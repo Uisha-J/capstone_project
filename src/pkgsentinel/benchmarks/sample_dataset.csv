@@ -1,0 +1,6 @@
+package,ecosystem,label,note
+flask,PyPI,benign,well-known benign
+requests,PyPI,benign,well-known benign
+chalk,npm,benign,well-known benign
+colors,npm,benign,known sabotage author but registered
+left-pad,npm,benign,famously deleted then restored

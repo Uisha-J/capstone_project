@@ -1,0 +1,127 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pkgsentinel"
+version = "0.1.0"
+description = "Supply-chain attack detection engine for PyPI / npm with AISLOPSQ agentic-package analysis."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "Uisha-J" },
+]
+keywords = [
+    "supply-chain", "security", "pypi", "npm", "slopsquatting",
+    "agentic", "llm-security", "static-analysis",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+dependencies = [
+    # core
+    "sqlcipher3>=0.6.2",
+    "tomli>=2.0; python_version < '3.11'",
+    # 정적 분석
+    "sentence-transformers>=2.2.0",
+    # 실시간
+    "httpx>=0.25.0",
+    # 선택 (LLM 호출 시)
+    "anthropic>=0.30.0",
+    "openai>=1.0.0",
+    # CLI 보조
+    "rich>=13.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "ruff>=0.1.0",
+    "mypy>=1.7",
+]
+docs = [
+    "mkdocs>=1.5",
+    "mkdocs-material>=9.4",
+]
+
+[project.scripts]
+pkgsentinel = "pkgsentinel.__main__:main"
+pkgsentinel-feeds = "pkgsentinel.feeds.refresh:main"
+pkgsentinel-worker = "pkgsentinel.monitor.worker:main"
+pkgsentinel-cron = "pkgsentinel.monitor.cron_main:main"
+
+[project.urls]
+Homepage = "https://github.com/Uisha-J/capstone_project"
+Repository = "https://github.com/Uisha-J/capstone_project"
+Documentation = "https://github.com/Uisha-J/capstone_project/tree/main/docs"
+Issues = "https://github.com/Uisha-J/capstone_project/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["pkgsentinel*"]
+
+# ─────────────── ruff ───────────────
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "W",   # pycodestyle warnings
+    "B",   # bugbear
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # line too long (해석 가독성 우선 케이스가 많음)
+    "B008",  # function call in default argument (dataclass field 패턴)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E402"]  # sys.path.insert before imports
+
+# ─────────────── pytest ───────────────
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-ra -q --strict-markers"
+markers = [
+    "integration: requires external network/services",
+    "slow: long-running test (>10s)",
+]
+
+[tool.coverage.run]
+source = ["src/pkgsentinel"]
+omit = [
+    "*/tests/*",
+    "*/__main__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]
+
+# ─────────────── mypy ───────────────
+[tool.mypy]
+python_version = "3.11"
+strict_optional = true
+ignore_missing_imports = true
+warn_unused_ignores = true

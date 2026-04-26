@@ -1,0 +1,88 @@
+# ─── Secrets / API keys ──────────────────────────────────────
+.env
+.env.*
+!.env.example
+**/db.key
+~/.aislopsquatting/
+
+# 키링/credential 파일들
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+service_account*.json
+.netrc
+
+# ─── Encrypted DB / runtime artifacts ───────────────────────
+src/pkgsentinel/db/data/*.sqlcipher*
+src/pkgsentinel/db/data/*.db
+src/pkgsentinel/db/data/*.sqlite*
+
+# Threat-intel cache (regeneratable)
+src/pkgsentinel/knowledge/cache/*.json
+src/pkgsentinel/knowledge/cache/*.zip
+
+# Real-time sink output (Falco/Tetragon/STIX)
+src/pkgsentinel/realtime/sinks/out/
+realtime_out/
+
+# Benchmark results (regeneratable)
+src/pkgsentinel/benchmarks/results/
+src/pkgsentinel/benchmarks/*.jsonl
+!src/pkgsentinel/benchmarks/sample_dataset.csv
+
+# ─── Copyrighted reference material ─────────────────────────
+docs/papers/*.pdf
+docs/papers/*.html
+docs/case-studies/**/*.pdf
+docs/case-studies/**/*.html
+docs/case-studies/**/*.zip
+docs/case-studies/**/*.tar.gz
+
+# ─── Python ─────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+.Python
+build/
+dist/
+.eggs/
+.installed.cfg
+
+# venv
+.venv/
+venv/
+env/
+ENV/
+
+# tests / dev
+.pytest_cache/
+.tox/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker logs
+*.log
+docker-compose.override.yml
+
+# tmp
+tmp/
+temp/
+*.tmp
+*.bak
