@@ -15,7 +15,7 @@
         "taint_flows": 1,
         "llm_stub": "suspicious"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.0,
       "note": "SP-001 + EXF-001"
     },
     {
@@ -188,7 +188,7 @@
       "severity_max": "HIGH",
       "matchers": {
         "ttp_match": 0,
-        "ind_47": 3,
+        "ind_47": 4,
         "ind_47_high": 1,
         "seq_pattern": 1,
         "seq_high": 0,
@@ -201,12 +201,12 @@
     {
       "name": "logic-bomb-time-trigger",
       "label": "malicious",
-      "verdict": "CLEAN",
-      "expected": false,
+      "verdict": "SUSPICIOUS",
+      "expected": true,
       "severity_max": "MEDIUM",
       "matchers": {
         "ttp_match": 0,
-        "ind_47": 1,
+        "ind_47": 3,
         "ind_47_high": 0,
         "seq_pattern": 0,
         "seq_high": 0,
@@ -255,13 +255,13 @@
     {
       "name": "dns-exfiltration",
       "label": "malicious",
-      "verdict": "CLEAN",
-      "expected": false,
-      "severity_max": "MEDIUM",
+      "verdict": "SUSPICIOUS",
+      "expected": true,
+      "severity_max": "HIGH",
       "matchers": {
         "ttp_match": 0,
-        "ind_47": 1,
-        "ind_47_high": 0,
+        "ind_47": 2,
+        "ind_47_high": 1,
         "seq_pattern": 0,
         "seq_high": 0,
         "taint_flows": 0,
@@ -273,13 +273,13 @@
     {
       "name": "self-modifying-code",
       "label": "malicious",
-      "verdict": "CLEAN",
-      "expected": false,
-      "severity_max": "MEDIUM",
+      "verdict": "SUSPICIOUS",
+      "expected": true,
+      "severity_max": "HIGH",
       "matchers": {
         "ttp_match": 0,
-        "ind_47": 1,
-        "ind_47_high": 0,
+        "ind_47": 2,
+        "ind_47_high": 1,
         "seq_pattern": 0,
         "seq_high": 0,
         "taint_flows": 0,
@@ -345,8 +345,8 @@
     {
       "name": "variable-alias-obfuscation",
       "label": "malicious",
-      "verdict": "CLEAN",
-      "expected": false,
+      "verdict": "SUSPICIOUS",
+      "expected": true,
       "severity_max": "MEDIUM",
       "matchers": {
         "ttp_match": 0,
@@ -354,7 +354,7 @@
         "ind_47_high": 0,
         "seq_pattern": 0,
         "seq_high": 0,
-        "taint_flows": 0,
+        "taint_flows": 1,
         "llm_stub": "benign"
       },
       "elapsed_s": 0.0,
@@ -722,14 +722,14 @@
     }
   ],
   "metrics": {
-    "tp": 15,
+    "tp": 19,
     "tn": 20,
     "fp": 0,
-    "fn": 5,
+    "fn": 1,
     "precision": 1.0,
-    "recall": 0.75,
-    "f1": 0.8571,
-    "accuracy": 0.875
+    "recall": 0.95,
+    "f1": 0.9744,
+    "accuracy": 0.975
   },
   "elapsed_total_s": 0.05
 }

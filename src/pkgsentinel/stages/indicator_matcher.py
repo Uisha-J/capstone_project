@@ -166,8 +166,11 @@ _TEXT_PATTERNS: list[tuple[str, str, float, str]] = [
      r"if\s+(?:platform|sys)\.platform\s*[=!]=",
      0.4, "OS conditional check"),
     ("EXM-002",
-     r"if\s+datetime\.(?:now|today)\(\)\s*[<>]",
-     0.5, "time-based conditional"),
+     r"if\s+platform\.system\s*\(\s*\)\s*[=!]=\s*['\"]",
+     0.6, "platform.system() conditional check"),
+    ("EXM-002",
+     r"if\s+datetime\.(?:datetime\.)?(?:now|today|utcnow)\s*\(\s*\)\s*[<>]",
+     0.5, "time-based conditional (datetime trigger)"),
 
     # EXM-003: ctypes / native dynamic library load
     ("EXM-003",
@@ -187,7 +190,14 @@ _TEXT_PATTERNS: list[tuple[str, str, float, str]] = [
     # EXF-003: DNS tunneling
     ("EXF-003",
      r"socket\.gethostbyname\s*\(\s*\w*\+",
-     0.7, "DNS query with concatenated payload"),
+     0.7, "DNS query with concatenated payload (string concat)"),
+    ("EXF-003",
+     r"socket\.gethostbyname\s*\(\s*f[\"'][^\"']*\{[^}]+\}[^\"']*\.[a-z]",
+     0.85,
+     "DNS query with f-string interpolated payload to external domain"),
+    ("EXF-003",
+     r"socket\.gethostbyname\s*\(\s*[\"'][^\"']*\{",
+     0.6, "DNS query with templated host"),
 
     # EXF-004: webhook exfil
     ("EXF-004",
@@ -226,6 +236,12 @@ _TEXT_PATTERNS: list[tuple[str, str, float, str]] = [
     ("SYS-007",
      r"shutil\.rmtree\s*\(\s*['\"]?(?:/|~|\$HOME|C:\\\\)",
      0.85, "mass file deletion from root/home"),
+    ("SYS-007",
+     r"shutil\.rmtree\s*\(\s*os\.path\.expanduser\s*\(\s*['\"]~",
+     0.85, "shutil.rmtree on expanded home directory"),
+    ("SYS-007",
+     r"shutil\.rmtree\s*\(\s*Path\.home\s*\(\s*\)",
+     0.85, "shutil.rmtree on Path.home()"),
 
     # SYS-009: write to sensitive system path
     ("SYS-009",
@@ -273,6 +289,27 @@ _TEXT_PATTERNS: list[tuple[str, str, float, str]] = [
     ("DEF-006",
      r"except\s*(?:[A-Za-z]+\s*)?:\s*pass|2>/dev/null|stderr\s*=\s*subprocess\.DEVNULL",
      0.4, "error suppression pattern"),
+
+    # EXM-005: dynamic import via variable alias (obfuscation)
+    # `m = __import__("subprocess")` 형태 — alias 가 위험 모듈 import
+    ("EXM-005",
+     r"\b\w+\s*=\s*__import__\s*\(\s*[\"'](?:os|subprocess|sys|importlib"
+     r"|socket|urllib|ctypes|pty|shutil|pickle|marshal)[\"']\s*\)",
+     0.85,
+     "dynamic import alias (variable = __import__(<dangerous module>))"),
+    ("EXM-005",
+     r"\b\w+\s*=\s*importlib\.import_module\s*\(\s*[\"'](?:os|subprocess|"
+     r"sys|socket|ctypes|pty)[\"']",
+     0.85, "importlib.import_module alias for dangerous module"),
+
+    # EXM-001 보강: file write 안에 exec/subprocess 가 string literal 로
+    # 들어가는 self-modifying 패턴
+    ("EXM-001",
+     r"\.write\s*\(\s*[bf]?[\"'][^\"']*\b(?:exec|eval|subprocess\.run"
+     r"|os\.system|importlib\.import_module)\s*\(",
+     0.8,
+     "exec/subprocess embedded in written-to-file string literal "
+     "(self-modifying / dropper pattern)"),
 ]
 
 

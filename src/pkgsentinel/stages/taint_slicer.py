@@ -58,6 +58,8 @@ TAINT_SINKS = {
     # 역직렬화 RCE (untrusted 입력 시 코드 실행과 동등)
     "pickle.loads", "marshal.loads",
     "yaml.load",  # SafeLoader 미지정 시 RCE
+    # DNS covert channel — gethostbyname 의 인자가 secret 을 포함하면 DNS 송출
+    "socket.gethostbyname", "socket.gethostbyname_ex",
     # JS sinks (단순)
     "fetch", "axios.post", "http.request", "https.request",
     "child_process.exec", "child_process.spawn",
@@ -111,13 +113,21 @@ class _PyTaintAnalyzer(ast.NodeVisitor):
         # 변수명 → 마지막으로 흐른 source 정보
         self.tainted: dict[str, dict] = {}
         self.flows: list[TaintFlow] = []
+        # 변수명 → 모듈명 alias (1단계 추적)
+        # 예: `m = __import__("subprocess")` → {"m": "subprocess"}
+        self.module_aliases: dict[str, str] = {}
 
     def _resolve_call_name(self, node) -> str | None:
         if isinstance(node, ast.Name):
+            # Name 자체는 alias 풀지 않음 (변수명 그대로). alias 풀기는
+            # Attribute 단계에서 — `m.run` 의 base = `m` → alias 'subprocess'
             return node.id
         if isinstance(node, ast.Attribute):
             base = self._resolve_call_name(node.value)
             if base:
+                # alias 가 등록된 변수면 → 모듈명으로 평탄화
+                if base in self.module_aliases:
+                    base = self.module_aliases[base]
                 return f"{base}.{node.attr}"
             return node.attr
         if isinstance(node, ast.Call):
@@ -199,9 +209,31 @@ class _PyTaintAnalyzer(ast.NodeVisitor):
         return names
 
     def visit_Assign(self, node: ast.Assign):
-        """`var = source_call(...)` 또는 `var = transform(other_var)`"""
+        """`var = source_call(...)` / `var = transform(other_var)` /
+        `var = __import__("module")`  (alias 등록)"""
         if len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
             target = node.targets[0].id
+
+            # ─── alias 등록: var = __import__("X") / importlib.import_module("X") ───
+            if isinstance(node.value, ast.Call):
+                inner = node.value.func
+                if (
+                    isinstance(inner, ast.Name)
+                    and inner.id == "__import__"
+                    and node.value.args
+                    and isinstance(node.value.args[0], ast.Constant)
+                    and isinstance(node.value.args[0].value, str)
+                ):
+                    self.module_aliases[target] = node.value.args[0].value
+                elif (
+                    isinstance(inner, ast.Attribute)
+                    and inner.attr == "import_module"
+                    and node.value.args
+                    and isinstance(node.value.args[0], ast.Constant)
+                    and isinstance(node.value.args[0].value, str)
+                ):
+                    self.module_aliases[target] = node.value.args[0].value
+
             if isinstance(node.value, ast.Call):
                 callee = self._resolve_call_name(node.value.func)
                 if callee in TAINT_SOURCES:
