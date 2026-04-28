@@ -15,7 +15,7 @@
         "taint_flows": 1,
         "llm_stub": "suspicious"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.0,
       "note": "SP-001 + EXF-001"
     },
     {
@@ -539,6 +539,186 @@
       },
       "elapsed_s": 0.0,
       "note": "credential-paths + EXF-001"
+    },
+    {
+      "name": "discord-token-grabber",
+      "label": "malicious",
+      "verdict": "HIGH_RISK",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 3,
+        "ind_47_high": 2,
+        "seq_pattern": 1,
+        "seq_high": 1,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "실제 사례: PyPI/npm Discord token grabber 다수"
+    },
+    {
+      "name": "chrome-cookie-stealer",
+      "label": "malicious",
+      "verdict": "HIGH_RISK",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 2,
+        "ind_47_high": 1,
+        "seq_pattern": 1,
+        "seq_high": 1,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "실제 사례: 다수 info-stealer 변형"
+    },
+    {
+      "name": "keylogger-pynput",
+      "label": "malicious",
+      "verdict": "SUSPICIOUS",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 3,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "실제 사례 변형 (pynput 기반)"
+    },
+    {
+      "name": "multi-stage-loader",
+      "label": "malicious",
+      "verdict": "HIGH_RISK",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 5,
+        "ind_47_high": 4,
+        "seq_pattern": 1,
+        "seq_high": 1,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "다단계 loader (실제 사례: request typosquat 변형)"
+    },
+    {
+      "name": "anti-vm-detection",
+      "label": "malicious",
+      "verdict": "HIGH_RISK",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 3,
+        "ind_47_high": 1,
+        "seq_pattern": 1,
+        "seq_high": 1,
+        "taint_flows": 1,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "anti-analysis 기법"
+    },
+    {
+      "name": "networkx-graph-ops",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "boto3-s3-readonly",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "paramiko-ssh-client",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "multiprocessing-pool",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "inspect-introspection",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
     },
     {
       "name": "fastapi-style-app",
@@ -1082,14 +1262,14 @@
     }
   ],
   "metrics": {
-    "tp": 29,
-    "tn": 30,
+    "tp": 34,
+    "tn": 35,
     "fp": 0,
     "fn": 1,
     "precision": 1.0,
-    "recall": 0.9667,
-    "f1": 0.9831,
-    "accuracy": 0.9833
+    "recall": 0.9714,
+    "f1": 0.9855,
+    "accuracy": 0.9857
   },
   "elapsed_total_s": 0.07
 }

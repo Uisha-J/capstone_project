@@ -262,6 +262,23 @@ _TEXT_PATTERNS: list[tuple[str, str, float, str]] = [
      r"\b(?:ipinfo\.io|ip-api\.com|ipify\.org|ifconfig\.me|ipgeolocation)\b",
      0.7, "external IP geolocation API"),
 
+    # SYS-005 보강: keystroke capture (keylogger)
+    ("SYS-005",
+     r"from\s+pynput\s+import\s+keyboard|pynput\.keyboard\.Listener",
+     0.85, "pynput keyboard listener (keystroke capture)"),
+    ("SYS-005",
+     r"\bkeyboard\.on_press\b|\bkeyboard\.read_event\b|"
+     r"\bkeyboard\.hook\b",
+     0.85, "keyboard module hook"),
+    ("SYS-005",
+     r"\b(?:CallNextHookEx|SetWindowsHookEx|WH_KEYBOARD_LL)\b",
+     0.95, "Win32 low-level keyboard hook API"),
+
+    # SYS-005 보강: clipboard monitoring loop
+    ("SYS-005",
+     r"\b(?:pyperclip|win32clipboard|pyclip)\b.*\bpaste\b",
+     0.7, "clipboard polling pattern"),
+
     # NET-002: mining pools
     ("NET-002",
      r"stratum\+tcp://|(?:minexmr|supportxmr|pool\.minexmr)\.com",
