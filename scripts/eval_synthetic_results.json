@@ -15,7 +15,7 @@
         "taint_flows": 1,
         "llm_stub": "suspicious"
       },
-      "elapsed_s": 0.0,
+      "elapsed_s": 0.01,
       "note": "SP-001 + EXF-001"
     },
     {
@@ -359,6 +359,366 @@
       },
       "elapsed_s": 0.0,
       "note": "alias of obfuscated-import-exec — 변수 추적 한계 알려진 케이스"
+    },
+    {
+      "name": "ld-preload-injection",
+      "label": "malicious",
+      "verdict": "HIGH_RISK",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 4,
+        "ind_47_high": 3,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "SYS-001"
+    },
+    {
+      "name": "bashrc-persistence",
+      "label": "malicious",
+      "verdict": "HIGH_RISK",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 3,
+        "ind_47_high": 2,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "SYS-002"
+    },
+    {
+      "name": "wallet-exfil",
+      "label": "malicious",
+      "verdict": "HIGH_RISK",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 3,
+        "ind_47_high": 1,
+        "seq_pattern": 1,
+        "seq_high": 1,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "SYS-003"
+    },
+    {
+      "name": "creationflags-detached",
+      "label": "malicious",
+      "verdict": "HIGH_RISK",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 3,
+        "ind_47_high": 2,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "EXM-004"
+    },
+    {
+      "name": "geo-ip-recon-and-send",
+      "label": "malicious",
+      "verdict": "HIGH_RISK",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 3,
+        "ind_47_high": 1,
+        "seq_pattern": 1,
+        "seq_high": 1,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "NET-001 + EXF-001"
+    },
+    {
+      "name": "tor-onion-c2",
+      "label": "malicious",
+      "verdict": "SUSPICIOUS",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 2,
+        "ind_47_high": 1,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "EXF-005 (.onion)"
+    },
+    {
+      "name": "ctypes-shellcode",
+      "label": "malicious",
+      "verdict": "SUSPICIOUS",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 2,
+        "ind_47_high": 1,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "EXM-003"
+    },
+    {
+      "name": "pastebin-fetch-exec",
+      "label": "malicious",
+      "verdict": "HIGH_RISK",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 3,
+        "ind_47_high": 2,
+        "seq_pattern": 1,
+        "seq_high": 1,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "EXF-005 + EXM-001"
+    },
+    {
+      "name": "etc-hosts-poison",
+      "label": "malicious",
+      "verdict": "SUSPICIOUS",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 2,
+        "ind_47_high": 1,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "SYS-009"
+    },
+    {
+      "name": "credential-paths-multifile",
+      "label": "malicious",
+      "verdict": "HIGH_RISK",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 2,
+        "ind_47_high": 1,
+        "seq_pattern": 1,
+        "seq_high": 1,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "credential-paths + EXF-001"
+    },
+    {
+      "name": "fastapi-style-app",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "numpy-array-ops",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "dataclass-serializer",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "logging-rotating-file",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "graphql-resolver-skeleton",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "image-pillow-resize",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "regex-validator",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "concurrent-futures-pool",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "redis-cache-wrapper",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "pytest-fixtures-tmpdir",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
     },
     {
       "name": "json-helper",
@@ -722,14 +1082,14 @@
     }
   ],
   "metrics": {
-    "tp": 19,
-    "tn": 20,
+    "tp": 29,
+    "tn": 30,
     "fp": 0,
     "fn": 1,
     "precision": 1.0,
-    "recall": 0.95,
-    "f1": 0.9744,
-    "accuracy": 0.975
+    "recall": 0.9667,
+    "f1": 0.9831,
+    "accuracy": 0.9833
   },
-  "elapsed_total_s": 0.05
+  "elapsed_total_s": 0.07
 }

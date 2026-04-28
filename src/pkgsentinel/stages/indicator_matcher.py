@@ -176,6 +176,15 @@ _TEXT_PATTERNS: list[tuple[str, str, float, str]] = [
     ("EXM-003",
      r"ctypes\.(?:CDLL|WinDLL|windll)",
      0.7, "native binary loading via ctypes"),
+    ("EXM-003",
+     r"ctypes\.CFUNCTYPE\s*\([^)]*\)\s*\(\s*ctypes\.addressof",
+     0.9,
+     "ctypes shellcode execution pattern "
+     "(CFUNCTYPE + addressof — direct memory exec)"),
+    ("EXM-003",
+     r"ctypes\.(?:CFUNCTYPE|cast)\s*\([^)]*\)\s*\([^)]*"
+     r"create_string_buffer",
+     0.85, "ctypes function pointer over allocated buffer"),
 
     # EXM-004: hidden execution flags
     ("EXM-004",
