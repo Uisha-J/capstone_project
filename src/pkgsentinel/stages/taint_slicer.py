@@ -55,6 +55,9 @@ TAINT_SINKS = {
     "exec", "eval", "compile",
     "subprocess.run", "subprocess.Popen", "subprocess.call",
     "os.system", "os.popen",
+    # 역직렬화 RCE (untrusted 입력 시 코드 실행과 동등)
+    "pickle.loads", "marshal.loads",
+    "yaml.load",  # SafeLoader 미지정 시 RCE
     # JS sinks (단순)
     "fetch", "axios.post", "http.request", "https.request",
     "child_process.exec", "child_process.spawn",

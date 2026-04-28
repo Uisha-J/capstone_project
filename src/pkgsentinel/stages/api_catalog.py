@@ -45,8 +45,9 @@ PYTHON_APIS: dict[str, AttackDimension] = {
     "zlib.compress": AttackDimension.ENCODING,
     "gzip.decompress": AttackDimension.ENCODING,
     "bz2.decompress": AttackDimension.ENCODING,
-    "marshal.loads": AttackDimension.ENCODING,
-    "pickle.loads": AttackDimension.ENCODING,
+    # pickle.loads / marshal.loads 는 untrusted 입력 시 RCE 동등 — PAYLOAD_EXECUTION 으로 분류
+    "marshal.loads": AttackDimension.PAYLOAD_EXECUTION,
+    "pickle.loads": AttackDimension.PAYLOAD_EXECUTION,
     # 'compile' 제외 — Python config 파일 (flask/django 설정) 등에서 정당하게 사용
     "bytes.fromhex": AttackDimension.ENCODING,
 

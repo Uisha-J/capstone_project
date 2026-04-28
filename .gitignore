@@ -5,6 +5,9 @@
 **/db.key
 ~/.aislopsquatting/
 
+# ─── 학교 제출용 보고서 (로컬 보존) ─────────────────────────
+reports/
+
 # 키링/credential 파일들
 *.pem
 *.key
