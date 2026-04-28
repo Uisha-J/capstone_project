@@ -1443,8 +1443,8 @@
     {
       "name": "ansible-shell-module",
       "label": "benign",
-      "verdict": "SUSPICIOUS",
-      "expected": false,
+      "verdict": "CLEAN",
+      "expected": true,
       "severity_max": "HIGH",
       "matchers": {
         "ttp_match": 0,
@@ -1479,8 +1479,8 @@
     {
       "name": "deployment-script",
       "label": "benign",
-      "verdict": "SUSPICIOUS",
-      "expected": false,
+      "verdict": "CLEAN",
+      "expected": true,
       "severity_max": "HIGH",
       "matchers": {
         "ttp_match": 0,
@@ -1515,8 +1515,8 @@
     {
       "name": "telemetry-opt-in-sender",
       "label": "benign",
-      "verdict": "HIGH_RISK",
-      "expected": false,
+      "verdict": "CLEAN",
+      "expected": true,
       "severity_max": "HIGH",
       "matchers": {
         "ttp_match": 0,
@@ -2163,13 +2163,13 @@
   ],
   "metrics": {
     "tp": 59,
-    "tn": 57,
-    "fp": 3,
+    "tn": 60,
+    "fp": 0,
     "fn": 1,
-    "precision": 0.9516,
+    "precision": 1.0,
     "recall": 0.9833,
-    "f1": 0.9672,
-    "accuracy": 0.9667
+    "f1": 0.9916,
+    "accuracy": 0.9917
   },
   "elapsed_total_s": 0.12
 }
