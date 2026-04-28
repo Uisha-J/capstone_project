@@ -279,6 +279,8 @@ _TEXT_PATTERNS: list[tuple[str, str, float, str]] = [
      r"\b(?:pyperclip|win32clipboard|pyclip)\b.*\bpaste\b",
      0.7, "clipboard polling pattern"),
 
+    # EXM-006 보강 (multiline) — _MULTILINE_PATTERNS 로 이동됨
+
     # NET-002: mining pools
     ("NET-002",
      r"stratum\+tcp://|(?:minexmr|supportxmr|pool\.minexmr)\.com",
@@ -339,6 +341,19 @@ _TEXT_PATTERNS: list[tuple[str, str, float, str]] = [
 ]
 
 
+# multiline 매칭 (line-by-line 으로는 매칭 불가능한 패턴) — 파일 전체 content 에 검색
+_MULTILINE_PATTERNS: list[tuple[str, str, float, str]] = [
+    ("EXM-006",
+     r"while\s+(?:True|1)\s*:[\s\S]{0,200}"
+     r"(?:sys\.stdout\.write|print)\s*\(",
+     0.6, "infinite stdout loop (self-DoS / sabotage pattern)"),
+    ("EXM-006",
+     r"while\s+(?:True|1)\s*:[\s\S]{0,300}"
+     r"open\s*\([^)]*[\"']w[\"']?\s*\)\s*\.write",
+     0.65, "infinite file write loop (disk-fill DoS)"),
+]
+
+
 def _match_from_text(sf: FullSourceFile) -> list[IndicatorHit]:
     """원본 소스 텍스트에서 정규식 기반 매칭."""
     hits: list[IndicatorHit] = []
@@ -347,6 +362,7 @@ def _match_from_text(sf: FullSourceFile) -> list[IndicatorHit]:
 
     lines = sf.content.splitlines()
 
+    # 1) line 단위 검색 (default)
     for code, pattern, conf, reason in _TEXT_PATTERNS:
         for i, line in enumerate(lines, start=1):
             try:
@@ -358,6 +374,23 @@ def _match_from_text(sf: FullSourceFile) -> list[IndicatorHit]:
                     break  # 같은 지표 중복 방지 (파일당 1회)
             except re.error:
                 continue
+
+    # 2) multiline 검색 (file content 전체)
+    seen_ml: set[str] = {h.indicator.code for h in hits}
+    for code, pattern, conf, reason in _MULTILINE_PATTERNS:
+        try:
+            m = re.search(pattern, sf.content)
+        except re.error:
+            continue
+        if not m:
+            continue
+        # 라인 번호: match 시작 위치 기준
+        line_no = sf.content.count("\n", 0, m.start()) + 1
+        hits.append(_hit(
+            code, sf.path, line_no,
+            sf.content[m.start():m.end()][:200].replace("\n", " "),
+            confidence=conf, reason=reason,
+        ))
     return hits
 
 

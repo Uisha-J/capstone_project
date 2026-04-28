@@ -15,7 +15,7 @@
         "taint_flows": 1,
         "llm_stub": "suspicious"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.0,
       "note": "SP-001 + EXF-001"
     },
     {
@@ -901,6 +901,186 @@
       "note": ""
     },
     {
+      "name": "event-stream-style-flatmap",
+      "label": "malicious",
+      "verdict": "HIGH_RISK",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 3,
+        "ind_47_high": 2,
+        "seq_pattern": 1,
+        "seq_high": 1,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "실제: event-stream incident 패턴 (npm)"
+    },
+    {
+      "name": "ua-parser-style-postinstall",
+      "label": "malicious",
+      "verdict": "HIGH_RISK",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 5,
+        "ind_47_high": 3,
+        "seq_pattern": 1,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "실제: ua-parser-js incident 패턴"
+    },
+    {
+      "name": "colors-style-infinite-output",
+      "label": "malicious",
+      "verdict": "SUSPICIOUS",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 2,
+        "ind_47_high": 1,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "실제: colors / faker 자살 폭탄"
+    },
+    {
+      "name": "node-ipc-style-geo-bomb",
+      "label": "malicious",
+      "verdict": "SUSPICIOUS",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 3,
+        "ind_47_high": 1,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "실제: node-ipc protestware"
+    },
+    {
+      "name": "xz-style-gated-payload",
+      "label": "malicious",
+      "verdict": "SUSPICIOUS",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 3,
+        "ind_47_high": 1,
+        "seq_pattern": 1,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "실제: xz utils backdoor 변형 (정적 검출 가능 영역만)"
+    },
+    {
+      "name": "torch-model-train",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "sklearn-pipeline",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "pandas-dataframe-ops",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "transformers-tokenizer",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "matplotlib-plot",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
       "name": "fastapi-style-app",
       "label": "benign",
       "verdict": "CLEAN",
@@ -1442,14 +1622,14 @@
     }
   ],
   "metrics": {
-    "tp": 39,
-    "tn": 40,
+    "tp": 44,
+    "tn": 45,
     "fp": 0,
     "fn": 1,
     "precision": 1.0,
-    "recall": 0.975,
-    "f1": 0.9873,
-    "accuracy": 0.9875
+    "recall": 0.9778,
+    "f1": 0.9888,
+    "accuracy": 0.9889
   },
   "elapsed_total_s": 0.08
 }
