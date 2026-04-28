@@ -15,7 +15,7 @@
         "taint_flows": 1,
         "llm_stub": "suspicious"
       },
-      "elapsed_s": 0.0,
+      "elapsed_s": 0.01,
       "note": "SP-001 + EXF-001"
     },
     {
@@ -1081,6 +1081,186 @@
       "note": ""
     },
     {
+      "name": "ctx-style-env-sweep",
+      "label": "malicious",
+      "verdict": "SUSPICIOUS",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 3,
+        "ind_47_high": 1,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "실제: ctx 패키지 incident"
+    },
+    {
+      "name": "torchtriton-style-confusion",
+      "label": "malicious",
+      "verdict": "HIGH_RISK",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 5,
+        "ind_47_high": 3,
+        "seq_pattern": 2,
+        "seq_high": 1,
+        "taint_flows": 0,
+        "llm_stub": "suspicious"
+      },
+      "elapsed_s": 0.0,
+      "note": "실제: pytorch nightly torchtriton incident"
+    },
+    {
+      "name": "ssh-decorate-stealer",
+      "label": "malicious",
+      "verdict": "SUSPICIOUS",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 2,
+        "ind_47_high": 1,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "실제: ssh-decorate hijack"
+    },
+    {
+      "name": "shai-hulud-self-replicate",
+      "label": "malicious",
+      "verdict": "HIGH_RISK",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 2,
+        "ind_47_high": 1,
+        "seq_pattern": 2,
+        "seq_high": 1,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "실제: shai-hulud worm"
+    },
+    {
+      "name": "phpass-style-pickle-rce",
+      "label": "malicious",
+      "verdict": "HIGH_RISK",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 2,
+        "ind_47_high": 1,
+        "seq_pattern": 2,
+        "seq_high": 2,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "역직렬화 RCE 패턴 보강"
+    },
+    {
+      "name": "fastapi-dependency-injection",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "celery-task-definition",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "structlog-config",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "dataclass-validation",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "py4web-style-controller",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
       "name": "fastapi-style-app",
       "label": "benign",
       "verdict": "CLEAN",
@@ -1622,14 +1802,14 @@
     }
   ],
   "metrics": {
-    "tp": 44,
-    "tn": 45,
+    "tp": 49,
+    "tn": 50,
     "fp": 0,
     "fn": 1,
     "precision": 1.0,
-    "recall": 0.9778,
-    "f1": 0.9888,
-    "accuracy": 0.9889
+    "recall": 0.98,
+    "f1": 0.9899,
+    "accuracy": 0.99
   },
-  "elapsed_total_s": 0.08
+  "elapsed_total_s": 0.1
 }

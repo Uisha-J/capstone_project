@@ -351,6 +351,31 @@ _MULTILINE_PATTERNS: list[tuple[str, str, float, str]] = [
      r"while\s+(?:True|1)\s*:[\s\S]{0,300}"
      r"open\s*\([^)]*[\"']w[\"']?\s*\)\s*\.write",
      0.65, "infinite file write loop (disk-fill DoS)"),
+
+    # EXF-001 보강 (multiline) — 환경변수 전체 sweep + 외부 송신
+    ("EXF-001",
+     r"(?:os\.environ\.items\s*\(\s*\)|dict\s*\(\s*os\.environ\s*\)"
+     r"|for\s+\w+(?:\s*,\s*\w+)?\s+in\s+os\.environ)"
+     r"[\s\S]{0,400}"
+     r"(?:requests\.|urllib\.request\.urlopen|httpx\.|aiohttp\.)",
+     0.85, "wholesale env-var dump transmitted to external endpoint"),
+
+    # EXM-006 보강 (multiline) — 외부 라이브러리 함수 monkey-patch (후킹)
+    # 정상 코드에서는 거의 보이지 않는 hidden runtime modification
+    ("EXM-006",
+     r"(_orig\w*|_original\w*)\s*=\s*\w+\.\w+\.\w+[\s\S]{0,400}\1\s*\(",
+     0.7,
+     "save-and-replace pattern (hijack of library method, "
+     "hidden runtime modification)"),
+    ("EXM-006",
+     r"\bparamiko\.\w+\.(?:connect|exec_command|invoke_shell)\s*=\s*\w",
+     0.85, "paramiko SSHClient method hijack"),
+    ("EXM-006",
+     r"\brequests\.(?:get|post|put|delete|Session|request)\s*=\s*\w",
+     0.85, "requests module function hijack"),
+    ("EXM-006",
+     r"\b(?:urllib|httpx|http\.client)\.\w+\s*=\s*\w",
+     0.7, "HTTP library function hijack"),
 ]
 
 
