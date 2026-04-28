@@ -15,7 +15,7 @@
         "taint_flows": 1,
         "llm_stub": "suspicious"
       },
-      "elapsed_s": 0.0,
+      "elapsed_s": 0.01,
       "note": "SP-001 + EXF-001"
     },
     {
@@ -721,6 +721,186 @@
       "note": ""
     },
     {
+      "name": "uninstall-time-trigger",
+      "label": "malicious",
+      "verdict": "HIGH_RISK",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 4,
+        "ind_47_high": 3,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "EXS-003 변형 (egg_info)"
+    },
+    {
+      "name": "build-py-hook-payload",
+      "label": "malicious",
+      "verdict": "HIGH_RISK",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 5,
+        "ind_47_high": 4,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "EXS-003 (build_py)"
+    },
+    {
+      "name": "dependency-confusion-internal",
+      "label": "malicious",
+      "verdict": "HIGH_RISK",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 6,
+        "ind_47_high": 3,
+        "seq_pattern": 1,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "dependency confusion + recon"
+    },
+    {
+      "name": "rust-binary-dropper",
+      "label": "malicious",
+      "verdict": "HIGH_RISK",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 3,
+        "ind_47_high": 2,
+        "seq_pattern": 1,
+        "seq_high": 1,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "EXM-003 (ctypes) + dropper"
+    },
+    {
+      "name": "stratum-mining-protocol",
+      "label": "malicious",
+      "verdict": "SUSPICIOUS",
+      "expected": true,
+      "severity_max": "HIGH",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 2,
+        "ind_47_high": 1,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": "NET-003 (mining pool) 변형"
+    },
+    {
+      "name": "alembic-migrations",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "graphene-relay-node",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "click-progress-bar",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "datetime-zoneinfo",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
+      "name": "scipy-statistics",
+      "label": "benign",
+      "verdict": "CLEAN",
+      "expected": true,
+      "severity_max": "MEDIUM",
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 1,
+        "ind_47_high": 0,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign"
+      },
+      "elapsed_s": 0.0,
+      "note": ""
+    },
+    {
       "name": "fastapi-style-app",
       "label": "benign",
       "verdict": "CLEAN",
@@ -1262,14 +1442,14 @@
     }
   ],
   "metrics": {
-    "tp": 34,
-    "tn": 35,
+    "tp": 39,
+    "tn": 40,
     "fp": 0,
     "fn": 1,
     "precision": 1.0,
-    "recall": 0.9714,
-    "f1": 0.9855,
-    "accuracy": 0.9857
+    "recall": 0.975,
+    "f1": 0.9873,
+    "accuracy": 0.9875
   },
-  "elapsed_total_s": 0.07
+  "elapsed_total_s": 0.08
 }
