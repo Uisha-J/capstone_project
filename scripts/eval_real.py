@@ -257,25 +257,67 @@ def extract_archive(
 # 에서 항상 등재돼 있는 메이저 패키지의 정적 명단.
 # 이 명단의 패키지가 medium-strength 신호만 있을 때 CLEAN 으로 다운그레이드.
 POPULAR_PYPI = {
+    # 코어 / 표준 라이브러리 wrapper
     "requests", "urllib3", "setuptools", "pip", "wheel", "build",
-    "flask", "django", "fastapi", "numpy", "pandas", "scipy", "scikit-learn",
-    "pytest", "pytest-cov", "tox", "coverage", "click", "rich", "tqdm",
-    "pyyaml", "jinja2", "markupsafe", "werkzeug", "cryptography",
-    "sqlalchemy", "alembic", "pydantic", "httpx", "aiohttp",
-    "boto3", "botocore", "pillow", "matplotlib", "lxml",
-    "beautifulsoup4", "selenium", "celery", "redis",
+    "packaging", "certifi", "idna", "charset-normalizer",
+    # 웹 프레임워크
+    "flask", "django", "fastapi", "starlette", "uvicorn",
+    "werkzeug", "jinja2", "markupsafe", "itsdangerous", "blinker",
+    # 데이터 / 과학
+    "numpy", "pandas", "scipy", "matplotlib", "seaborn",
+    "scikit-learn", "scikit-image",
+    # 테스트 / 품질
+    "pytest", "pytest-cov", "pytest-xdist", "tox", "coverage",
+    "hypothesis", "mock", "freezegun",
+    # CLI / TUI
+    "click", "rich", "tqdm", "typer", "colorama", "tabulate",
+    # 직렬화 / 검증
+    "pyyaml", "pydantic", "jsonschema", "msgpack", "orjson",
+    # DB / ORM / 캐시
+    "sqlalchemy", "alembic", "redis",
+    # HTTP 클라이언트 / 네트워크
+    "httpx", "aiohttp", "websockets",
+    # 보안
+    "cryptography", "bcrypt", "passlib",
+    # 클라우드
+    "boto3", "botocore", "s3transfer",
+    # 이미지 / 파일
+    "pillow", "lxml", "openpyxl",
+    # 자동화 / 브라우저
+    "beautifulsoup4", "selenium",
+    # 메시징 / 큐
+    "celery", "kombu", "amqp",
+    # 노트북 / IPython
     "ipython", "jupyter", "notebook",
+    # ML / AI
     "torch", "tensorflow", "keras", "transformers",
-    "openai", "anthropic", "langchain",
+    "openai", "anthropic", "langchain", "tiktoken",
+    # 로깅 / 유틸리티
+    "structlog", "loguru", "tenacity", "more-itertools",
 }
 POPULAR_NPM = {
-    "react", "react-dom", "lodash", "express", "axios", "vue",
-    "typescript", "webpack", "eslint", "prettier", "chalk",
-    "babel-core", "@babel/core", "rxjs", "moment", "date-fns",
-    "next", "nuxt", "svelte",
-    "tailwindcss", "@types/node", "@types/react",
+    # 프레임워크 / UI
+    "react", "react-dom", "vue", "angular", "svelte",
+    "next", "nuxt",
+    # 유틸리티
+    "lodash", "underscore", "ramda", "date-fns", "moment",
+    # HTTP / 네트워크
+    "axios", "node-fetch", "got", "ws",
+    # 빌드 / 도구
+    "typescript", "webpack", "rollup", "vite", "esbuild",
+    "babel-core", "@babel/core", "rxjs",
+    # 린팅 / 포맷
+    "eslint", "prettier", "stylelint",
+    # 서버 / 미들웨어
+    "express", "koa", "fastify",
+    # 색상 / CLI
+    "chalk", "commander", "yargs", "inquirer",
+    # 테스트
     "jest", "mocha", "@testing-library/react",
-    "node-fetch", "ws", "ioredis",
+    # 타입
+    "tailwindcss", "@types/node", "@types/react",
+    # 캐시
+    "ioredis",
 }
 
 
@@ -498,15 +540,17 @@ def _evaluate(
     )
     # 분산(spread) 신호 — 라지 패키지에 신호가 균일하게 흩어져 있으면 잡음 가능성↑
     # max_high_per_file == 1 이면 거의 확실히 분산. == 2 도 라지 패키지에선 분산.
-    # cooccur=0 + taint<=1 동시 만족 시 집중 신호 약함.
-    # 단, ind_high 절대값이 큼 (8 이상)이면 흩어져 있어도 위험 — 다운그레이드 X
+    # cooccur=0 + taint<=1 + seq_HIGH=0 동시 만족 시 집중 신호 약함.
+    # 단, ind_high 절대값이 큼 (4+) 또는 seq_high 가 있으면 흩어져 있어도 위험 — 다운그레이드 X
+    # winston-logger-pro 류 (ind=4(4H) seq=2(2H)) 의 합신호를 놓치지 않도록.
     is_spread = (
         n_analysis_files > 20
         and len(files_with_high_ind) >= 3
         and max_high_per_file <= 2
         and len(cooccur_files) == 0
         and taint_total <= 1
-        and ind_high < 8       # 절대값 보호 — compromised 라이브러리는 여기서 걸려도 됨
+        and high_sev_seq == 0       # seq HIGH 가 하나라도 있으면 spread 아님
+        and ind_high < 4            # 절대값 보호 — 4+ HIGH 면 흩어져 있어도 위험
     )
 
     # MALICIOUS triggers
@@ -643,6 +687,20 @@ def _evaluate(
 
 # ─────────────── 집계 ───────────────
 
+def _wilson_interval(successes: int, n: int, z: float = 1.96) -> tuple[float, float]:
+    """Wilson score 95% confidence interval for binomial proportion.
+
+    n=0 → (0, 0). 작은 n 에서도 normal approximation 보다 정확.
+    """
+    if n == 0:
+        return 0.0, 0.0
+    p = successes / n
+    denom = 1 + z * z / n
+    centre = (p + z * z / (2 * n)) / denom
+    half = (z * (((p * (1 - p) + z * z / (4 * n)) / n) ** 0.5)) / denom
+    return max(0.0, centre - half), min(1.0, centre + half)
+
+
 def _confusion(results: list[FixtureResult]) -> dict:
     tp = fp = tn = fn = 0
     for r in results:
@@ -660,6 +718,9 @@ def _confusion(results: list[FixtureResult]) -> dict:
     r = tp / (tp + fn) if (tp + fn) else 0.0
     f1 = (2 * p * r / (p + r)) if (p + r) else 0.0
     acc = (tp + tn) / max(1, len(results))
+    # 95% Wilson score CI
+    p_lo, p_hi = _wilson_interval(tp, tp + fp)
+    r_lo, r_hi = _wilson_interval(tp, tp + fn)
     return {
         "tp": tp, "tn": tn, "fp": fp, "fn": fn,
         "precision": round(p, 4),
@@ -667,6 +728,8 @@ def _confusion(results: list[FixtureResult]) -> dict:
         "f1": round(f1, 4),
         "accuracy": round(acc, 4),
         "n": len(results),
+        "precision_ci95": [round(p_lo, 4), round(p_hi, 4)],
+        "recall_ci95": [round(r_lo, 4), round(r_hi, 4)],
     }
 
 
@@ -688,18 +751,51 @@ def _print_table(results: list[FixtureResult]):
     print("-" * 145)
     for r in results:
         ok = "OK" if r.expected else "FAIL"
-        m = (f"ind={r.matchers['ind_47']}({r.matchers['ind_47_high']}H) "
-             f"seq={r.matchers['seq_pattern']}({r.matchers['seq_high']}H) "
-             f"taint={r.matchers['taint_flows']} "
-             f"llm={r.matchers['llm_stub'][:4]}")
+        mr = r.matchers or {}
+        m = (f"ind={mr.get('ind_47',0)}({mr.get('ind_47_high',0)}H) "
+             f"seq={mr.get('seq_pattern',0)}({mr.get('seq_high',0)}H) "
+             f"taint={mr.get('taint_flows',0)} "
+             f"llm={(mr.get('llm_stub','-') or '-')[:4]}")
         src_short = r.source.replace("datadog/", "dd:").replace("registry", "reg")
         name_short = (r.name[:35] + "..") if len(r.name) > 37 else r.name
         print(f"{name_short:<38} {r.ecosystem:<5} {src_short:<22} "
               f"{r.label:<10} {r.verdict:<11} {ok:<5} {m}")
 
 
+def _process_one(meta: dict) -> FixtureResult:
+    """multiprocessing worker — single fixture 평가.
+
+    pickling 가능해야 하므로 module top-level. DATA_DIR 은 module-level constant
+    이므로 sub-process 에도 보임.
+    """
+    archive_path = DATA_DIR / meta["archive_path"]
+    try:
+        archive_bytes = archive_path.read_bytes()
+        files = extract_archive(
+            archive_bytes, meta["archive_format"], meta["label"],
+        )
+        if not files:
+            return FixtureResult(
+                name=meta["name"], ecosystem=meta["ecosystem"],
+                version=meta["version"], label=meta["label"],
+                source=meta["source"], verdict="ERROR",
+                expected=False, error="no extractable source files",
+            )
+        return _evaluate(meta, files)
+    except Exception as e:
+        tb = traceback.format_exc()[:300]
+        return FixtureResult(
+            name=meta["name"], ecosystem=meta["ecosystem"],
+            version=meta["version"], label=meta["label"],
+            source=meta["source"], verdict="ERROR",
+            expected=False, error=f"{e}\n{tb}",
+        )
+
+
 def main():
     import argparse
+    import multiprocessing as mp
+
     ap = argparse.ArgumentParser()
     ap.add_argument(
         "--fixtures", default=str(DATA_DIR / "fixtures.json"),
@@ -712,6 +808,10 @@ def main():
     ap.add_argument(
         "--limit", type=int, default=0,
         help="N개만 평가 (0=전부)",
+    )
+    ap.add_argument(
+        "--workers", type=int, default=0,
+        help="병렬 worker 수 (0=cpu_count, 1=직렬)",
     )
     args = ap.parse_args()
 
@@ -728,53 +828,68 @@ def main():
     if args.limit:
         fixtures_meta = fixtures_meta[: args.limit]
 
+    n_workers = args.workers if args.workers > 0 else max(1, mp.cpu_count() - 1)
+
     print(f"Total fixtures: {len(fixtures_meta)}")
     print(f"  malicious: {sum(1 for f in fixtures_meta if f['label']=='malicious')}")
-    print(f"  benign   : {sum(1 for f in fixtures_meta if f['label']=='benign')}\n")
+    print(f"  benign   : {sum(1 for f in fixtures_meta if f['label']=='benign')}")
+    print(f"  workers  : {n_workers}\n")
 
     results: list[FixtureResult] = []
     t0 = time.time()
-    for i, meta in enumerate(fixtures_meta):
-        archive_path = DATA_DIR / meta["archive_path"]
-        try:
-            archive_bytes = archive_path.read_bytes()
-            files = extract_archive(
-                archive_bytes, meta["archive_format"], meta["label"],
-            )
-            if not files:
-                results.append(FixtureResult(
-                    name=meta["name"], ecosystem=meta["ecosystem"],
-                    version=meta["version"], label=meta["label"],
-                    source=meta["source"], verdict="ERROR",
-                    expected=False, error="no extractable source files",
-                ))
-                continue
-            r = _evaluate(meta, files)
-            results.append(r)
-        except Exception as e:
-            tb = traceback.format_exc()[:300]
-            results.append(FixtureResult(
-                name=meta["name"], ecosystem=meta["ecosystem"],
-                version=meta["version"], label=meta["label"],
-                source=meta["source"], verdict="ERROR",
-                expected=False, error=f"{e}\n{tb}",
-            ))
-        if (i + 1) % 10 == 0:
-            print(f"  ... {i+1}/{len(fixtures_meta)} processed", flush=True)
+    if n_workers == 1:
+        for i, meta in enumerate(fixtures_meta):
+            results.append(_process_one(meta))
+            if (i + 1) % 25 == 0:
+                print(f"  ... {i+1}/{len(fixtures_meta)} processed", flush=True)
+    else:
+        with mp.Pool(processes=n_workers) as pool:
+            for i, r in enumerate(
+                pool.imap_unordered(_process_one, fixtures_meta, chunksize=4)
+            ):
+                results.append(r)
+                if (i + 1) % 25 == 0:
+                    print(
+                        f"  ... {i+1}/{len(fixtures_meta)} processed "
+                        f"({(i+1)/(time.time()-t0):.1f}/s)",
+                        flush=True,
+                    )
 
     elapsed = time.time() - t0
     print()
-    _print_table(results)
+    # 500+ fixture 시 표가 너무 길어서 라벨별 5개씩만 sample 출력
+    n_total = len(results)
+    if n_total > 100:
+        print(f"(table sampling: {n_total} total, showing first 5 mal + 5 ben "
+              "+ failures)")
+        mal = [r for r in results if r.label == "malicious"]
+        ben = [r for r in results if r.label == "benign"]
+        failures = [r for r in results if not r.expected]
+        sample = mal[:5] + ben[:5] + failures[:30]
+        # 중복 제거
+        seen = set()
+        uniq = []
+        for r in sample:
+            key = (r.name, r.version)
+            if key in seen:
+                continue
+            seen.add(key)
+            uniq.append(r)
+        _print_table(uniq)
+    else:
+        _print_table(results)
     print()
 
     cm = _confusion(results)
     print("=== Confusion Matrix (overall) ===")
-    print(f"  TP: {cm['tp']:>3}   FN: {cm['fn']:>3}")
-    print(f"  FP: {cm['fp']:>3}   TN: {cm['tn']:>3}")
+    print(f"  TP: {cm['tp']:>4}   FN: {cm['fn']:>4}")
+    print(f"  FP: {cm['fp']:>4}   TN: {cm['tn']:>4}")
     print()
     print("=== Metrics ===")
-    print(f"  Precision : {cm['precision']:.4f}")
-    print(f"  Recall    : {cm['recall']:.4f}")
+    p_lo, p_hi = cm["precision_ci95"]
+    r_lo, r_hi = cm["recall_ci95"]
+    print(f"  Precision : {cm['precision']:.4f}  (95% CI [{p_lo:.3f}, {p_hi:.3f}])")
+    print(f"  Recall    : {cm['recall']:.4f}  (95% CI [{r_lo:.3f}, {r_hi:.3f}])")
     print(f"  F1        : {cm['f1']:.4f}")
     print(f"  Accuracy  : {cm['accuracy']:.4f}")
     print(f"  Elapsed   : {elapsed:.2f}s "
@@ -783,10 +898,12 @@ def main():
     print("\n=== Per-source breakdown ===")
     by_src = _confusion_by_source(results)
     for src, sm in by_src.items():
-        print(f"  [{src}] n={sm['n']:>3} "
-              f"TP={sm['tp']:>3} FN={sm['fn']:>3} "
-              f"FP={sm['fp']:>3} TN={sm['tn']:>3}  "
-              f"R={sm['recall']:.3f} P={sm['precision']:.3f} F1={sm['f1']:.3f}")
+        rl, rh = sm["recall_ci95"]
+        print(f"  [{src}] n={sm['n']:>4} "
+              f"TP={sm['tp']:>4} FN={sm['fn']:>4} "
+              f"FP={sm['fp']:>4} TN={sm['tn']:>4}  "
+              f"R={sm['recall']:.3f} (CI[{rl:.2f},{rh:.2f}]) "
+              f"P={sm['precision']:.3f} F1={sm['f1']:.3f}")
 
     # JSON 저장
     out_path = Path(args.json)

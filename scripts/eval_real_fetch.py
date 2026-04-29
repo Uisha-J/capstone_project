@@ -210,17 +210,57 @@ def fetch_datadog_npm_compromised(limit: int = 10, seed: int = 42) -> list[dict]
 # 학교 capstone 평가용 — 실제 광범위하게 신뢰되는 패키지들.
 # 이 명단은 대부분 OpenSSF Critical Project / Tidelift / 다운로드 상위 100 에 포함됨.
 PYPI_BENIGN = [
-    "requests", "urllib3", "setuptools", "pip", "wheel",
-    "flask", "django", "numpy", "pandas", "scipy",
-    "pytest", "pytest-cov", "click", "rich", "tqdm",
-    "pyyaml", "jinja2", "markupsafe", "werkzeug", "cryptography",
-    "sqlalchemy", "fastapi", "pydantic", "httpx", "aiohttp",
-    "boto3", "botocore", "pillow", "matplotlib", "lxml",
+    # 코어 / 표준
+    "requests", "urllib3", "setuptools", "pip", "wheel", "build",
+    "packaging", "certifi", "idna", "charset-normalizer",
+    # 웹 프레임워크
+    "flask", "django", "fastapi", "starlette", "uvicorn",
+    "werkzeug", "jinja2", "markupsafe", "itsdangerous", "blinker",
+    # 데이터 / 과학
+    "numpy", "pandas", "scipy", "matplotlib", "seaborn",
+    "scikit-learn", "scikit-image",
+    # 테스트 / 품질
+    "pytest", "pytest-cov", "pytest-xdist", "tox", "coverage",
+    "hypothesis", "mock", "freezegun",
+    # CLI / TUI
+    "click", "rich", "tqdm", "typer", "colorama",
+    "tabulate",
+    # 직렬화 / 검증
+    "pyyaml", "pydantic", "jsonschema", "msgpack", "orjson",
+    # DB / ORM
+    "sqlalchemy", "alembic", "redis",
+    # HTTP 클라이언트
+    "httpx", "aiohttp", "websockets",
+    # 보안 / 암호
+    "cryptography", "bcrypt", "passlib",
+    # 클라우드 / AWS
+    "boto3", "botocore", "s3transfer",
+    # 이미지 / 파일
+    "pillow", "lxml", "openpyxl",
+    # AI / ML
+    "openai", "anthropic", "tiktoken",
+    # 기타 인기
+    "beautifulsoup4", "selenium", "celery", "kombu", "amqp",
+    "structlog", "loguru", "tenacity", "more-itertools",
 ]
 
 NPM_BENIGN = [
-    "react", "lodash", "express", "axios", "vue",
-    "typescript", "webpack", "eslint", "prettier", "chalk",
+    # 프레임워크 / UI
+    "react", "react-dom", "vue", "angular", "svelte",
+    # 유틸리티
+    "lodash", "underscore", "ramda", "date-fns", "moment",
+    # HTTP / 네트워크
+    "axios", "node-fetch", "got", "ws",
+    # 빌드 / 도구
+    "typescript", "webpack", "rollup", "vite", "esbuild",
+    # 린팅 / 포맷
+    "eslint", "prettier", "stylelint",
+    # 서버 / 미들웨어
+    "express", "koa", "fastify",
+    # 색상 / CLI
+    "chalk", "commander", "yargs", "inquirer",
+    # 테스트
+    "jest", "mocha",
 ]
 
 
