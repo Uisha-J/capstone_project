@@ -1,7 +1,7 @@
 """사람 읽기 좋은 출력 / 표준 포맷 직렬화."""
 from __future__ import annotations
 
-from ..schema import AnalysisReport
+from ..schema import AnalysisReport, Verdict
 
 
 def format_cyclonedx(report: AnalysisReport) -> str:
@@ -15,7 +15,20 @@ def format_report(report: AnalysisReport) -> str:
     lines.append("=" * 70)
     lines.append(f"Package   : {report.package} {report.version} ({report.ecosystem.value})")
     lines.append(f"Analyzed  : {report.analyzed_at.isoformat()}")
-    lines.append(f"Verdict   : {report.verdict.value}")
+
+    # CLEAN + evidence ≥ 1: "(noisy)" 접미. 사용자가 verdict 만 보고
+    # 묻힌 약한 신호를 놓치지 않도록 명시. package_meta.clean_with_noise 도 set.
+    verdict_str = report.verdict.value
+    if (
+        report.verdict == Verdict.CLEAN
+        and report.evidence
+        and len(report.evidence) > 0
+    ):
+        verdict_str += f"  (noisy: {len(report.evidence)} weak evidence)"
+        if report.package_meta is not None:
+            report.package_meta.setdefault("clean_with_noise", True)
+
+    lines.append(f"Verdict   : {verdict_str}")
     lines.append("=" * 70)
 
     lines.append("\n[Stage Results]")

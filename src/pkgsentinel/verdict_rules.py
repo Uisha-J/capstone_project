@@ -50,6 +50,11 @@ MALICIOUS_CONFIDENCE_THRESHOLD = 0.85
 STRONG_MATCH_SIMILARITY = 0.85
 WEAK_MATCH_SIMILARITY = 0.70
 
+# LLM-only SUSPICIOUS 승격에 필요한 evidence quorum.
+# 단일 evidence 만으로 SUSPICIOUS 로 올리지 않고, confidence ≥ 0.5 인 의심
+# evidence 가 N 개 이상이어야 함. 대량 분석에서 false positive 누적 억제.
+LLM_SUSPICIOUS_QUORUM = 2
+
 
 # ─────────────────────── 판정 헬퍼 ───────────────────────
 
@@ -94,11 +99,24 @@ def _any_llm_malicious(evidence: Iterable[Evidence]) -> bool:
 
 
 def _any_llm_suspicious_or_worse(evidence: Iterable[Evidence]) -> bool:
-    """confidence 0.5 이상 의심도 있는 evidence만 고려."""
+    """confidence 0.5 이상 의심도 있는 evidence만 고려.
+
+    HIGH_RISK 분기에서는 1건만 있어도 의미 있음 (다른 강한 신호와 결합).
+    SUSPICIOUS 단독 승격에는 _llm_suspicious_count() 의 quorum 사용.
+    """
     return any(
         e.llm_verdict in (LLMVerdict.SUSPICIOUS, LLMVerdict.MALICIOUS)
         and e.confidence >= 0.5
         for e in evidence
+    )
+
+
+def _llm_suspicious_count(evidence: Iterable[Evidence]) -> int:
+    """confidence ≥ 0.5 의 의심 / 악성 evidence 개수."""
+    return sum(
+        1 for e in evidence
+        if e.llm_verdict in (LLMVerdict.SUSPICIOUS, LLMVerdict.MALICIOUS)
+        and e.confidence >= 0.5
     )
 
 
@@ -174,10 +192,12 @@ def decide_verdict(
         return Verdict.HIGH_RISK
 
     # SUSPICIOUS
+    # - TTP 매칭 또는 version_diff 가 있으면 단일 evidence 라도 발화 (강한 신호)
+    # - LLM-only 의심 단독 승격은 quorum 필요 (LLM_SUSPICIOUS_QUORUM)
     if (
         _has_any_ttp_match(evidence)
         or _any_version_diff(evidence)
-        or _any_llm_suspicious_or_worse(evidence)
+        or _llm_suspicious_count(evidence) >= LLM_SUSPICIOUS_QUORUM
     ):
         return Verdict.SUSPICIOUS
 

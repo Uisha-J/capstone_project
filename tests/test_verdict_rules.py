@@ -16,6 +16,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from datetime import UTC
+
 from pkgsentinel.schema import (
     AttackDimension,
     Evidence,
@@ -126,10 +128,14 @@ def test_suspicious_when_weak_ttp_match_with_non_benign_llm():
     assert decide_verdict([e], _all_passed_stages()) == Verdict.SUSPICIOUS
 
 
-def test_suspicious_when_llm_only_suspicious():
-    """TTP 매칭 약하지만 LLM 이 confidence 0.6 으로 SUSPICIOUS → SUSPICIOUS."""
+def test_llm_only_suspicious_with_ttp_match_promotes():
+    """TTP 매칭 (sim 0.72) + LLM=SUSPICIOUS confidence 0.6 → SUSPICIOUS.
+
+    LLM-only quorum (T-4) 의 영향을 받지 않는 경로 — TTP 매칭이 있으므로
+    _has_any_ttp_match 가 True 로 단독 발화. quorum 은 LLM-only 에만 적용.
+    """
     e = _make_evidence(
-        similarity=0.50,                  # weak (sim 0.70 미만)
+        similarity=0.72,                  # weak threshold (≥ 0.70)
         severity=Severity.LOW,
         llm_verdict=LLMVerdict.SUSPICIOUS,
         confidence=0.60,
@@ -194,3 +200,66 @@ def test_evidence_with_failed_required_stage_yields_error():
         StageResult(stage="stage_5_llm_review", success=True),
     ]
     assert decide_verdict([e], partial_fail) == Verdict.ERROR
+
+
+# ─────────────── 8. T-4 quorum 정책 ───────────────
+
+def test_quorum_single_llm_only_suspicious_does_not_promote():
+    """LLM-only SUSPICIOUS evidence 1건 + TTP weak (sim 0.50) → CLEAN.
+
+    quorum 미충족 (LLM_SUSPICIOUS_QUORUM=2). TTP 매칭 임계 (0.70) 미만이라
+    _has_any_ttp_match 도 False → SUSPICIOUS 분기 모든 조건 미충족.
+    """
+    e = _make_evidence(
+        similarity=0.50,           # weak (< WEAK_MATCH_SIMILARITY 0.70)
+        severity=Severity.LOW,
+        llm_verdict=LLMVerdict.SUSPICIOUS,
+        confidence=0.60,
+    )
+    assert decide_verdict([e], _all_passed_stages()) == Verdict.CLEAN
+
+
+def test_quorum_two_llm_only_suspicious_promotes():
+    """LLM-only SUSPICIOUS evidence 2건 (sim < 0.70) → SUSPICIOUS (quorum 충족)."""
+    e1 = _make_evidence(
+        similarity=0.50, severity=Severity.LOW,
+        llm_verdict=LLMVerdict.SUSPICIOUS, confidence=0.60,
+        file_path="a.py",
+    )
+    e2 = _make_evidence(
+        similarity=0.55, severity=Severity.LOW,
+        llm_verdict=LLMVerdict.SUSPICIOUS, confidence=0.65,
+        file_path="b.py",
+    )
+    assert decide_verdict([e1, e2], _all_passed_stages()) == Verdict.SUSPICIOUS
+
+
+# ─────────────── 9. T-5 CLEAN + evidence visualization ───────────────
+
+def test_clean_with_noise_marked_in_format_report():
+    """CLEAN verdict + evidence 1건 → format_report 에 (noisy) 표시 +
+    package_meta.clean_with_noise = True 설정.
+
+    weak TTP (sim 0.72, severity LOW, LLM=BENIGN) 1건은 CLEAN 으로 빠지지만
+    Evidence list 에는 들어 있음 — 운영자에게 "약신호 N건이 묻혔다" 를 노출.
+    """
+    from datetime import datetime, timezone
+
+    from pkgsentinel.reporting.formats import format_report
+    from pkgsentinel.schema import AnalysisReport, Ecosystem
+
+    weak = _make_evidence(
+        similarity=0.72, severity=Severity.LOW,
+        llm_verdict=LLMVerdict.BENIGN, confidence=0.40,
+    )
+    report = AnalysisReport(
+        package="x", ecosystem=Ecosystem.PYPI, version="1.0",
+        analyzed_at=datetime.now(UTC),
+        verdict=Verdict.CLEAN,
+        evidence=[weak],
+        stage_results=_all_passed_stages(),
+    )
+    out = format_report(report)
+    assert "noisy" in out, "expected '(noisy)' marker in CLEAN+evidence output"
+    assert "1 weak evidence" in out
+    assert report.package_meta.get("clean_with_noise") is True
