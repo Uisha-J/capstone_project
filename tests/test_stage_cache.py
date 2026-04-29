@@ -12,18 +12,19 @@ Stage-level 분석 캐시 테스트.
 from __future__ import annotations
 
 import os
+import sys
+from pathlib import Path
 
-import pytest
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+# 모듈 import 시점에 DB key 확보 — pytest fixture 없이도 동작.
+# (다른 tests/test_*.py 와 같은 패턴: 모듈 레벨 sys.path / env 셋업)
+if not os.environ.get("AISLOP_DB_KEY"):
+    os.environ["AISLOP_DB_KEY"] = "test-stage-cache-passphrase"
 
 from pkgsentinel.db.stage_cache import (
     StageCache, StageCacheKey, all_supported_stages, stage_version_for,
 )
-
-
-@pytest.fixture(scope="module", autouse=True)
-def _ensure_db_key():
-    if not os.environ.get("AISLOP_DB_KEY"):
-        os.environ["AISLOP_DB_KEY"] = "test-stage-cache-passphrase"
 
 
 def _key(pkg: str, stage: str) -> StageCacheKey:
