@@ -42,12 +42,11 @@ jobs:
       - name: Run tests
         env:
           AISLOP_DB_KEY: ci-test-passphrase-do-not-reuse
-        run: |
-          pytest -q --tb=short \
-                 --ignore=tests/test_synthetic_malicious.py \
-                 --ignore=tests/test_47_indicators.py
-        # 위 두 개는 def main() 형태의 데모 스크립트 — pytest collect 0 items.
-        # 별도 PR (T-2) 에서 examples/ 로 이동 또는 def test_*() 로 재작성 예정.
+        run: pytest -q --tb=short
+        # NOTE: 직전에 --ignore 했던 test_synthetic_malicious / test_47_indicators
+        # 두 파일은 def main() 형태의 데모 스크립트라 pytest collect 0 items 였음.
+        # T-2 처리로 examples/{synthetic_malicious_demo,indicator_47_demo}.py 로 이동.
+        # 동등 회귀는 scripts/eval_synthetic.py (cycle 11, 120 fixture, P=1 R=0.983) 가 담당.
 
   security-scan:
     name: dependency vulnerability scan

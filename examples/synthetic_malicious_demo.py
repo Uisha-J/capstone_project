@@ -1,8 +1,12 @@
 """
-합성 악성 샘플로 파이프라인 탐지 능력 확인.
+합성 악성 샘플로 파이프라인 탐지 능력 확인 데모 (예전 tests/test_synthetic_malicious.py).
 
-실제 레지스트리를 건너뛰고, 메모리상에 가짜 ExtractedPackage를 만들어
-Stage 2 → 4 → 5 → verdict 을 통과시킨다.
+본 파일은 def test_*() 함수가 없어 pytest collect 0 items 였음.
+실제 회귀 검증은 scripts/eval_synthetic.py (120 fixture, cycle 11) 가 담당.
+사람 확인용 단발 데모 / 학습용으로만 직접 실행.
+
+실행:
+    python examples/synthetic_malicious_demo.py
 """
 from __future__ import annotations
 
