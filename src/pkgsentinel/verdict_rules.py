@@ -6,13 +6,21 @@ Verdict 결정 규칙.
 - 패키지 나이 / 인기도 / 다운로드 수 일절 참조하지 않음.
 - 부분 판정 금지: Stage 2/4/5 중 하나라도 실패하면 ERROR.
 
+LLM 처리 정책:
+- **BENIGN LLM verdict 는 weak TTP 신호 (similarity 0.70~0.85, severity LOW)
+  를 덮어쓴다.** LLM 이 정상으로 본 약한 매칭은 SUSPICIOUS 로 승격되지 않는다.
+- 강한 매칭 (similarity ≥ 0.85, severity ≠ LOW) 은 LLM verdict 와 무관하게
+  HIGH_RISK / MALICIOUS 분기로 진입.
+
 판정 규칙 테이블 (설계 문서 3장과 일치)
 
     MALICIOUS    : high-severity TTP ≥ 1 AND LLM malicious AND avg confidence ≥ 0.85
     HIGH_RISK    : (TTP match ≥ 1 OR version_diff critical)
                        AND LLM in {suspicious, malicious}
-    SUSPICIOUS   : weak TTP match OR version_diff any OR LLM-only suspicious
+    SUSPICIOUS   : weak TTP match (LLM ≠ BENIGN) OR version_diff any
+                       OR LLM-only suspicious (confidence ≥ 0.5)
     CLEAN        : all stages passed AND evidence list empty
+                       OR weak TTP + LLM=BENIGN (BENIGN overrides)
     ERROR        : Stage 2/4/5 중 하나 이상 실패
     CANNOT_ANALYZE : Stage 0에서 레지스트리 미등록 확정
 """
@@ -178,99 +186,6 @@ def decide_verdict(
     return Verdict.CLEAN
 
 
-# ─────────────────────── 자체 테스트 ───────────────────────
-
-if __name__ == "__main__":
-    # 간단한 sanity check
-    from datetime import datetime, timezone
-    from .schema import (
-        Evidence,
-        AttackDimension,
-        TTPSource,
-        LLMVerdict,
-        Severity,
-        VersionDiffInfo,
-    )
-
-    # 미등록
-    assert decide_verdict([], [], registry_found=False) == Verdict.CANNOT_ANALYZE
-
-    # 필수 스테이지 성공 + 빈 Evidence → CLEAN
-    all_passed = [
-        StageResult(stage=s, success=True)
-        for s in REQUIRED_STAGES_FOR_JUDGMENT
-    ]
-    assert decide_verdict([], all_passed) == Verdict.CLEAN
-
-    # 필수 스테이지 실패 → ERROR
-    partial_fail = [
-        StageResult(stage="stage_2_behavior_sequence", success=False, error="AST parse failed"),
-        StageResult(stage="stage_4_ttp_matching", success=True),
-        StageResult(stage="stage_5_llm_review", success=True),
-    ]
-    assert decide_verdict([], partial_fail) == Verdict.ERROR
-
-    # MALICIOUS 케이스
-    bad = Evidence(
-        file_path="setup.py",
-        line_start=10,
-        line_end=12,
-        code_snippet="exec(base64.b64decode(...))",
-        behavior_sequence=["base64.b64decode", "exec"],
-        attack_dimensions=[AttackDimension.ENCODING, AttackDimension.PAYLOAD_EXECUTION],
-        ttp_id="T1027",
-        ttp_name="Obfuscated Files or Information",
-        ttp_source=TTPSource.MITRE_ATTACK,
-        ttp_url="https://attack.mitre.org/techniques/T1027/",
-        vector_similarity=0.93,
-        ttp_severity=Severity.HIGH,
-        llm_verdict=LLMVerdict.MALICIOUS,
-        llm_reasoning="난독화 페이로드 설치 시점 실행",
-        llm_model="claude-sonnet-4-5",
-        confidence=0.90,
-    )
-    assert decide_verdict([bad], all_passed) == Verdict.MALICIOUS
-
-    # HIGH_RISK 케이스 (심각도 MEDIUM, LLM suspicious)
-    mid = Evidence(
-        file_path="__init__.py",
-        line_start=5,
-        line_end=5,
-        code_snippet="requests.post(...)",
-        behavior_sequence=["requests.post"],
-        attack_dimensions=[AttackDimension.DATA_TRANSMISSION],
-        ttp_id="T1048",
-        ttp_name="Exfiltration Over Alternative Protocol",
-        ttp_source=TTPSource.MITRE_ATTACK,
-        ttp_url="https://attack.mitre.org/techniques/T1048/",
-        vector_similarity=0.88,
-        ttp_severity=Severity.MEDIUM,
-        llm_verdict=LLMVerdict.SUSPICIOUS,
-        llm_reasoning="환경변수 직송 가능성",
-        llm_model="claude-sonnet-4-5",
-        confidence=0.70,
-    )
-    assert decide_verdict([mid], all_passed) == Verdict.HIGH_RISK
-
-    # SUSPICIOUS 케이스 (약한 매칭만)
-    weak = Evidence(
-        file_path="utils.py",
-        line_start=20,
-        line_end=20,
-        code_snippet="os.environ.get('FOO')",
-        behavior_sequence=["os.environ.get"],
-        attack_dimensions=[AttackDimension.INFORMATION_READING],
-        ttp_id="T1082",
-        ttp_name="System Information Discovery",
-        ttp_source=TTPSource.MITRE_ATTACK,
-        ttp_url="https://attack.mitre.org/techniques/T1082/",
-        vector_similarity=0.72,
-        ttp_severity=Severity.LOW,
-        llm_verdict=LLMVerdict.BENIGN,
-        llm_reasoning="설정 조회로 보임",
-        llm_model="claude-sonnet-4-5",
-        confidence=0.40,
-    )
-    assert decide_verdict([weak], all_passed) == Verdict.SUSPICIOUS
+# 자체 테스트 (sanity check) 는 tests/test_verdict_rules.py 로 이관됨.
 
     print("✅ verdict_rules sanity checks passed.")
