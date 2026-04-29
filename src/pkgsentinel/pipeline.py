@@ -108,6 +108,8 @@ from .evidence.converters import (
 from .reporting.formats import format_cyclonedx, format_report
 from .reporting.serialize import report_to_serializable as _report_to_serializable
 
+from ._pipeline_state import PipelineContext, PipelineOptions
+
 
 
 # ─────────────── 메인 ───────────────
@@ -126,38 +128,56 @@ def run_pipeline(
     force_rescan: bool = False,
     use_threat_filter: bool = True,
 ) -> AnalysisReport:
-    stage_results: list[StageResult] = []
-    evidence_list: list[Evidence] = []
+    # 옵션과 컨텍스트 구성. run_pipeline 본문은 ctx 를 통해 누적 결과
+    # (stage_results, evidence) 와 단계간 흐르는 산출물 (ext, behavior, diff,
+    # description) 을 공유한다.
+    options = PipelineOptions(
+        llm_mode=llm_mode,
+        enable_deps=enable_deps,
+        enable_sandbox=enable_sandbox,
+        verbose=verbose,
+        use_multi_agent=use_multi_agent,
+        integrity_mode=integrity_mode,
+        use_cache=use_cache,
+        force_rescan=force_rescan,
+        use_threat_filter=use_threat_filter,
+    )
+    ctx = PipelineContext(
+        package=package,
+        ecosystem=ecosystem,
+        version=version,
+        options=options,
+    )
 
     # ─── 무결성 모드 정규화 ───
     try:
-        _integrity_mode = IntegrityMode(integrity_mode)
+        _integrity_mode = IntegrityMode(ctx.options.integrity_mode)
     except ValueError:
         _integrity_mode = IntegrityMode.STRICT
 
     # ========== Stage 0: 레지스트리 ==========
     try:
         reg = check(package, ecosystem)
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_0_registry",
             success=reg.error is None,
             error=reg.error,
             payload={"found": reg.found},
         ))
     except Exception as e:
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_0_registry", success=False,
             error=f"{e}\n{traceback.format_exc()}",
         ))
         report = empty_report(package, ecosystem, version or "unknown")
         report.verdict = Verdict.ERROR
-        report.stage_results = stage_results
+        report.stage_results = ctx.stage_results
         return report
 
     if not reg.found:
         report = empty_report(package, ecosystem, version or "unknown")
         report.verdict = Verdict.CANNOT_ANALYZE
-        report.stage_results = stage_results
+        report.stage_results = ctx.stage_results
         report.package_meta = {"reason": "registry_not_found"}
         return report
 
@@ -165,10 +185,10 @@ def run_pipeline(
     # 암호화 DB 의 known_malicious / popular / typosquat 매칭.
     # exact match 발견 시 즉시 MALICIOUS verdict 로 단축.
     threat_filter_rpt: ThreatFilterReport | None = None
-    if use_threat_filter:
+    if ctx.options.use_threat_filter:
         try:
             threat_filter_rpt = threat_filter_run(package, ecosystem)
-            stage_results.append(StageResult(
+            ctx.stage_results.append(StageResult(
                 stage="stage_0a_threat_filter",
                 success=not threat_filter_rpt.skipped,
                 error=threat_filter_rpt.error,
@@ -181,13 +201,13 @@ def run_pipeline(
             ))
             if threat_filter_rpt.is_known_malicious:
                 # 게이트: 알려진 악성 → 즉시 종료
-                evidence_list.extend(threat_filter_to_evidence(
+                ctx.evidence.extend(threat_filter_to_evidence(
                     threat_filter_rpt, package, ecosystem.value,
                 ))
                 report = empty_report(package, ecosystem, version or reg.latest_version or "unknown")
                 report.verdict = Verdict.MALICIOUS
-                report.evidence = evidence_list
-                report.stage_results = stage_results
+                report.evidence = ctx.evidence
+                report.stage_results = ctx.stage_results
                 report.package_meta = {
                     "shortcircuit_reason": "known_malicious_in_threat_feed",
                     "advisory_id": threat_filter_rpt.advisory_id,
@@ -196,18 +216,18 @@ def run_pipeline(
                 return report
             # 게이트는 아니지만 typosquat 후보 있으면 evidence 만 추가
             if threat_filter_rpt.typosquat_candidates:
-                evidence_list.extend(threat_filter_to_evidence(
+                ctx.evidence.extend(threat_filter_to_evidence(
                     threat_filter_rpt, package, ecosystem.value,
                 ))
         except Exception as e:
-            stage_results.append(StageResult(
+            ctx.stage_results.append(StageResult(
                 stage="stage_0a_threat_filter", success=False, error=str(e),
             ))
 
     # ========== Stage 0B: 공격 이력 ==========
     try:
         hist = check_attack_history(package, ecosystem)
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_0b_attack_history",
             success=hist.error is None,
             error=hist.error,
@@ -217,9 +237,9 @@ def run_pipeline(
             },
         ))
         if hist.any_hit:
-            evidence_list.extend(attack_history_to_evidence(hist))
+            ctx.evidence.extend(attack_history_to_evidence(hist))
     except Exception as e:
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_0b_attack_history", success=False, error=str(e),
         ))
 
@@ -228,7 +248,7 @@ def run_pipeline(
     scorecard_report: ScorecardReport | None = None
     try:
         scorecard_report = scorecard_fetch_for_package(reg.raw_metadata, ecosystem)
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_0c_scorecard",
             success=scorecard_report.available,
             error=scorecard_report.error,
@@ -239,7 +259,7 @@ def run_pipeline(
             },
         ))
     except Exception as e:
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_0c_scorecard", success=False, error=str(e),
         ))
 
@@ -247,7 +267,7 @@ def run_pipeline(
     slsa_report: SLSAReport | None = None
     try:
         slsa_report = slsa_evaluate(reg.raw_metadata, ecosystem)
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_0d_slsa",
             success=slsa_report.error is None,
             error=slsa_report.error,
@@ -258,27 +278,27 @@ def run_pipeline(
             },
         ))
     except Exception as e:
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_0d_slsa", success=False, error=str(e),
         ))
 
     target_version = version or reg.latest_version or ""
     archive_url = reg.archive_urls.get(target_version, "")
     if not archive_url:
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_1b_full_source",
             success=False,
             error=f"no archive url for {target_version}",
         ))
         report = empty_report(package, ecosystem, target_version)
-        report.verdict = decide_verdict(evidence_list, stage_results, registry_found=True)
-        report.stage_results = stage_results
-        report.evidence = evidence_list
+        report.verdict = decide_verdict(ctx.evidence, ctx.stage_results, registry_found=True)
+        report.stage_results = ctx.stage_results
+        report.evidence = ctx.evidence
         return report
 
     # ========== Stage 0E: 캐시 조회 (6-트리거 무효화) ==========
     cache_meta: dict = {}
-    if use_cache and not force_rescan:
+    if ctx.options.use_cache and not ctx.options.force_rescan:
         try:
             from .db.analysis_cache import AnalysisCache, CacheKey
             _cache = AnalysisCache(integrity_mode=_integrity_mode)
@@ -294,7 +314,7 @@ def run_pipeline(
                 "reason": hit.reason,
                 "integrity_mode": _integrity_mode.value,
             }
-            stage_results.append(StageResult(
+            ctx.stage_results.append(StageResult(
                 stage="stage_0e_cache_lookup",
                 success=True,
                 payload=cache_meta,
@@ -308,7 +328,7 @@ def run_pipeline(
                 except Exception:
                     report.verdict = Verdict.ERROR
                 report.evidence = []
-                report.stage_results = stage_results
+                report.stage_results = ctx.stage_results
                 report.package_meta = hit.report.get("package_meta", {}) or {}
                 report.package_meta["cache_hit"] = True
                 report.package_meta["cached_at"] = (
@@ -319,35 +339,35 @@ def run_pipeline(
                 )
                 return report
         except Exception as e:
-            stage_results.append(StageResult(
+            ctx.stage_results.append(StageResult(
                 stage="stage_0e_cache_lookup", success=False, error=str(e),
             ))
 
     # ========== Stage 1B: 전 파일 소스 추출 ==========
     try:
-        ext = extract_all(package, ecosystem, target_version, archive_url)
-        ok = ext.error is None
-        stage_results.append(StageResult(
+        ctx.ext = extract_all(package, ecosystem, target_version, archive_url)
+        ok = ctx.ext.error is None
+        ctx.stage_results.append(StageResult(
             stage="stage_1b_full_source",
             success=ok,
-            error=ext.error,
+            error=ctx.ext.error,
             payload={
-                "archive_size": ext.archive_size,
-                "source_files": len(ext.source_files),
-                "binary_files": len(ext.binary_files),
-                "total_files": len(ext.all_file_names),
+                "archive_size": ctx.ext.archive_size,
+                "source_files": len(ctx.ext.source_files),
+                "binary_files": len(ctx.ext.binary_files),
+                "total_files": len(ctx.ext.all_file_names),
             },
         ))
         if not ok:
-            raise RuntimeError(ext.error)
+            raise RuntimeError(ctx.ext.error)
     except Exception as e:
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_1b_full_source", success=False, error=str(e),
         ))
         report = empty_report(package, ecosystem, target_version)
         report.verdict = Verdict.ERROR
-        report.stage_results = stage_results
-        report.evidence = evidence_list
+        report.stage_results = ctx.stage_results
+        report.evidence = ctx.evidence
         return report
 
     # ========== Stage 1C: AISLOPSQ Agentic Classification ==========
@@ -357,16 +377,16 @@ def run_pipeline(
     #   - agentic + MALICIOUS / HIGH_RISK / SUSPICIOUS / AGENTIC → 본 stage 결과로 단축
     agentic_result: StageAgenticResult | None = None
     try:
-        # 1B 단계의 description / declared deps
+        # 1B 단계의 ctx.description / declared deps
         _description = ""
         if reg.raw_metadata:
             info = reg.raw_metadata.get("info", {}) or {}
             _description = info.get("summary", "") or (
-                info.get("description") or ""
+                info.get("ctx.description") or ""
             )[:300]
         try:
             from .stages.stage_dependency import extract_dependencies
-            _dep_ext = extract_dependencies(ext.source_files, ecosystem)
+            _dep_ext = extract_dependencies(ctx.ext.source_files, ecosystem)
             _declared_deps_for_agt = [d.name for d in _dep_ext.direct_deps]
         except Exception:
             _declared_deps_for_agt = []
@@ -375,11 +395,11 @@ def run_pipeline(
             package_name=package,
             description=_description,
             declared_deps=_declared_deps_for_agt,
-            source_files=ext.source_files,
+            source_files=ctx.ext.source_files,
             ecosystem=ecosystem,
         )
         cls = agentic_result.classification
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_1c_aislopsq",
             success=True,
             payload={
@@ -398,24 +418,24 @@ def run_pipeline(
         if (agentic_result.triggered
                 and agentic_result.verdict in (Verdict.MALICIOUS,
                                                Verdict.HIGH_RISK)):
-            evidence_list.extend(agentic_result.evidence)
+            ctx.evidence.extend(agentic_result.evidence)
             report = empty_report(package, ecosystem, target_version)
             report.verdict = agentic_result.verdict
-            report.evidence = evidence_list
-            report.stage_results = stage_results
+            report.evidence = ctx.evidence
+            report.stage_results = ctx.stage_results
             report.package_meta = dict(agentic_result.package_meta)
             return report
         # SUSPICIOUS / AGENTIC: evidence 만 보강하고 후속 stage 도 진행
         if agentic_result.triggered:
-            evidence_list.extend(agentic_result.evidence)
+            ctx.evidence.extend(agentic_result.evidence)
     except Exception as e:
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_1c_aislopsq", success=False,
             error=f"{e}\n{traceback.format_exc()[:300]}",
         ))
 
     # 분석할 EntryFile 리스트 (메타데이터 제외)
-    analysis_files = to_entry_files(ext)
+    analysis_files = to_entry_files(ctx.ext)
 
     # ExtractedPackage-like 객체 (Stage 2 analyze_behavior 는 entry_files 만 쓴다)
     class _ExtLike:
@@ -428,107 +448,107 @@ def run_pipeline(
 
     # ========== Stage 2: Behavior Sequence ==========
     try:
-        behavior = analyze_behavior(ext_for_behavior)
-        stage_results.append(StageResult(
+        ctx.behavior = analyze_behavior(ext_for_behavior)
+        ctx.stage_results.append(StageResult(
             stage="stage_2_behavior_sequence",
             success=True,
             payload={
-                "files_analyzed": len(behavior.files),
-                "files_with_calls": sum(1 for fs in behavior.files if fs.calls),
-                "total_calls": len(behavior.all_calls()),
+                "files_analyzed": len(ctx.behavior.files),
+                "files_with_calls": sum(1 for fs in ctx.behavior.files if fs.calls),
+                "total_calls": len(ctx.behavior.all_calls()),
             },
         ))
     except Exception as e:
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_2_behavior_sequence", success=False,
             error=f"{e}\n{traceback.format_exc()}",
         ))
         report = empty_report(package, ecosystem, target_version)
         report.verdict = Verdict.ERROR
-        report.stage_results = stage_results
-        report.evidence = evidence_list
+        report.stage_results = ctx.stage_results
+        report.evidence = ctx.evidence
         return report
 
     # ========== Stage 2B: 문자열 상수 풀 ==========
     try:
         total_strs = 0
-        for sf in ext.source_files:
+        for sf in ctx.ext.source_files:
             if sf.language not in ("python", "javascript"):
                 continue
             strs = analyze_strings(sf.path, sf.content, sf.language)
             if strs:
                 total_strs += len(strs)
-                evidence_list.extend(_sstr_to_evidence(sf.path, strs))
-        stage_results.append(StageResult(
+                ctx.evidence.extend(_sstr_to_evidence(sf.path, strs))
+        ctx.stage_results.append(StageResult(
             stage="stage_2b_string_analysis",
             success=True,
             payload={"suspicious_strings": total_strs},
         ))
     except Exception as e:
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_2b_string_analysis", success=False, error=str(e),
         ))
 
-    # ========== Stage 3B: 버전 diff ==========
-    diff = None
+    # ========== Stage 3B: 버전 ctx.diff ==========
+    ctx.diff = None
     try:
-        diff = analyze_full_diff(reg, ext, behavior)
-        stage_results.append(StageResult(
+        ctx.diff = analyze_full_diff(reg, ctx.ext, ctx.behavior)
+        ctx.stage_results.append(StageResult(
             stage="stage_3b_version_diff",
-            success=diff.error is None,
-            error=diff.error,
+            success=ctx.diff.error is None,
+            error=ctx.diff.error,
             payload={
-                "compared": diff.compared_versions,
-                "changed_files": len(diff.file_diffs),
-                "severity": diff.overall_severity.value,
+                "compared": ctx.diff.compared_versions,
+                "changed_files": len(ctx.diff.file_diffs),
+                "severity": ctx.diff.overall_severity.value,
             },
         ))
     except Exception as e:
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_3b_version_diff", success=False, error=str(e),
         ))
 
     # ========== Stage 4: TTP 매칭 ==========
     try:
-        match_report = match_ttps(behavior, top_k=3)
-        stage_results.append(StageResult(
+        match_report = match_ttps(ctx.behavior, top_k=3)
+        ctx.stage_results.append(StageResult(
             stage="stage_4_ttp_matching",
             success=True,
             payload={"matches": len(match_report.matches)},
         ))
     except Exception as e:
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_4_ttp_matching", success=False,
             error=f"{e}\n{traceback.format_exc()}",
         ))
         report = empty_report(package, ecosystem, target_version)
         report.verdict = Verdict.ERROR
-        report.stage_results = stage_results
-        report.evidence = evidence_list
+        report.stage_results = ctx.stage_results
+        report.evidence = ctx.evidence
         return report
 
     # ========== Stage 4B: 이상 탐지 ==========
     try:
         from .knowledge.anomaly_baseline import detect_anomalies
-        description = ""
+        ctx.description = ""
         author = ""
         if reg.raw_metadata:
             info = reg.raw_metadata.get("info", {}) or {}
-            description = info.get("summary", "") or info.get("description", "")[:200]
+            ctx.description = info.get("summary", "") or info.get("ctx.description", "")[:200]
             author = info.get("author") or info.get("author_email") or ""
-        findings = detect_anomalies(package, description, behavior.files)
+        findings = detect_anomalies(package, ctx.description, ctx.behavior.files)
         for f in findings:
-            evidence_list.append(_anomaly_to_evidence(f))
-        stage_results.append(StageResult(
+            ctx.evidence.append(_anomaly_to_evidence(f))
+        ctx.stage_results.append(StageResult(
             stage="stage_4b_anomaly_detection",
             success=True,
             payload={"anomalies": len(findings)},
         ))
     except Exception as e:
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_4b_anomaly_detection", success=False, error=str(e),
         ))
-        description = ""
+        ctx.description = ""
         author = ""
 
     # ========== Stage 4C: 47-Indicator 매처 (논문 2025) ==========
@@ -537,24 +557,24 @@ def run_pipeline(
         declared_deps: list[str] = []
         try:
             from .stages.stage_dependency import extract_dependencies
-            dep_ext = extract_dependencies(ext.source_files, ecosystem)
+            dep_ext = extract_dependencies(ctx.ext.source_files, ecosystem)
             declared_deps = [d.name for d in dep_ext.direct_deps]
         except Exception:
             pass
 
         ind_report = match_47_indicators(
-            behavior_files=behavior.files,
-            source_files=ext.source_files,
+            behavior_files=ctx.behavior.files,
+            source_files=ctx.ext.source_files,
             package_name=package,
-            description=description,
+            description=ctx.description,
             author=author,
             declared_deps=declared_deps,
         )
         # 모든 매칭된 지표 코드 집합 (조합 escalation 판단용)
         codes_present = {h.indicator.code for h in ind_report.hits}
         for h in ind_report.hits:
-            evidence_list.append(_indicator_hit_to_evidence(h, codes_present))
-        stage_results.append(StageResult(
+            ctx.evidence.append(_indicator_hit_to_evidence(h, codes_present))
+        ctx.stage_results.append(StageResult(
             stage="stage_4c_indicator_matcher",
             success=True,
             payload={
@@ -564,17 +584,17 @@ def run_pipeline(
             },
         ))
     except Exception as e:
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_4c_indicator_matcher", success=False,
             error=f"{e}\n{traceback.format_exc()}",
         ))
 
     # ========== Stage 4E: Sequential Pattern Mining ==========
     try:
-        seq_rpt = mine_sequences(behavior)
+        seq_rpt = mine_sequences(ctx.behavior)
         for m in seq_rpt.matches:
-            evidence_list.append(_sequence_match_to_evidence(m))
-        stage_results.append(StageResult(
+            ctx.evidence.append(_sequence_match_to_evidence(m))
+        ctx.stage_results.append(StageResult(
             stage="stage_4e_sequence_mining",
             success=seq_rpt.error is None,
             error=seq_rpt.error,
@@ -584,7 +604,7 @@ def run_pipeline(
             },
         ))
     except Exception as e:
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_4e_sequence_mining", success=False,
             error=f"{e}\n{traceback.format_exc()}",
         ))
@@ -595,14 +615,14 @@ def run_pipeline(
     taint_slice_by_path: dict[str, str] = {}
     taint_total_flows = 0
     try:
-        for sf in ext.source_files:
+        for sf in ctx.ext.source_files:
             if sf.language != "python":
                 continue  # JS 는 차후 (tree-sitter 기반)
             rpt = taint_analyze_python(sf.content)
             if rpt.flows:
                 taint_total_flows += len(rpt.flows)
                 taint_slice_by_path[sf.path] = taint_slice_for_llm(sf.content, rpt.flows)
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_4d_taint_slicing",
             success=True,
             payload={
@@ -611,7 +631,7 @@ def run_pipeline(
             },
         ))
     except Exception as e:
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_4d_taint_slicing", success=False,
             error=f"{e}\n{traceback.format_exc()}",
         ))
@@ -622,15 +642,15 @@ def run_pipeline(
         # Stage 5 에서 사용할 의존성 / new_apis 사전 추출
         try:
             from .stages.stage_dependency import extract_dependencies
-            _dep_ext = extract_dependencies(ext.source_files, ecosystem)
+            _dep_ext = extract_dependencies(ctx.ext.source_files, ecosystem)
             stage5_declared_deps = [d.name for d in _dep_ext.direct_deps]
         except Exception:
             stage5_declared_deps = []
 
-        # 새 API 호출(diff 신규 추가) 수집
+        # 새 API 호출(ctx.diff 신규 추가) 수집
         new_apis_all: list[str] = []
-        if diff and diff.file_diffs:
-            for fd in diff.file_diffs:
+        if ctx.diff and ctx.diff.file_diffs:
+            for fd in ctx.diff.file_diffs:
                 # 일부 구현엔 added_calls / new_apis 가 있음 — 안전하게 fallback
                 for attr in ("added_calls", "new_apis", "added_apis"):
                     val = getattr(fd, attr, None)
@@ -639,29 +659,29 @@ def run_pipeline(
                             new_apis_all.append(str(v))
 
         for m in match_report.matches:
-            fs = _find_file_seq(behavior, m.file_path)
+            fs = _find_file_seq(ctx.behavior, m.file_path)
             if fs is None:
                 continue
             snippet = _snippet_for(fs)
             diff_summary = None
-            if diff and diff.file_diffs:
+            if ctx.diff and ctx.diff.file_diffs:
                 diff_summary = (
-                    f"{len(diff.file_diffs)} file(s) changed, "
-                    f"severity {diff.overall_severity.value}"
+                    f"{len(ctx.diff.file_diffs)} file(s) changed, "
+                    f"severity {ctx.diff.overall_severity.value}"
                 )
             taint_slice = taint_slice_by_path.get(fs.path)
 
-            if use_multi_agent:
+            if ctx.options.use_multi_agent:
                 consensus_rpt = review_multi(
                     package, target_version, ecosystem.value,
                     fs, match_report.matches,
                     code_snippet=snippet,
                     version_diff_summary=diff_summary,
                     new_apis=new_apis_all,
-                    description=description,
+                    description=ctx.description,
                     declared_deps=stage5_declared_deps,
                     taint_slice=taint_slice,
-                    mode=llm_mode,
+                    mode=ctx.options.llm_mode,
                 )
                 multi_agent_consensus_per_file[fs.path] = consensus_rpt
                 llm = consensus_to_llm_response(consensus_rpt)
@@ -670,13 +690,13 @@ def run_pipeline(
                     package, target_version, ecosystem.value,
                     fs, match_report.matches, snippet,
                     version_diff_summary=diff_summary,
-                    mode=llm_mode,
+                    mode=ctx.options.llm_mode,
                     taint_slice=taint_slice,
                 )
             line_start = fs.calls[0].line if fs.calls else 0
             line_end = fs.calls[-1].line if fs.calls else 0
-            vd_info = diff.to_version_diff_info() if diff else None
-            evidence_list.append(Evidence(
+            vd_info = ctx.diff.to_version_diff_info() if ctx.diff else None
+            ctx.evidence.append(Evidence(
                 file_path=fs.path,
                 line_start=line_start,
                 line_end=line_end,
@@ -697,7 +717,7 @@ def run_pipeline(
             ))
         # 멀티 에이전트 통계
         ma_payload: dict = {}
-        if use_multi_agent and multi_agent_consensus_per_file:
+        if ctx.options.use_multi_agent and multi_agent_consensus_per_file:
             agreements = [
                 c.agreement_ratio for c in multi_agent_consensus_per_file.values()
             ]
@@ -710,31 +730,31 @@ def run_pipeline(
                 "avg_agreement": round(sum(agreements) / len(agreements), 3),
                 "verdicts": verdicts,
             }
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_5_llm_review",
             success=True,
             payload={
-                "evidence_generated": len(evidence_list),
-                "mode": llm_mode,
+                "evidence_generated": len(ctx.evidence),
+                "mode": ctx.options.llm_mode,
                 **ma_payload,
             },
         ))
     except Exception as e:
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_5_llm_review", success=False,
             error=f"{e}\n{traceback.format_exc()}",
         ))
         report = empty_report(package, ecosystem, target_version)
         report.verdict = Verdict.ERROR
-        report.stage_results = stage_results
-        report.evidence = evidence_list
+        report.stage_results = ctx.stage_results
+        report.evidence = ctx.evidence
         return report
 
     # ========== Stage 6: 의존성 재귀 (옵션) ==========
-    if enable_deps:
+    if ctx.options.enable_deps:
         try:
             from .stages.stage_dependency import extract_dependencies, analyze_dependencies
-            dep_ext = extract_dependencies(ext.source_files, ecosystem)
+            dep_ext = extract_dependencies(ctx.ext.source_files, ecosystem)
             dep_results = analyze_dependencies(
                 dep_ext, ecosystem, attack_history_only=True, max_packages=30,
             )
@@ -742,9 +762,9 @@ def run_pipeline(
             for dr in dep_results:
                 ev = _dependency_to_evidence(dr)
                 if ev:
-                    evidence_list.append(ev)
+                    ctx.evidence.append(ev)
                     hit_count += 1
-            stage_results.append(StageResult(
+            ctx.stage_results.append(StageResult(
                 stage="stage_6_dependencies",
                 success=True,
                 payload={
@@ -755,12 +775,12 @@ def run_pipeline(
                 },
             ))
         except Exception as e:
-            stage_results.append(StageResult(
+            ctx.stage_results.append(StageResult(
                 stage="stage_6_dependencies", success=False, error=str(e),
             ))
 
     # ========== Stage 7: 바이너리 ==========
-    if ext.binary_files:
+    if ctx.ext.binary_files:
         try:
             import urllib.request
             from .stages.stage_binary import extract_and_analyze
@@ -771,14 +791,14 @@ def run_pipeline(
             with urllib.request.urlopen(req, timeout=60) as resp:
                 archive_bytes = resp.read()
             bin_findings = extract_and_analyze(
-                archive_bytes, ext.binary_files, archive_url,
+                archive_bytes, ctx.ext.binary_files, archive_url,
             )
             hit_count = 0
             for bf in bin_findings:
                 if bf.has_findings:
-                    evidence_list.append(_binary_to_evidence(bf))
+                    ctx.evidence.append(_binary_to_evidence(bf))
                     hit_count += 1
-            stage_results.append(StageResult(
+            ctx.stage_results.append(StageResult(
                 stage="stage_7_binary",
                 success=True,
                 payload={
@@ -787,25 +807,25 @@ def run_pipeline(
                 },
             ))
         except Exception as e:
-            stage_results.append(StageResult(
+            ctx.stage_results.append(StageResult(
                 stage="stage_7_binary", success=False, error=str(e),
             ))
     else:
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_7_binary",
             success=True,
             payload={"binaries": 0, "skipped": "no binary files"},
         ))
 
     # ========== Stage 8: 샌드박스 (옵션) ==========
-    if enable_sandbox:
+    if ctx.options.enable_sandbox:
         try:
             from .stages.stage_sandbox import get_default_sandbox
             sb = get_default_sandbox()
             obs = sb.run(package, ecosystem, target_version)
             if obs.has_findings:
-                evidence_list.append(_sandbox_to_evidence(obs))
-            stage_results.append(StageResult(
+                ctx.evidence.append(_sandbox_to_evidence(obs))
+            ctx.stage_results.append(StageResult(
                 stage="stage_8_sandbox",
                 success=True,
                 payload={
@@ -815,23 +835,23 @@ def run_pipeline(
                 },
             ))
         except Exception as e:
-            stage_results.append(StageResult(
+            ctx.stage_results.append(StageResult(
                 stage="stage_8_sandbox", success=False, error=str(e),
             ))
 
     # ========== Stage 9: Verdict + 리포트 ==========
-    verdict = decide_verdict(evidence_list, stage_results, registry_found=True)
+    verdict = decide_verdict(ctx.evidence, ctx.stage_results, registry_found=True)
 
     report = empty_report(package, ecosystem, target_version)
     report.verdict = verdict
-    report.evidence = evidence_list
-    report.stage_results = stage_results
+    report.evidence = ctx.evidence
+    report.stage_results = ctx.stage_results
     report.package_meta = {
         "latest_version": reg.latest_version,
         "version_count": len(reg.all_versions) if reg.all_versions else 0,
-        "archive_size": ext.archive_size,
-        "source_files": len(ext.source_files),
-        "binary_files": len(ext.binary_files),
+        "archive_size": ctx.ext.archive_size,
+        "source_files": len(ctx.ext.source_files),
+        "binary_files": len(ctx.ext.binary_files),
     }
     # AISLOPSQ agentic classification (판정 영향 — Step 1C 단계에서 이미 처리됨)
     if agentic_result is not None and agentic_result.classification is not None:
@@ -875,9 +895,9 @@ def run_pipeline(
     # NIST SSDF 준수 체크 (참고 정보)
     try:
         # 파이프라인 전반의 source_paths 모음
-        all_source_paths = [sf.path for sf in ext.source_files]
+        all_source_paths = [sf.path for sf in ctx.ext.source_files]
         # binary file 도 포함하면 SBOM 검출 강화
-        all_source_paths.extend([bf.path for bf in ext.binary_files])
+        all_source_paths.extend([bf.path for bf in ctx.ext.binary_files])
         ssdf_rpt = ssdf_evaluate(
             ecosystem=ecosystem,
             registry_found=True,
@@ -886,7 +906,7 @@ def run_pipeline(
             scorecard=scorecard_report,
         )
         report.package_meta["ssdf"] = ssdf_rpt.to_dict()
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_ssdf_compliance",
             success=True,
             payload={
@@ -896,7 +916,7 @@ def run_pipeline(
             },
         ))
     except Exception as e:
-        stage_results.append(StageResult(
+        ctx.stage_results.append(StageResult(
             stage="stage_ssdf_compliance", success=False, error=str(e),
         ))
     report.kb_versions = {
@@ -905,7 +925,7 @@ def run_pipeline(
     }
 
     # ========== 캐시 저장 (분석 완료 후) ==========
-    if use_cache:
+    if ctx.options.use_cache:
         try:
             from .db.analysis_cache import AnalysisCache, CacheKey
             _cache = AnalysisCache(integrity_mode=_integrity_mode)
