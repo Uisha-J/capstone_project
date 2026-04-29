@@ -507,13 +507,13 @@
     {
       "name": "etc-hosts-poison",
       "label": "malicious",
-      "verdict": "SUSPICIOUS",
+      "verdict": "HIGH_RISK",
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
         "ttp_match": 0,
-        "ind_47": 2,
-        "ind_47_high": 1,
+        "ind_47": 3,
+        "ind_47_high": 2,
         "seq_pattern": 0,
         "seq_high": 0,
         "taint_flows": 0,
@@ -2171,5 +2171,5 @@
     "f1": 0.9916,
     "accuracy": 0.9917
   },
-  "elapsed_total_s": 0.12
+  "elapsed_total_s": 0.15
 }
