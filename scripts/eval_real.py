@@ -483,7 +483,10 @@ def _evaluate(
         seq_hits = high_sev_seq = medium_sev_seq = 0
         cooccur_files = set()
 
-    # Stage 5 — multi-agent (stub)
+    # Stage 5 — multi-agent.
+    # llm_mode 는 환경변수로 전달 (multiprocessing 서브프로세스도 자동 상속).
+    # 기본 stub. PKGSENTINEL_LLM_MODE=claude 면 실제 Anthropic 호출.
+    llm_mode = os.environ.get("PKGSENTINEL_LLM_MODE", "stub")
     primary_seq = file_seqs[0] if file_seqs else None
     if primary_seq is not None:
         try:
@@ -494,7 +497,7 @@ def _evaluate(
                 description="",
                 declared_deps=[],
                 taint_slice=None,
-                mode="stub",
+                mode=llm_mode,
             )
             llm_verdict = consensus.verdict
         except Exception:
@@ -642,6 +645,21 @@ def _evaluate(
         and len(cooccur_files) == 0
         and taint_total == 0
         and high_sev_seq < 2
+    ):
+        verdict = Verdict.CLEAN
+
+    # popular + LLM benign → 강 다운그레이드.
+    # LLM 이 정상이라고 명시적으로 판정한 인기 패키지면, 매처가 발화한 다중 신호도
+    # 정당 사용으로 간주. 단 multi-taint 나 결정적 코드 cooccurrence 가 있으면 보호.
+    # (typescript / pandas / fastapi / scikit-learn 같이 dangerous API 를
+    #  legitimate 사용하는 도구의 13 FP 케이스 정리)
+    if (
+        llm_mode == "claude"
+        and _is_popular(name, ecosystem)
+        and llm_verdict == LLMVerdict.BENIGN
+        and verdict in (Verdict.SUSPICIOUS, Verdict.HIGH_RISK)
+        and taint_total < 2
+        and len(cooccur_files) <= 2
     ):
         verdict = Verdict.CLEAN
 
@@ -813,7 +831,30 @@ def main():
         "--workers", type=int, default=0,
         help="병렬 worker 수 (0=cpu_count, 1=직렬)",
     )
+    ap.add_argument(
+        "--llm", choices=["stub", "claude"], default="stub",
+        help="Stage 5 LLM 모드. claude → 실제 Anthropic API 호출 (요금 발생)",
+    )
+    ap.add_argument(
+        "--stratified", type=int, default=0,
+        help="N 개 fixture 를 카테고리별 균형 sample (compromised + malicious_intent + benign FP 후보).",
+    )
     args = ap.parse_args()
+
+    # Stage 5 mode 를 환경변수로 전파 — sub-process 도 상속.
+    os.environ["PKGSENTINEL_LLM_MODE"] = args.llm
+    if args.llm == "claude":
+        # 실제 API 호출 시 multiprocessing rate limit 위험 → worker 수 제한
+        if args.workers == 0:
+            args.workers = 4
+        # Anthropic 키 확인
+        from pkgsentinel import _dotenv as _ad
+        _ad.load()
+        if not os.environ.get("ANTHROPIC_API_KEY"):
+            print("ERROR: ANTHROPIC_API_KEY not set. Add to .env or export.",
+                  file=sys.stderr)
+            sys.exit(2)
+        print(f"  LLM mode    : claude (Anthropic API will be called)")
 
     fixtures_path = Path(args.fixtures)
     if not fixtures_path.exists():
@@ -825,7 +866,51 @@ def main():
         manifest = json.load(f)
 
     fixtures_meta = manifest["fixtures"]
-    if args.limit:
+
+    # Stratified sample — LLM 평가 시 N 적은 sample 로 카테고리별 균형 유지
+    if args.stratified > 0:
+        # 직전 stub 결과가 있으면 FP 후보 우선 — 그 외 무작위
+        prev_results_path = Path(args.json).parent / "results.json"
+        prev_fp_names: set[str] = set()
+        if prev_results_path.exists() and prev_results_path != Path(args.json):
+            try:
+                prev = json.loads(prev_results_path.read_text(encoding="utf-8"))
+                prev_fp_names = {
+                    f["name"] for f in prev.get("fixtures", [])
+                    if f["label"] == "benign" and not f["expected"]
+                }
+            except Exception:
+                pass
+
+        import random
+        rng = random.Random(42)
+        comp = [f for f in fixtures_meta if f["source"] == "datadog/compromised_lib"]
+        mali = [f for f in fixtures_meta if f["source"] == "datadog/malicious_intent"]
+        ben = [f for f in fixtures_meta if f["label"] == "benign"]
+        # benign — FP 후보 우선
+        ben_fp = [f for f in ben if f["name"] in prev_fp_names]
+        ben_other = [f for f in ben if f["name"] not in prev_fp_names]
+
+        # 비율: compromised 30%, malicious_intent 30%, benign 40% (FP 우선)
+        n = args.stratified
+        n_comp = min(len(comp), n * 30 // 100)
+        n_mali = min(len(mali), n * 30 // 100)
+        n_ben = n - n_comp - n_mali
+        n_ben_fp = min(len(ben_fp), n_ben * 80 // 100)
+        n_ben_other = n_ben - n_ben_fp
+
+        rng.shuffle(comp)
+        rng.shuffle(mali)
+        rng.shuffle(ben_fp)
+        rng.shuffle(ben_other)
+
+        fixtures_meta = (
+            comp[:n_comp] + mali[:n_mali]
+            + ben_fp[:n_ben_fp] + ben_other[:n_ben_other]
+        )
+        print(f"  stratified sample: comp={n_comp} mali={n_mali} "
+              f"ben_fp={n_ben_fp} ben_other={n_ben_other}")
+    elif args.limit:
         fixtures_meta = fixtures_meta[: args.limit]
 
     n_workers = args.workers if args.workers > 0 else max(1, mp.cpu_count() - 1)
