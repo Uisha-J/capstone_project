@@ -442,6 +442,90 @@ CLI가 안정화되면 같은 엔진을 다음 프론트엔드에서 호출:
 
 ---
 
+## 8.5 Operational Topology
+
+운영 환경의 프로세스 모델 — `pkgsentinel-worker` / `pkgsentinel-cron` /
+`pkgsentinel-feeds` console script 가 어떻게 협업하는지.
+
+```mermaid
+flowchart LR
+    PyPI[PyPI XML-RPC<br/>/changelog]
+    NPM[npm CouchDB<br/>/_changes]
+    OSV[OSV / GHSA / urlhaus<br/>피드]
+
+    subgraph cron[pkgsentinel-cron - 주기 트리거]
+        WP[watch-pypi<br/>매 10분]
+        WN[watch-npm<br/>매 5분]
+        RF[refresh-feeds<br/>매일 03:00]
+    end
+
+    Q[(scan_queue<br/>SQLCipher)]
+    DB[(threat_db<br/>SQLCipher)]
+
+    subgraph worker[pkgsentinel-worker - N개 인스턴스]
+        W1[worker #1]
+        W2[worker #2]
+        WN3[worker #N]
+    end
+
+    subgraph sinks[Real-time sinks]
+        STIX[STIX 2.1<br/>TAXII]
+        WH[Webhook<br/>HMAC-signed]
+        FAL[Falco rules<br/>Tetragon TracingPolicy]
+    end
+
+    PyPI --> WP --> Q
+    NPM --> WN --> Q
+    OSV --> RF --> DB
+
+    Q --> W1 --> DB
+    Q --> W2 --> DB
+    Q --> WN3 --> DB
+
+    W1 -->|verdict ≥ SUSPICIOUS| STIX
+    W2 -->|verdict ≥ SUSPICIOUS| WH
+    WN3 -->|verdict ≥ SUSPICIOUS| FAL
+```
+
+### 8.5.1 프로세스별 역할
+
+| 프로세스 | 트리거 | 목적 | 권장 주기 |
+|---|---|---|---|
+| `pkgsentinel-cron watch-pypi` | systemd timer / cron | PyPI 신규 release 감지 → 큐 적재 | 매 10분 |
+| `pkgsentinel-cron watch-npm` | systemd timer / cron | npm 신규 release 감지 → 큐 적재 | 매 5분 |
+| `pkgsentinel-cron refresh-feeds` | systemd timer / cron | OSV / popular / urlhaus / feodo 피드 갱신 → DB 적재 + 캐시 무효화 트리거 발화 | 매일 03:00 |
+| `pkgsentinel-worker` | systemd service (long-running) 또는 cron `--max N` | 큐 pop → `run_pipeline()` → sink 발송 | 매 5분 (cron 모드) 또는 데몬 |
+| `pkgsentinel-feeds` | 수동 / 초기 적재 | 위협 피드 일괄 다운로드 (cron `refresh-feeds` 와 동일 로직 — 별도 entry) | 1회 + 필요 시 |
+
+### 8.5.2 큐 / DB 격리
+
+- **`scan_queue`** (SQLCipher) — watcher 가 적재, worker 가 pop. 동시성은
+  SQLite WAL + `lock_next()` 트랜잭션으로 처리. worker N개 안전.
+- **`threat_db`** — known_malicious, known_popular, network_blocklist,
+  feed_meta, analyses, stage_cache, cache_invalidation_log 모두 한 DB
+  (단, 페이지 암호화는 동일).
+- **AISLOP_DB_KEY** 환경변수 또는 `~/.aislopsq/key` 파일로 DB 패스워드 주입.
+
+### 8.5.3 배포 예시
+
+[`examples/systemd/`](../examples/systemd/) 에 systemd unit 파일 2개:
+
+- `pkgsentinel-worker.service` — 큐 consumer, `Restart=on-failure`
+- `pkgsentinel-cron.service` + `pkgsentinel-cron.timer` — 주기 트리거
+
+자세한 설치 절차는 해당 디렉터리의 `README.md` 참조.
+
+### 8.5.4 sink 발송 정책
+
+`run_pipeline()` 의 verdict 가 SUSPICIOUS 이상일 때만 sink 발송. CLEAN /
+CANNOT_ANALYZE 는 DB 에 저장만. sink 별 포맷:
+
+- **STIX 2.1 TAXII** — Indicator object, `pattern: malicious-activity`
+- **Webhook** — JSON 페이로드 + HMAC-SHA256 서명 헤더 (`X-Signature`)
+- **Falco** — `falco_rules.yaml` 추가 항목 (커널 레벨 차단)
+
+---
+
 ## 9. 구현 로드맵
 
 ### Phase 1 — 설계 확정 (3~4일)

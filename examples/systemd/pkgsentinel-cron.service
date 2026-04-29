@@ -1,0 +1,41 @@
+[Unit]
+Description=pkgsentinel cron trigger (one-shot, paired with .timer)
+Documentation=https://github.com/Uisha-J/capstone_project
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=pkgsentinel
+Group=pkgsentinel
+
+EnvironmentFile=/etc/pkgsentinel/env
+WorkingDirectory=/var/lib/pkgsentinel
+StateDirectory=pkgsentinel
+LogsDirectory=pkgsentinel
+
+# 본 unit 은 .timer 와 짝. ExecStart 의 subcommand 는 timer 마다 다른 instance
+# 권장. 예: pkgsentinel-cron@watch-pypi.service / @watch-npm@.service /
+# @refresh-feeds.service. 단순화 위해 본 파일은 watch-pypi 기본값.
+ExecStart=/usr/local/bin/pkgsentinel-cron watch-pypi --limit 200
+
+# oneshot 은 Restart 가 의미 없음. 실패 시 다음 timer 발화에서 재시도.
+TimeoutStartSec=300s
+
+# 보안
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/pkgsentinel /var/log/pkgsentinel
+PrivateTmp=true
+PrivateDevices=true
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictNamespaces=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

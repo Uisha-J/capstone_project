@@ -1,0 +1,52 @@
+[Unit]
+Description=pkgsentinel real-time analysis worker (queue consumer)
+Documentation=https://github.com/Uisha-J/capstone_project
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pkgsentinel
+Group=pkgsentinel
+
+# Load DB key from systemd credential or environment file (do NOT hardcode).
+# 옵션 A: systemd credential
+#   LoadCredential=db_key:/etc/pkgsentinel/db.key
+#   Environment=AISLOP_DB_KEY=%d/db_key
+# 옵션 B: env file
+EnvironmentFile=/etc/pkgsentinel/env
+
+# Working directory — DB / cache / logs 가 여기 기준.
+WorkingDirectory=/var/lib/pkgsentinel
+StateDirectory=pkgsentinel
+LogsDirectory=pkgsentinel
+
+# 큐에서 한 번에 N건 처리 후 종료 (cron 친화). 데몬 모드는 --loop.
+ExecStart=/usr/local/bin/pkgsentinel-worker --max 50
+
+# 안정성
+Restart=on-failure
+RestartSec=15s
+TimeoutStartSec=60s
+TimeoutStopSec=120s
+
+# 보안 강화 — 최소 권한 + read-only system
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/pkgsentinel /var/log/pkgsentinel
+PrivateTmp=true
+PrivateDevices=true
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictNamespaces=true
+RestrictRealtime=true
+LockPersonality=true
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+
+[Install]
+WantedBy=multi-user.target

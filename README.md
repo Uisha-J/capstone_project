@@ -107,10 +107,25 @@ Detection signals are emitted to:
 
 ## Project status
 
-Research preview. Tested with 13 internal test suites (100+ cases) covering
-encrypted DB integrity, agentic classification, real-time pipeline, and
-classical malicious-pattern detection. **Not yet evaluated on Datadog /
-Backstabber benchmarks** — that's the next milestone.
+Research preview. Verified by:
+
+- **14 pytest suites / 106 cases** (encrypted DB integrity, agentic classification,
+  real-time pipeline, multi-stage verdict rules, stage-level cache trigger).
+- **120 synthetic fixtures** (`scripts/eval_synthetic.py`, cycle 11) —
+  P=1.000 R=0.983 F1=0.992.
+- **550 real-data fixtures** (`scripts/eval_real.py` against
+  [Datadog/malicious-software-packages-dataset][datadog-ds]) —
+  overall P=0.96 R=0.73 F1=0.83;
+  *compromised_lib subset (legit-package compromise, e.g. event-stream / xz)*
+  P=1.000 R=0.944 [Wilson CI 0.85, 0.98].
+- **100 stratified fixtures with Claude Sonnet 4.5 LLM** — F1 0.94, FP 13→2.
+  See [`docs/cost_model.md`](docs/cost_model.md) for token cost model.
+
+Two demo scripts (`examples/synthetic_malicious_demo.py`,
+`examples/indicator_47_demo.py`) are kept for human inspection but not part
+of automated CI — equivalent regression is covered by `eval_synthetic.py`.
+
+[datadog-ds]: https://github.com/DataDog/malicious-software-packages-dataset
 
 This started as an undergraduate capstone project and is published under
 Apache 2.0.
@@ -119,7 +134,9 @@ Apache 2.0.
 
 ## Documentation
 
-- [`docs/architecture.md`](docs/architecture.md) — pipeline overview
+- [`docs/architecture.md`](docs/architecture.md) — pipeline overview + operational topology
+- [`docs/cost_model.md`](docs/cost_model.md) — Stage 5 LLM cost model (per-call
+  tokens, daily/monthly scenarios, cache strategy)
 - [`docs/aislopsq/`](docs/aislopsq/) — AISLOPSQ Manifest specification, decision
   tree, R1-R4 rule catalogue, and paper cards (Chhabra 2025, Beurer-Kellner 2025,
   Shi 2025, Nasr 2025, Meta Rule of Two 2025)
@@ -127,6 +144,8 @@ Apache 2.0.
   incidents (event-stream 2018, ua-parser 2021, XZ 2024, …)
 - [`docs/references/`](docs/references/) — 59-entry reference index (papers,
   frameworks, industry reports, related projects)
+- [`examples/systemd/`](examples/systemd/) — systemd unit files for
+  pkgsentinel-worker / pkgsentinel-cron deployment
 
 ---
 
