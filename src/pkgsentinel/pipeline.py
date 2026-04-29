@@ -715,6 +715,55 @@ def run_pipeline(
                 version_diff=vd_info,
                 confidence=_match_confidence(m, llm.verdict),
             ))
+        # version_diff 가 의미 있는 변화를 보고했지만 TTP 매치가 비어 있어
+        # diff 결과가 verdict 에 닿지 못하는 경우를 보강.
+        # → diff-only Evidence 한 개 추가 (event-stream / xz 류 케이스 대비).
+        if (
+            ctx.diff is not None
+            and ctx.diff.error is None
+            and ctx.diff.compared_versions
+            and ctx.diff.overall_severity != Severity.LOW
+            and not any(e.version_diff for e in ctx.evidence)
+        ):
+            vd_info = ctx.diff.to_version_diff_info()
+            if vd_info is not None:
+                # 진단용 — verdict_rules._any_version_diff(_critical) 가 인식
+                ctx.evidence.append(Evidence(
+                    file_path="<version-diff>",
+                    line_start=0,
+                    line_end=0,
+                    code_snippet=(
+                        f"version diff vs {', '.join(vd_info.compared_versions)}: "
+                        f"{vd_info.details}"
+                    ),
+                    behavior_sequence=[f"diff:{api}" for api in vd_info.new_apis[:8]],
+                    attack_dimensions=[],
+                    ttp_id="DIFF/T1195.002",
+                    ttp_name=f"Version-diff risk introduction "
+                             f"({vd_info.risk_classification.value})",
+                    ttp_source=TTPSource.MITRE_ATTACK,
+                    ttp_url="https://attack.mitre.org/techniques/T1195/002/",
+                    ttp_severity=vd_info.risk_classification,
+                    vector_similarity=1.0,
+                    llm_verdict=(
+                        LLMVerdict.SUSPICIOUS
+                        if vd_info.risk_classification in (Severity.HIGH, Severity.MEDIUM)
+                        else LLMVerdict.BENIGN
+                    ),
+                    llm_reasoning=(
+                        f"new APIs introduced in current version vs prior "
+                        f"({len(vd_info.new_apis)} added). "
+                        f"{vd_info.details}"
+                    ),
+                    llm_model="version-diff-rule",
+                    version_diff=vd_info,
+                    confidence=(
+                        0.85 if vd_info.risk_classification == Severity.HIGH
+                        else 0.6 if vd_info.risk_classification == Severity.MEDIUM
+                        else 0.3
+                    ),
+                ))
+
         # 멀티 에이전트 통계
         ma_payload: dict = {}
         if ctx.options.use_multi_agent and multi_agent_consensus_per_file:
