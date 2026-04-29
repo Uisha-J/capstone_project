@@ -169,6 +169,30 @@ CREATE INDEX IF NOT EXISTS idx_an_verdict   ON analyses(verdict);
 CREATE INDEX IF NOT EXISTS idx_an_analyzed  ON analyses(analyzed_at);
 
 
+-- ─── 5b. Stage-level 분석 캐시 ─────────────────────────────
+-- 단계별 결과를 분리 저장해 선택적 무효화/재사용 가능.
+-- rules_version 만 바뀌면 indicator stage 만 재실행, 나머지 그대로.
+-- KB 만 갱신되면 threat_filter / 47-indicator 만 재실행.
+CREATE TABLE IF NOT EXISTS stage_cache (
+    package         TEXT NOT NULL,
+    ecosystem       TEXT NOT NULL CHECK (ecosystem IN ('PyPI', 'npm')),
+    version         TEXT NOT NULL,
+    stage           TEXT NOT NULL,    -- 'stage_2_behavior' / 'stage_4c_ind47' 등
+    stage_version   TEXT NOT NULL,    -- 해당 stage 의 dependency hash
+    archive_sha256  TEXT,             -- 본 stage 가 본 archive sha (변경 시 무효)
+    payload_json    TEXT NOT NULL,    -- stage 결과 직렬화
+    cached_at       TEXT NOT NULL
+                    DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+
+    PRIMARY KEY (package, ecosystem, version, stage, stage_version)
+);
+
+CREATE INDEX IF NOT EXISTS idx_sc_lookup
+    ON stage_cache (package, ecosystem, version, stage);
+CREATE INDEX IF NOT EXISTS idx_sc_cached_at
+    ON stage_cache (cached_at);
+
+
 -- ─── 6. 캐시 무효화 트리거 (피드 갱신 시 자동) ────────────
 -- known_malicious 에 새 행이 들어오면 그 패키지의 캐시는 stale 표시
 CREATE TABLE IF NOT EXISTS cache_invalidation_log (
@@ -189,6 +213,16 @@ BEGIN
         (NEW.ecosystem, NEW.package,
          strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
          'new advisory: ' || NEW.advisory_id);
+END;
+
+-- 새 advisory → stage_cache 의 threat-feed 의존 stage 만 강제 무효화
+-- (전 stage 무효 vs 선택 무효의 분기점)
+CREATE TRIGGER IF NOT EXISTS trg_drop_threat_stage_on_advisory
+AFTER INSERT ON known_malicious
+BEGIN
+    DELETE FROM stage_cache
+    WHERE ecosystem = NEW.ecosystem AND package = NEW.package
+      AND stage IN ('stage_0a_threat_filter', 'stage_0b_attack_history');
 END;
 
 
