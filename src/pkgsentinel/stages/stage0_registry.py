@@ -5,12 +5,10 @@ PyPI / npm 에서 패키지의 등록 여부만 확인. 판정에는 쓰지 않�
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Optional
-
-import urllib.request
-import urllib.error
 import json
+import urllib.error
+import urllib.request
+from dataclasses import dataclass
 
 from ..schema import Ecosystem
 
@@ -18,11 +16,11 @@ from ..schema import Ecosystem
 @dataclass
 class RegistryInfo:
     found: bool
-    latest_version: Optional[str] = None
+    latest_version: str | None = None
     all_versions: list[str] = None
     archive_urls: dict[str, str] = None       # {version: tarball_url}
     raw_metadata: dict = None
-    error: Optional[str] = None
+    error: str | None = None
 
 
 def _http_get_json(url: str, timeout: int = 15) -> dict:

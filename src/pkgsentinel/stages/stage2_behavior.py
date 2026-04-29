@@ -12,12 +12,10 @@ from __future__ import annotations
 import ast
 import re
 from dataclasses import dataclass, field
-from typing import Optional
 
 from ..schema import AttackDimension
-from .api_catalog import lookup_python, lookup_js
+from .api_catalog import lookup_python
 from .stage1_entry_point import EntryFile, ExtractedPackage
-
 
 # ─────────────── 데이터 구조 ───────────────
 
@@ -39,7 +37,7 @@ class FileSequence:
     path: str
     language: str
     calls: list[APICall] = field(default_factory=list)
-    parse_error: Optional[str] = None
+    parse_error: str | None = None
 
     @property
     def sequence(self) -> list[str]:
@@ -89,7 +87,7 @@ class _PyCallVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
     # attr 체인: a.b.c.func → "a.b.c.func"
-    def _resolve_call_name(self, node: ast.AST) -> Optional[str]:
+    def _resolve_call_name(self, node: ast.AST) -> str | None:
         if isinstance(node, ast.Name):
             return node.id
         if isinstance(node, ast.Attribute):
@@ -203,6 +201,7 @@ def analyze(ext: ExtractedPackage) -> BehaviorReport:
 
 if __name__ == "__main__":
     import sys
+
     from ..schema import Ecosystem
     from .stage0_registry import check
     from .stage1_entry_point import extract

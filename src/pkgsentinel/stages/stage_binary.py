@@ -15,7 +15,6 @@ import io
 import re
 from dataclasses import dataclass, field
 
-
 # ─────────────── 의심 심볼 사전 ───────────────
 
 # Windows PE 의심 API
@@ -185,7 +184,8 @@ def extract_and_analyze(
     FullSourceExtract.binary_files 의 경로 리스트를 받아
     원본 아카이브에서 바이너리를 읽어 분석.
     """
-    import tarfile, zipfile
+    import tarfile
+    import zipfile
 
     results: list[BinaryFinding] = []
     if not binary_file_paths:

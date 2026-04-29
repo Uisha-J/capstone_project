@@ -1,7 +1,7 @@
 """
 `python -m detector <package>` 진입점.
 """
-from .pipeline import run_pipeline, format_report
+from .pipeline import format_report, run_pipeline
 from .schema import Ecosystem
 
 

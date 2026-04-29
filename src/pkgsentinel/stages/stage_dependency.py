@@ -22,12 +22,9 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass, field
-from typing import Optional
 
 from ..schema import Ecosystem
-from .stage1_entry_point import ExtractedPackage
 from .stage1b_full_source import FullSourceFile
-
 
 # ─────────────── 결과 구조 ───────────────
 
@@ -277,6 +274,7 @@ def analyze_dependencies(
 
 if __name__ == "__main__":
     import sys
+
     from .stage0_registry import check
     from .stage1b_full_source import extract_all
 
@@ -299,7 +297,7 @@ if __name__ == "__main__":
     for d in deps.direct_deps[:20]:
         print(f"  {d}")
 
-    print(f"\n=== 의존성 공격 이력 조회 (attack_history_only=True) ===")
+    print("\n=== 의존성 공격 이력 조회 (attack_history_only=True) ===")
     results = analyze_dependencies(deps, eco)
     for r in results:
         marker = "[!]" if r.verdict in ("MALICIOUS", "HIGH_RISK", "SUSPICIOUS") else "[ ]"

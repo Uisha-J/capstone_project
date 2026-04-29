@@ -10,12 +10,11 @@ from pkgsentinel.schema import LLMVerdict
 from pkgsentinel.stages.stage1_entry_point import EntryFile
 from pkgsentinel.stages.stage2_behavior import _analyze_python
 from pkgsentinel.stages.stage5_multi_agent import (
-    review_multi,
-    consensus,
     AgentReport,
+    consensus,
     consensus_to_llm_response,
+    review_multi,
 )
-
 
 MALICIOUS = '''
 import os, base64, requests

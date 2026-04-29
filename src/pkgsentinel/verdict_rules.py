@@ -26,7 +26,7 @@ LLM 처리 정책:
 """
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from .schema import (
     Evidence,
@@ -35,7 +35,6 @@ from .schema import (
     StageResult,
     Verdict,
 )
-
 
 # ─────────────────────── 설정 상수 ───────────────────────
 
@@ -187,5 +186,3 @@ def decide_verdict(
 
 
 # 자체 테스트 (sanity check) 는 tests/test_verdict_rules.py 로 이관됨.
-
-    print("✅ verdict_rules sanity checks passed.")

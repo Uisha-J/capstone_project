@@ -6,38 +6,40 @@ AISLOPSQ classifier — Step 1~4 결정 트리 통합.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 from ..schema import Verdict
-from .manifest import AISLOPSQManifest, parse_manifest
-from .signals import (
-    SignalReport,
-    detect_agentic_python, detect_agentic_js,
-)
 from .capability_detector import (
-    Capability, extract_capabilities_python, extract_capabilities_js,
+    extract_capabilities_js,
+    extract_capabilities_python,
     map_to_abc,
 )
-from .rule_of_two import detect_human_in_the_loop, has_lethal_trifecta
+from .manifest import AISLOPSQManifest, parse_manifest
+from .rule_of_two import detect_human_in_the_loop
 from .rules import (
-    RuleReport, RuleSeverity, run_all_rules,
-    DANGEROUS_UNDECLARED, MEDIUM_UNDECLARED,
+    DANGEROUS_UNDECLARED,
+    RuleReport,
+    RuleSeverity,
+    run_all_rules,
 )
-
+from .signals import (
+    SignalReport,
+    detect_agentic_js,
+    detect_agentic_python,
+)
 
 # ─────────────── 결과 ───────────────
 
 @dataclass
 class AgenticClassification:
     is_agentic: bool                       # Step 1
-    manifest: Optional[AISLOPSQManifest] = None
-    signal_report: Optional[SignalReport] = None
+    manifest: AISLOPSQManifest | None = None
+    signal_report: SignalReport | None = None
     declared: set[str] = field(default_factory=set)
     detected: set[str] = field(default_factory=set)
     undeclared: set[str] = field(default_factory=set)
     abc_actual: set[str] = field(default_factory=set)
     has_human_in_the_loop: bool = False
-    rule_report: Optional[RuleReport] = None
+    rule_report: RuleReport | None = None
     verdict: Verdict = Verdict.CLEAN
     reason: str = ""
 
@@ -154,9 +156,6 @@ def classify(
 
     declared_session_isolation = (
         manifest.rule_of_two.session_isolation if manifest else False
-    )
-    declared_satisfies = (
-        manifest.rule_of_two.satisfies if manifest else []
     )
     design_patterns_applied = (
         manifest.design_patterns.applied if manifest else []

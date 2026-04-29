@@ -13,7 +13,6 @@ OWASP Top 10 for Large Language Model Applications (v1.1).
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
@@ -126,7 +125,7 @@ OWASP_LLM_ITEMS: list[OWASPLLMItem] = [
 
 # ─────────────── 헬퍼 ───────────────
 
-def get(id: str) -> Optional[OWASPLLMItem]:
+def get(id: str) -> OWASPLLMItem | None:
     for it in OWASP_LLM_ITEMS:
         if it.id == id:
             return it

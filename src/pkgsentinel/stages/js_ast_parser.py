@@ -14,14 +14,13 @@ call_expression 노드를 순서대로 추출한다.
 """
 from __future__ import annotations
 
-import tree_sitter_javascript
 import tree_sitter
+import tree_sitter_javascript
 
 from ..schema import AttackDimension
 from .api_catalog import lookup_js
 from .stage1_entry_point import EntryFile
 from .stage2_behavior import APICall, FileSequence
-
 
 # ─────────────── 파서 싱글턴 ───────────────
 

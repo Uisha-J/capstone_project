@@ -23,12 +23,11 @@ import os
 import random
 import sys
 import time
-import urllib.request
 import urllib.error
-from dataclasses import asdict, dataclass, field
+import urllib.request
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Optional
-
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / "scripts" / "eval_real_data"
@@ -151,7 +150,7 @@ def _enumerate_datadog(ecosystem: str, kind: str) -> list[dict]:
         parts = rel.split("/")
         if len(parts) < 3:
             continue
-        pkg_dir, version_dir, fname = parts[0], parts[1], parts[-1]
+        pkg_dir, version_dir, _fname = parts[0], parts[1], parts[-1]
         try:
             size = int(size_s)
         except ValueError:

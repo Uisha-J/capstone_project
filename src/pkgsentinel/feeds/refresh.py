@@ -16,13 +16,12 @@ import argparse
 import json
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from ..db.threat_db import ThreatDB, DEFAULT_DB_PATH, get_default_db
+from ..db.threat_db import DEFAULT_DB_PATH, ThreatDB
+from . import network_ioc as feed_ioc
 from . import osv as feed_osv
 from . import popular as feed_popular
-from . import network_ioc as feed_ioc
-
 
 # ─────────────── 상태 조회 ───────────────
 
@@ -65,7 +64,7 @@ def show_status(db: ThreatDB) -> dict:
             "analyses": anc,
             "cache_invalidation_log": civ,
         },
-        "checked_at": datetime.now(timezone.utc).isoformat(),
+        "checked_at": datetime.now(UTC).isoformat(),
     }
 
 

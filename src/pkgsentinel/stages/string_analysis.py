@@ -19,7 +19,6 @@ import math
 import re
 from dataclasses import dataclass
 
-
 # ─────────────── 데이터 구조 ───────────────
 
 @dataclass

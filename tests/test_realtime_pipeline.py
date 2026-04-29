@@ -6,8 +6,6 @@ worker 동작 + sink YAML/STIX/HMAC 출력만 검증.
 """
 from __future__ import annotations
 
-import hashlib
-import hmac
 import json
 import os
 import sys
@@ -26,16 +24,22 @@ os.environ["AISLOP_DB_KEY"] = TEST_PASSPHRASE
 from pkgsentinel.db.threat_db import ThreatDB, reset_default_db
 from pkgsentinel.monitor.priority_queue import PriorityQueue
 from pkgsentinel.monitor.release_event import (
-    ReleaseEvent, compute_priority,
-)
-from pkgsentinel.realtime.sinks.stix_sink import (
-    to_stix_bundle, to_stix_json, STIXSink,
-)
-from pkgsentinel.realtime.sinks.webhook_sink import (
-    hmac_sign, hmac_verify, WebhookSink,
+    ReleaseEvent,
+    compute_priority,
 )
 from pkgsentinel.realtime.sinks.falco_policy import (
-    to_falco_rules, to_tracing_policy, FalcoPolicySink,
+    FalcoPolicySink,
+    to_falco_rules,
+    to_tracing_policy,
+)
+from pkgsentinel.realtime.sinks.stix_sink import (
+    STIXSink,
+    to_stix_bundle,
+    to_stix_json,
+)
+from pkgsentinel.realtime.sinks.webhook_sink import (
+    hmac_sign,
+    hmac_verify,
 )
 
 
@@ -157,7 +161,7 @@ def test_stix_bundle_structure():
     assert "indicator" in types
     assert "malware" in types     # MALICIOUS 라서
     assert "relationship" in types
-    print(f"  OK contains all expected types")
+    print("  OK contains all expected types")
     # JSON round-trip
     s = to_stix_json(_SAMPLE_REPORT)
     parsed = json.loads(s)
@@ -174,7 +178,8 @@ def test_stix_file_emit():
     assert os.path.exists(r["file"])
     print(f"  OK file written: {os.path.basename(r['file'])} "
           f"sha={r['sha256'][:12]}..")
-    import shutil; shutil.rmtree(out, ignore_errors=True)
+    import shutil
+    shutil.rmtree(out, ignore_errors=True)
     return True
 
 
@@ -246,7 +251,8 @@ def test_falco_sink_writes_files():
     assert os.path.exists(r["tetragon"]), r
     print(f"  OK falco={os.path.basename(r['falco'])}")
     print(f"     tetragon={os.path.basename(r['tetragon'])}")
-    import shutil; shutil.rmtree(out, ignore_errors=True)
+    import shutil
+    shutil.rmtree(out, ignore_errors=True)
     return True
 
 
@@ -270,7 +276,7 @@ def main():
             ok = t()
             if not ok:
                 failed += 1
-        except Exception as e:
+        except Exception:
             import traceback
             traceback.print_exc()
             failed += 1
@@ -282,7 +288,8 @@ def main():
     else:
         print("ALL OK")
 
-    import shutil; shutil.rmtree(TEST_DB_DIR, ignore_errors=True)
+    import shutil
+    shutil.rmtree(TEST_DB_DIR, ignore_errors=True)
     sys.exit(failed)
 
 

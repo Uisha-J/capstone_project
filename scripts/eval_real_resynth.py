@@ -22,12 +22,12 @@ DATA_DIR = ROOT / "scripts" / "eval_real_data"
 
 sys.path.insert(0, str(ROOT / "src"))
 
-from pkgsentinel.schema import LLMVerdict, Severity, Verdict
-
+from pkgsentinel.schema import LLMVerdict, Verdict
 
 # eval_real.py 의 popular 명단 import (단순 복사 회피)
 sys.path.insert(0, str(ROOT / "scripts"))
 import eval_real
+
 _is_popular = eval_real._is_popular
 
 
@@ -39,7 +39,7 @@ def _resynth(fx: dict, llm_mode: str) -> str:
     m = fx.get("matchers") or {}
     name = fx["name"]
     ecosystem = fx["ecosystem"]
-    label = fx["label"]
+    fx["label"]
 
     ind_hits = m.get("ind_47", 0)
     ind_high = m.get("ind_47_high", 0)
@@ -54,7 +54,7 @@ def _resynth(fx: dict, llm_mode: str) -> str:
 
     benign_context = m.get("benign_context", False)
     max_high_per_file = m.get("max_high_per_file", 0)
-    files_with_high_ind = m.get("files_with_high_ind", 0)
+    m.get("files_with_high_ind", 0)
     cooccur_files = m.get("cooccur_files", 0)
     is_concentrated = m.get("is_concentrated", False)
     is_spread = m.get("is_spread", False)
@@ -171,7 +171,7 @@ def main():
     for fx in fixtures:
         old_verdict = fx["verdict"]
         new_verdict = _resynth(fx, args.llm)
-        old_expected = fx["expected"]
+        fx["expected"]
         # 새 expected 계산
         if fx["label"] == "malicious":
             new_expected = new_verdict in ("MALICIOUS", "HIGH_RISK", "SUSPICIOUS")
@@ -208,7 +208,7 @@ def main():
     print(f"  Verdict flips: {len(flips)}")
     print()
     if flips:
-        print(f"Flipped:")
+        print("Flipped:")
         for fx, new_v in flips:
             old_v = fx["verdict"]
             label = fx["label"]

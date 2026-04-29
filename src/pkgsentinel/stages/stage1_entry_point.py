@@ -12,10 +12,8 @@ import tarfile
 import urllib.request
 import zipfile
 from dataclasses import dataclass, field
-from typing import Optional
 
 from ..schema import Ecosystem
-
 
 # ─────────────── Tier 1 파일 패턴 ───────────────
 
@@ -63,7 +61,7 @@ class ExtractedPackage:
 
     entry_files: list[EntryFile] = field(default_factory=list)
     all_file_names: list[str] = field(default_factory=list)   # 전체 파일 목록 (참고)
-    error: Optional[str] = None
+    error: str | None = None
 
 
 # ─────────────── 다운로드 + 추출 ───────────────
@@ -311,6 +309,7 @@ def extract(
 
 if __name__ == "__main__":
     import sys
+
     from .stage0_registry import check
 
     pkg = sys.argv[1] if len(sys.argv) > 1 else "flask"
@@ -338,4 +337,4 @@ if __name__ == "__main__":
         preview = ef.content.splitlines()[:3]
         for line in preview:
             print(f"      {line[:100]}")
-        print(f"      ...")
+        print("      ...")

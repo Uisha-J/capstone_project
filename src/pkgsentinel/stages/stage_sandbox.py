@@ -32,7 +32,6 @@ from dataclasses import dataclass, field
 
 from ..schema import Ecosystem
 
-
 # ─────────────── 관찰된 동적 행위 ───────────────
 
 @dataclass

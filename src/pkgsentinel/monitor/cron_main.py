@@ -20,7 +20,7 @@ import argparse
 import json
 import sys
 
-from ..db.threat_db import ThreatDB, DEFAULT_DB_PATH
+from ..db.threat_db import DEFAULT_DB_PATH, ThreatDB
 
 
 def _make_db(passphrase: str | None) -> ThreatDB:
@@ -85,8 +85,8 @@ def _cmd_refresh_feeds(args) -> int:
 
 
 def _cmd_status(args) -> int:
-    from .priority_queue import PriorityQueue
     from ..feeds.refresh import show_status
+    from .priority_queue import PriorityQueue
     db = _make_db(args.passphrase)
     feed_status = show_status(db)
     queue_stats = PriorityQueue(db).stats()

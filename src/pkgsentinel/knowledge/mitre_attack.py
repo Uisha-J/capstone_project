@@ -10,11 +10,10 @@ from __future__ import annotations
 
 import json
 import urllib.request
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
-from ..schema import TTPEntry, TTPSource, Severity
-
+from ..schema import Severity, TTPEntry, TTPSource
 
 # MITRE cti 리포지토리 — Enterprise Matrix STIX Bundle 원본 URL
 ENTERPRISE_ATTACK_URL = (
@@ -113,7 +112,7 @@ def parse_techniques(stix_bundle: dict) -> list[TTPEntry]:
     코드 탐지 가능한 전술만 선별.
     """
     entries: list[TTPEntry] = []
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # 버전 추출
     kb_version = "unknown"
@@ -208,7 +207,6 @@ def collect() -> list[TTPEntry]:
 # ─────────────── CLI 진입점 ───────────────
 
 if __name__ == "__main__":
-    import sys
     out_path = Path(__file__).parent / "cache" / "mitre_attack.json"
     entries = collect()
 
@@ -216,7 +214,7 @@ if __name__ == "__main__":
     from collections import Counter
     sev_counts = Counter(e.severity.value for e in entries)
     print(f"\n심각도 분포: {dict(sev_counts)}")
-    print(f"예시 5개:")
+    print("예시 5개:")
     for e in entries[:5]:
         print(f"  {e.ttp_id} ({e.severity.value}): {e.ttp_name}")
 

@@ -32,12 +32,10 @@ from __future__ import annotations
 
 import hashlib
 import json
-import time
-from dataclasses import dataclass, field
-from typing import Any, Optional
+from dataclasses import dataclass
+from typing import Any
 
 from .threat_db import ThreatDB, get_default_db
-
 
 # ─────────────── Stage 별 의존 모듈 매핑 ───────────────
 # 각 stage 가 의존하는 모듈 이름 → 해당 모듈들의 source code 합산 sha256.

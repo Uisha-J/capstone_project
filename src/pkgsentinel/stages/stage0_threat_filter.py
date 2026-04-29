@@ -17,26 +17,29 @@ Stage 0 Threat Filter — 분석 시작 전 게이트.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 from ..schema import (
-    AttackDimension, Ecosystem, Evidence, LLMVerdict, Severity, TTPSource,
+    AttackDimension,
+    Ecosystem,
+    Evidence,
+    LLMVerdict,
+    Severity,
+    TTPSource,
 )
-
 
 # ─────────────── 결과 ───────────────
 
 @dataclass
 class ThreatFilterReport:
     exact_match: bool = False
-    advisory_id: Optional[str] = None
-    advisory_summary: Optional[str] = None
+    advisory_id: str | None = None
+    advisory_summary: str | None = None
     typosquat_candidates: list[dict] = field(default_factory=list)
-    popular_rank: Optional[int] = None
-    popular_downloads: Optional[int] = None
+    popular_rank: int | None = None
+    popular_downloads: int | None = None
     ioc_hits: list[dict] = field(default_factory=list)
     skipped: bool = False
-    error: Optional[str] = None
+    error: str | None = None
 
     @property
     def is_known_malicious(self) -> bool:
@@ -89,7 +92,7 @@ def _levenshtein(a: str, b: str, max_dist: int = 3) -> int:
     return prev[-1]
 
 
-def _check_exact(db, ecosystem: str, package: str) -> Optional[dict]:
+def _check_exact(db, ecosystem: str, package: str) -> dict | None:
     with db.cursor() as cur:
         cur.execute("""
             SELECT advisory_id, attack_type, summary, modified
@@ -162,7 +165,7 @@ def _check_typosquat(
     return candidates[:max_results]
 
 
-def _check_popular(db, ecosystem: str, package: str) -> Optional[dict]:
+def _check_popular(db, ecosystem: str, package: str) -> dict | None:
     with db.cursor() as cur:
         cur.execute("""
             SELECT rank, downloads_30d, source FROM known_popular

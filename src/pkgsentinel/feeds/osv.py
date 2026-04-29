@@ -20,11 +20,9 @@ import re
 import time
 import urllib.request
 import zipfile
-from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from ..db.threat_db import ThreatDB, get_default_db
-
 
 # ─────────────── 출처 ───────────────
 
@@ -206,7 +204,7 @@ def _record_feed_meta(
     fetch_sha256: str,
     error: str | None = None,
 ) -> str:
-    feed_version = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    feed_version = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     with db.cursor() as cur:
         cur.execute("""
             INSERT INTO feed_meta (source, last_fetched_at, record_count,
@@ -306,7 +304,8 @@ def ingest_osv(
 # ─────────────── CLI ───────────────
 
 if __name__ == "__main__":
-    import argparse, sys
+    import argparse
+    import sys
 
     p = argparse.ArgumentParser(description="OSV feed ingester")
     p.add_argument("--ecosystem", choices=["PyPI", "npm", "all"], default="PyPI")
@@ -318,7 +317,7 @@ if __name__ == "__main__":
     args = p.parse_args()
 
     if args.passphrase:
-        from ..db.threat_db import ThreatDB, DEFAULT_DB_PATH
+        from ..db.threat_db import DEFAULT_DB_PATH, ThreatDB
         db = ThreatDB(DEFAULT_DB_PATH, passphrase=args.passphrase)
     else:
         db = None  # env/keyfile 사용

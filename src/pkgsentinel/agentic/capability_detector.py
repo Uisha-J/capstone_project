@@ -13,8 +13,6 @@ from __future__ import annotations
 
 import ast
 import re
-from dataclasses import dataclass, field
-
 
 # ─────────────── 어휘 ───────────────
 
@@ -266,7 +264,6 @@ class _PyCapVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
     def _check_open_mode(self, node: ast.Call):
-        write_modes = {"w", "wb", "wt", "a", "ab", "x", "xb"}
         mode = None
         # positional 두 번째 인자
         if len(node.args) >= 2 and isinstance(node.args[1], ast.Constant):

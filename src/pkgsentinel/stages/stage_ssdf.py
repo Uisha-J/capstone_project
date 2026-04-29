@@ -31,7 +31,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
 
 from ..schema import Ecosystem
 from .stage_scorecard import ScorecardReport
@@ -335,7 +334,8 @@ def evaluate(
 if __name__ == "__main__":
     # 가짜 데이터로 자체 테스트
     from .stage_scorecard import (
-        ScorecardReport, ScorecardCheck,
+        ScorecardCheck,
+        ScorecardReport,
     )
 
     sc = ScorecardReport(
@@ -370,7 +370,7 @@ if __name__ == "__main__":
         scorecard=sc,
     )
 
-    print(f"=== SSDF Compliance ===")
+    print("=== SSDF Compliance ===")
     print(f"PASS: {rpt.pass_count}, FAIL: {rpt.fail_count}, UNKNOWN: {rpt.unknown_count}")
     print(f"compliance ratio: {rpt.pass_count / max(1, len(rpt.checks)):.2f}")
     print()

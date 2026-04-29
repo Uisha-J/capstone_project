@@ -13,15 +13,14 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-from ..schema import AttackDimension, Severity
 from ..knowledge.malicious_indicators import (
     INDICATORS,
     IndicatorCategory,
     MaliciousIndicator,
 )
+from ..schema import AttackDimension, Severity
 from .stage1b_full_source import FullSourceFile
 from .stage2_behavior import FileSequence
-
 
 # ─────────────────── 매칭 결과 ───────────────────
 
@@ -492,7 +491,7 @@ def _match_from_text(sf: FullSourceFile) -> list[IndicatorHit]:
                 continue
 
     # 2) multiline 검색 (file content 전체)
-    seen_ml: set[str] = {h.indicator.code for h in hits}
+    {h.indicator.code for h in hits}
     for code, pattern, conf, reason in _MULTILINE_PATTERNS:
         try:
             m = re.search(pattern, sf.content)
@@ -532,7 +531,7 @@ def _match_from_metadata(
             hits.append(_hit("MET-001", "<metadata>", 0,
                              f"author={author!r}",
                              confidence=0.6,
-                             reason=f"placeholder/throwaway author identity"))
+                             reason="placeholder/throwaway author identity"))
 
     # MET-004: description anomaly
     if description:

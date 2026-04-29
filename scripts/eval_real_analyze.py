@@ -8,7 +8,6 @@ eval_real_data/results.json 결과 분석 — FN/FP 패턴 분류, 신뢰구간 
 from __future__ import annotations
 
 import json
-import sys
 from collections import Counter
 from pathlib import Path
 
@@ -65,7 +64,7 @@ def main():
     print(f"  has-signal but verdict=CLEAN  : {len(fns) - len(fns_zero)}")
     print()
     if len(fns) - len(fns_zero) > 0:
-        print(f"  Has-signal FNs (likely matcher-fixable):")
+        print("  Has-signal FNs (likely matcher-fixable):")
         for f in fns:
             m = f.get("matchers") or {}
             if not m:

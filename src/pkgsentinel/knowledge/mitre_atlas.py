@@ -13,7 +13,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
 
 
 class AtlasTactic(str, Enum):
@@ -161,7 +160,7 @@ ATLAS_TECHNIQUES: list[AtlasTechnique] = [
 
 # ─────────────── 헬퍼 ───────────────
 
-def get(id: str) -> Optional[AtlasTechnique]:
+def get(id: str) -> AtlasTechnique | None:
     for t in ATLAS_TECHNIQUES:
         if t.id == id:
             return t
@@ -195,7 +194,7 @@ if __name__ == "__main__":
     s = stats()
     print(f"MITRE ATLAS techniques: {s['total']}")
     print(f"  supply-chain relevant: {s['supply_chain_relevant']}")
-    print(f"  by tactic:")
+    print("  by tactic:")
     for k, v in s["by_tactic"].items():
         print(f"    {k:<25} {v}")
     print()

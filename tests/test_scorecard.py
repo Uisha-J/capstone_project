@@ -10,9 +10,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from pkgsentinel.schema import Ecosystem
 from pkgsentinel.stages.stage_scorecard import (
     extract_github_repo,
-    find_github_repo_in_metadata,
-    fetch_scorecard,
     extract_risk_signals,
+    fetch_scorecard,
+    find_github_repo_in_metadata,
 )
 
 

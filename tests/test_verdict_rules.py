@@ -30,7 +30,6 @@ from pkgsentinel.verdict_rules import (
     decide_verdict,
 )
 
-
 # ─────────────── 헬퍼 ───────────────
 
 def _all_passed_stages() -> list[StageResult]:

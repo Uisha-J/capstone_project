@@ -22,10 +22,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
 
-from ..schema import AttackDimension, Severity, TTPSource
-
+from ..schema import AttackDimension, Severity
 
 # ─────────────────── 7개 카테고리 ───────────────────
 
@@ -559,7 +557,7 @@ _add(MaliciousIndicator(
 
 # ─────────────────── 조회 헬퍼 ───────────────────
 
-def get(code: str) -> Optional[MaliciousIndicator]:
+def get(code: str) -> MaliciousIndicator | None:
     return INDICATORS.get(code)
 
 

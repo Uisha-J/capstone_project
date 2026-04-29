@@ -18,8 +18,6 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Optional
-
 
 _LOADED: bool = False
 
@@ -70,7 +68,7 @@ def _parse_dotenv(text: str) -> dict[str, str]:
     return out
 
 
-def _try_python_dotenv(path: Path, override: bool) -> Optional[dict[str, str]]:
+def _try_python_dotenv(path: Path, override: bool) -> dict[str, str] | None:
     """python-dotenv 가 있으면 그걸로 파싱 (escape 등 더 정확)."""
     try:
         from dotenv import dotenv_values  # type: ignore

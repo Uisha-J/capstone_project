@@ -17,12 +17,11 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 
-from ..schema import AttackDimension, TTPEntry
-from ..knowledge.mitre_attack import load_cached
 from ..knowledge.embedder import TTPIndex
+from ..knowledge.mitre_attack import load_cached
+from ..schema import AttackDimension, TTPEntry
 from .stage2_behavior import BehaviorReport, FileSequence
 from .stage4_rules import apply_rules, rule_hit_to_ttp_entry
-
 
 WEAK_THRESHOLD = 0.50     # 이보다 낮으면 무시 (noise)
 STRONG_THRESHOLD = 0.70   # 후보로 취함
@@ -88,8 +87,8 @@ def _load_index() -> TTPIndex:
     emb_path = cache_dir / "mitre_attack_embedded.json"
     if not emb_path.exists():
         raise FileNotFoundError(
-            f"임베딩된 TTP 캐시가 없습니다. 먼저 아래 명령으로 생성하세요:\n"
-            f"  python -m detector.knowledge.embedder"
+            "임베딩된 TTP 캐시가 없습니다. 먼저 아래 명령으로 생성하세요:\n"
+            "  python -m detector.knowledge.embedder"
         )
     entries = load_cached(emb_path)
     return TTPIndex(entries)
@@ -102,7 +101,7 @@ def match_ttps(behavior: BehaviorReport, top_k: int = 3) -> TTPMatchReport:
 
     try:
         index = _load_index()
-    except FileNotFoundError as e:
+    except FileNotFoundError:
         # 지식 DB 준비 안 됨 → Stage ERROR 처리 상위에서 결정
         raise
 
@@ -146,6 +145,7 @@ def match_ttps(behavior: BehaviorReport, top_k: int = 3) -> TTPMatchReport:
 
 if __name__ == "__main__":
     import sys
+
     from ..schema import Ecosystem
     from .stage0_registry import check
     from .stage1_entry_point import extract

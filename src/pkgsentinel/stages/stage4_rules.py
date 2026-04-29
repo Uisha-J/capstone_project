@@ -13,9 +13,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ..schema import AttackDimension, TTPEntry, Severity, TTPSource
+from ..schema import AttackDimension, Severity, TTPEntry, TTPSource
 from .stage2_behavior import FileSequence
-
 
 # ─────────────── 행위 패턴 규칙 ───────────────
 #

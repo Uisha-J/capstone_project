@@ -23,10 +23,9 @@ import hashlib
 import json
 import time
 import urllib.request
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from ..db.threat_db import ThreatDB, get_default_db
-
 
 # ─────────────── 출처 ───────────────
 
@@ -66,7 +65,7 @@ ON CONFLICT(ecosystem, package) DO UPDATE SET
 
 def _record_meta(db: ThreatDB, *, source: str, count: int, sha: str,
                  error: str | None = None) -> str:
-    feed_version = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    feed_version = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     with db.cursor() as cur:
         cur.execute("""
             INSERT INTO feed_meta (source, last_fetched_at, record_count,
@@ -105,7 +104,7 @@ def ingest_pypi_top(
                         (source_key,))
             row = cur.fetchone()
             if row and row[0] == sha:
-                print(f"[POPULAR] PyPI unchanged, skip")
+                print("[POPULAR] PyPI unchanged, skip")
                 return {"ok": True, "ecosystem": "PyPI", "skipped": True}
 
     # 데이터 형식: { "last_update": "...", "rows": [{"project": "boto3", "download_count": ...}, ...] }
@@ -159,7 +158,7 @@ def ingest_npm_top(
                         (source_key,))
             row = cur.fetchone()
             if row and row[0] == sha:
-                print(f"[POPULAR] npm unchanged, skip")
+                print("[POPULAR] npm unchanged, skip")
                 return {"ok": True, "ecosystem": "npm", "skipped": True}
 
     # anvaka npmrank 형식: { "rank": { "lodash": <score>, ... } }
@@ -206,7 +205,8 @@ def lookup_popular(db: ThreatDB, ecosystem: str, package: str) -> dict | None:
 # ─────────────── CLI ───────────────
 
 if __name__ == "__main__":
-    import argparse, sys
+    import argparse
+    import sys
 
     p = argparse.ArgumentParser()
     p.add_argument("--ecosystem", choices=["PyPI", "npm", "all"], default="PyPI")
@@ -215,7 +215,7 @@ if __name__ == "__main__":
     args = p.parse_args()
 
     if args.passphrase:
-        from ..db.threat_db import ThreatDB, DEFAULT_DB_PATH
+        from ..db.threat_db import DEFAULT_DB_PATH, ThreatDB
         db = ThreatDB(DEFAULT_DB_PATH, passphrase=args.passphrase)
     else:
         db = None

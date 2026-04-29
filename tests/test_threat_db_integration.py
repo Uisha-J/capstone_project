@@ -6,7 +6,6 @@ Threat DB + 캐시 + 무결성 + threat_filter 통합 테스트.
 """
 from __future__ import annotations
 
-import json
 import os
 import sys
 import tempfile
@@ -22,13 +21,16 @@ TEST_PASSPHRASE = "test-passphrase-do-not-reuse"
 
 os.environ["AISLOP_DB_KEY"] = TEST_PASSPHRASE
 
-from pkgsentinel.db.threat_db import ThreatDB, reset_default_db
-from pkgsentinel.db.integrity import (
-    IntegrityChecker, IntegrityMode, RowHMAC, _merkle_root,
-)
 from pkgsentinel.db.analysis_cache import AnalysisCache, CacheKey
-from pkgsentinel.stages.stage0_threat_filter import run as filter_run, ThreatFilterReport
+from pkgsentinel.db.integrity import (
+    IntegrityChecker,
+    IntegrityMode,
+    RowHMAC,
+    _merkle_root,
+)
+from pkgsentinel.db.threat_db import ThreatDB, reset_default_db
 from pkgsentinel.schema import Ecosystem
+from pkgsentinel.stages.stage0_threat_filter import run as filter_run
 
 
 def _fresh_db() -> ThreatDB:
@@ -91,7 +93,7 @@ def test_row_hmac_tamper_detection():
 
     row["verdict"] = "MALICIOUS"  # 변조
     assert not rh.verify(row, sig)
-    print(f"  OK verify rejects modified row")
+    print("  OK verify rejects modified row")
     return True
 
 
@@ -131,7 +133,7 @@ def test_known_malicious_exact_match():
     print(f"  exact_match={rpt.exact_match}, advisory={rpt.advisory_id}")
     assert rpt.exact_match
     assert rpt.advisory_id == "MAL-2025-test"
-    print(f"  OK")
+    print("  OK")
     return True
 
 
@@ -148,7 +150,7 @@ def test_typosquat_detection():
     rpt = filter_run("reqests", Ecosystem.PYPI, db=db)
     print(f"  typosquat candidates: {rpt.typosquat_candidates}")
     assert any(c["target"] == "requests" for c in rpt.typosquat_candidates)
-    print(f"  OK")
+    print("  OK")
     return True
 
 
@@ -169,7 +171,7 @@ def test_popular_skips_typosquat():
     print(f"  popular_rank={rpt.popular_rank}, typosquats={rpt.typosquat_candidates}")
     assert rpt.popular_rank == 134
     assert rpt.typosquat_candidates == []  # popular 면 검사 skip
-    print(f"  OK")
+    print("  OK")
     return True
 
 
@@ -219,7 +221,7 @@ def test_cache_invalidation_by_new_advisory():
     print(f"  hit after new advisory: hit={h.hit}, reason={h.reason}")
     assert not h.hit
     assert "advisory" in h.reason.lower()
-    print(f"  OK invalidated")
+    print("  OK invalidated")
     return True
 
 
@@ -263,7 +265,7 @@ def test_paranoid_row_hmac():
     # 정상 hit
     h = cache.get(key)
     assert h.hit, f"should hit: {h.reason}"
-    print(f"  OK normal hit")
+    print("  OK normal hit")
 
     # 메모리 변조 시뮬레이션: row 의 verdict 컬럼만 변조 (HMAC 은 그대로)
     with db.cursor() as cur:
@@ -276,7 +278,7 @@ def test_paranoid_row_hmac():
     print(f"  after tamper: hit={h.hit}, reason={h.reason}")
     assert not h.hit
     assert "HMAC" in h.reason or "tamper" in h.reason.lower()
-    print(f"  OK tamper detected by HMAC")
+    print("  OK tamper detected by HMAC")
     return True
 
 
@@ -303,7 +305,7 @@ def main():
             ok = t()
             if not ok:
                 failed += 1
-        except Exception as e:
+        except Exception:
             import traceback
             traceback.print_exc()
             failed += 1

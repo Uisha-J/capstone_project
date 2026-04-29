@@ -6,12 +6,10 @@ Evidence / Verdict 데이터 모델.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field, asdict
-from datetime import datetime, timezone
-from enum import Enum
-from typing import Optional
 import json
-
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from enum import Enum
 
 # ───────────────────────── Enums ─────────────────────────
 
@@ -93,8 +91,8 @@ class TTPEntry:
     mitigations: list[str] = field(default_factory=list)
     severity: Severity = Severity.MEDIUM
     url: str = ""
-    embedding: Optional[list[float]] = None  # Sentence-Transformer 벡터
-    collected_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    embedding: list[float] | None = None  # Sentence-Transformer 벡터
+    collected_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def to_dict(self) -> dict:
         d = {
@@ -150,7 +148,7 @@ class Evidence:
     llm_model: str                          # "claude-sonnet-4-5"
 
     # ── 5) 버전 변화 (해당 시) ─────────
-    version_diff: Optional[VersionDiffInfo] = None
+    version_diff: VersionDiffInfo | None = None
 
     # ── 6) 종합 신뢰도 ────────────────
     confidence: float = 0.0                 # 0.0~1.0
@@ -184,7 +182,7 @@ class StageResult:
     """각 Stage의 성공/실패와 산출물."""
     stage: str                              # "stage_2_behavior_sequence" 등
     success: bool
-    error: Optional[str] = None
+    error: str | None = None
     payload: dict = field(default_factory=dict)
 
 
@@ -242,7 +240,7 @@ def empty_report(
         package=package,
         ecosystem=ecosystem,
         version=version,
-        analyzed_at=datetime.now(timezone.utc),
+        analyzed_at=datetime.now(UTC),
         verdict=Verdict.CLEAN,  # 기본값. 파이프라인 종료 시 결정됨.
     )
 

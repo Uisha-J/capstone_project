@@ -9,14 +9,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from pkgsentinel.benchmarks import harness
 from pkgsentinel.schema import (
+    AnalysisReport,
     Ecosystem,
     Verdict,
-    AnalysisReport,
     empty_report,
 )
-from pkgsentinel.benchmarks import harness
-
 
 # ─────────────── run_pipeline 가짜 ───────────────
 

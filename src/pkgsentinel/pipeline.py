@@ -26,11 +26,44 @@ import traceback
 # detector 모듈을 어떻게 진입하든 — pipeline / worker / cron_main —
 # 첫 import 시점에 1회 실행. 이미 환경변수에 있으면 덮어쓰지 않음.
 from . import _dotenv as _aislopsq_dotenv
+
 _aislopsq_dotenv.load()
 
+from ._pipeline_state import PipelineContext, PipelineOptions
+from .db.integrity import IntegrityMode
+from .evidence.converters import (
+    anomaly_to_evidence as _anomaly_to_evidence,
+)
+from .evidence.converters import (
+    binary_to_evidence as _binary_to_evidence,
+)
+from .evidence.converters import (
+    dependency_to_evidence as _dependency_to_evidence,
+)
+from .evidence.converters import (
+    indicator_hit_to_evidence as _indicator_hit_to_evidence,
+)
+from .evidence.converters import (
+    sandbox_to_evidence as _sandbox_to_evidence,
+)
+from .evidence.converters import (
+    sequence_match_to_evidence as _sequence_match_to_evidence,
+)
+from .evidence.converters import (
+    sstr_to_evidence as _sstr_to_evidence,
+)
+from .evidence.snippets import (
+    find_file_seq as _find_file_seq,
+)
+from .evidence.snippets import (
+    match_confidence as _match_confidence,
+)
+from .evidence.snippets import (
+    snippet_for as _snippet_for,
+)
+from .reporting.serialize import report_to_serializable as _report_to_serializable
 from .schema import (
     AnalysisReport,
-    AttackDimension,
     Ecosystem,
     Evidence,
     LLMVerdict,
@@ -40,77 +73,68 @@ from .schema import (
     Verdict,
     empty_report,
 )
-from .stages.stage0_registry import check
-from .stages.stage0b_attack_history import (
-    check_attack_history,
-    to_evidence as attack_history_to_evidence,
-)
-from .stages.stage1b_full_source import extract_all, to_entry_files, FullSourceExtract
-from .stages.stage2_behavior import analyze as analyze_behavior, BehaviorReport, FileSequence
-from .stages.string_analysis import analyze_strings, SuspiciousString
-from .stages.stage3b_full_diff import analyze_full_diff
-from .stages.stage4_ttp_match import match_ttps, TTPMatch
-from .stages.indicator_matcher import match_all as match_47_indicators, IndicatorHit
-from .stages.taint_slicer import (
-    analyze_python as taint_analyze_python,
-    slice_for_llm as taint_slice_for_llm,
-    TaintFlow,
-)
-from .stages.stage5_llm_review import review
-from .stages.stage5_multi_agent import (
-    review_multi,
-    consensus_to_llm_response,
-    ConsensusReport,
-)
-from .stages.stage_scorecard import (
-    fetch_for_package as scorecard_fetch_for_package,
-    extract_risk_signals as scorecard_risk_signals,
-    ScorecardReport,
-)
-from .stages.stage_ssdf import (
-    evaluate as ssdf_evaluate,
-    SSDFReport,
-)
+from .stages.indicator_matcher import match_all as match_47_indicators
 from .stages.sequence_patterns import (
     mine as mine_sequences,
-    SequenceMatch,
 )
-from .stages.stage_slsa import (
-    evaluate as slsa_evaluate,
-    SLSAReport,
+from .stages.stage0_registry import check
+from .stages.stage0_threat_filter import (
+    ThreatFilterReport,
 )
 from .stages.stage0_threat_filter import (
     run as threat_filter_run,
+)
+from .stages.stage0_threat_filter import (
     to_evidence as threat_filter_to_evidence,
-    ThreatFilterReport,
+)
+from .stages.stage0b_attack_history import (
+    check_attack_history,
+)
+from .stages.stage0b_attack_history import (
+    to_evidence as attack_history_to_evidence,
+)
+from .stages.stage1b_full_source import extract_all, to_entry_files
+from .stages.stage2_behavior import analyze as analyze_behavior
+from .stages.stage3b_full_diff import analyze_full_diff
+from .stages.stage4_ttp_match import match_ttps
+from .stages.stage5_llm_review import review
+from .stages.stage5_multi_agent import (
+    ConsensusReport,
+    consensus_to_llm_response,
+    review_multi,
+)
+from .stages.stage_agentic import (
+    StageAgenticResult,
 )
 from .stages.stage_agentic import (
     run as agentic_run,
-    StageAgenticResult,
 )
-from .db.integrity import IntegrityMode
+from .stages.stage_scorecard import (
+    ScorecardReport,
+)
+from .stages.stage_scorecard import (
+    extract_risk_signals as scorecard_risk_signals,
+)
+from .stages.stage_scorecard import (
+    fetch_for_package as scorecard_fetch_for_package,
+)
+from .stages.stage_slsa import (
+    SLSAReport,
+)
+from .stages.stage_slsa import (
+    evaluate as slsa_evaluate,
+)
+from .stages.stage_ssdf import (
+    evaluate as ssdf_evaluate,
+)
+from .stages.string_analysis import analyze_strings
+from .stages.taint_slicer import (
+    analyze_python as taint_analyze_python,
+)
+from .stages.taint_slicer import (
+    slice_for_llm as taint_slice_for_llm,
+)
 from .verdict_rules import decide_verdict
-
-from .evidence.snippets import (
-    find_file_seq as _find_file_seq,
-    snippet_for as _snippet_for,
-    match_confidence as _match_confidence,
-)
-from .evidence.converters import (
-    anomaly_to_evidence as _anomaly_to_evidence,
-    binary_to_evidence as _binary_to_evidence,
-    dependency_to_evidence as _dependency_to_evidence,
-    indicator_hit_to_evidence as _indicator_hit_to_evidence,
-    sandbox_to_evidence as _sandbox_to_evidence,
-    sequence_match_to_evidence as _sequence_match_to_evidence,
-    sstr_to_evidence as _sstr_to_evidence,
-)
-from .reporting.formats import format_cyclonedx, format_report
-from .reporting.serialize import report_to_serializable as _report_to_serializable
-
-from ._pipeline_state import PipelineContext, PipelineOptions
-
-
 
 # ─────────────── 메인 ───────────────
 
@@ -802,7 +826,7 @@ def run_pipeline(
     # ========== Stage 6: 의존성 재귀 (옵션) ==========
     if ctx.options.enable_deps:
         try:
-            from .stages.stage_dependency import extract_dependencies, analyze_dependencies
+            from .stages.stage_dependency import analyze_dependencies, extract_dependencies
             dep_ext = extract_dependencies(ctx.ext.source_files, ecosystem)
             dep_results = analyze_dependencies(
                 dep_ext, ecosystem, attack_history_only=True, max_packages=30,
@@ -832,6 +856,7 @@ def run_pipeline(
     if ctx.ext.binary_files:
         try:
             import urllib.request
+
             from .stages.stage_binary import extract_and_analyze
             # 아카이브 재다운로드 (전 파일 추출 때와 동일 URL)
             req = urllib.request.Request(
@@ -919,11 +944,13 @@ def run_pipeline(
 
     # OWASP LLM Top 10 / MITRE ATLAS 매핑 (참고 정보)
     try:
+        from .knowledge.mitre_atlas import supply_chain_relevant
         from .knowledge.owasp_llm import (
-            map_verdict_to_owasp,
             get as get_owasp,
         )
-        from .knowledge.mitre_atlas import supply_chain_relevant
+        from .knowledge.owasp_llm import (
+            map_verdict_to_owasp,
+        )
         owasp_ids = map_verdict_to_owasp(report.verdict.value)
         report.package_meta["owasp_llm_top10"] = [
             {

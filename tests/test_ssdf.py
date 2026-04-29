@@ -7,8 +7,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from pkgsentinel.schema import Ecosystem
-from pkgsentinel.stages.stage_ssdf import evaluate, SSDFStatus
-from pkgsentinel.stages.stage_scorecard import ScorecardReport, ScorecardCheck
+from pkgsentinel.stages.stage_scorecard import ScorecardCheck, ScorecardReport
+from pkgsentinel.stages.stage_ssdf import SSDFStatus, evaluate
 
 
 def _make_scorecard(pairs: dict[str, float]) -> ScorecardReport:

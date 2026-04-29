@@ -20,7 +20,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
 
 from ..schema import Ecosystem
 
@@ -38,11 +37,11 @@ class SLSAReport:
     level: SLSALevel
     has_provenance: bool
     has_signature: bool
-    builder_url: Optional[str] = None
-    source_uri: Optional[str] = None
-    raw_provenance: Optional[dict] = None
+    builder_url: str | None = None
+    source_uri: str | None = None
+    raw_provenance: dict | None = None
     notes: list[str] = field(default_factory=list)
-    error: Optional[str] = None
+    error: str | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -71,9 +70,9 @@ def _evaluate_npm(raw: dict) -> SLSAReport:
     notes: list[str] = []
     has_provenance = False
     has_signature = False
-    builder_url: Optional[str] = None
-    source_uri: Optional[str] = None
-    raw_prov: Optional[dict] = None
+    builder_url: str | None = None
+    source_uri: str | None = None
+    raw_prov: dict | None = None
 
     latest = (raw.get("dist-tags") or {}).get("latest")
     ver = (raw.get("versions") or {}).get(latest, {}) if latest else {}
@@ -135,9 +134,9 @@ def _evaluate_pypi(raw: dict) -> SLSAReport:
     notes: list[str] = []
     has_provenance = False
     has_signature = False
-    builder_url: Optional[str] = None
-    source_uri: Optional[str] = None
-    raw_prov: Optional[dict] = None
+    builder_url: str | None = None
+    source_uri: str | None = None
+    raw_prov: dict | None = None
 
     info = raw.get("info") or {}
     # source 추정
@@ -228,6 +227,7 @@ def evaluate(raw_metadata: dict | None, ecosystem: Ecosystem) -> SLSAReport:
 
 if __name__ == "__main__":
     import sys
+
     from .stage0_registry import check
 
     pkg = sys.argv[1] if len(sys.argv) > 1 else "sigstore"
@@ -242,6 +242,6 @@ if __name__ == "__main__":
     print(rpt.summary_line())
     print(f"  builder_url : {rpt.builder_url}")
     print(f"  source_uri  : {rpt.source_uri}")
-    print(f"  notes       :")
+    print("  notes       :")
     for n in rpt.notes:
         print(f"    - {n}")

@@ -6,11 +6,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from pkgsentinel.schema import Severity
+from pkgsentinel.stages.sequence_patterns import PATTERNS, mine
 from pkgsentinel.stages.stage1_entry_point import EntryFile
-from pkgsentinel.stages.stage2_behavior import _analyze_python, BehaviorReport
-from pkgsentinel.stages.sequence_patterns import mine, PATTERNS
-
+from pkgsentinel.stages.stage2_behavior import BehaviorReport, _analyze_python
 
 # 1) credential exfil
 SAMPLE_CRED = '''

@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from ..schema import (
     AnalysisReport,
@@ -30,7 +30,6 @@ from ..schema import (
     Severity,
     Verdict,
 )
-
 
 _TOOL_VENDOR = "ai-slopsquatting-detector"
 _TOOL_NAME = "secure-capstone"
@@ -128,7 +127,7 @@ def to_cyclonedx(report: AnalysisReport) -> dict:
     ts = (
         report.analyzed_at.isoformat()
         if hasattr(report, "analyzed_at") and report.analyzed_at
-        else datetime.now(timezone.utc).isoformat()
+        else datetime.now(UTC).isoformat()
     )
 
     component = {

@@ -27,7 +27,6 @@ import stat
 import threading
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Optional
 
 try:
     import sqlcipher3 as _sqlite
@@ -334,7 +333,7 @@ class ThreatDB:
                 pass
             self._tls.c = None
 
-    def get_meta(self, key: str) -> Optional[str]:
+    def get_meta(self, key: str) -> str | None:
         with self.cursor() as cur:
             cur.execute("SELECT value FROM schema_meta WHERE key=?", (key,))
             row = cur.fetchone()
@@ -473,7 +472,9 @@ def reset_default_db():
 # ─────────────── CLI ───────────────
 
 if __name__ == "__main__":
-    import argparse, json, sys
+    import argparse
+    import json
+    import sys
 
     p = argparse.ArgumentParser(description="ThreatDB inspector")
     p.add_argument("--db", default=str(DEFAULT_DB_PATH))

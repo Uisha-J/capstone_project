@@ -18,14 +18,11 @@ from __future__ import annotations
 
 import hashlib
 import json
-import time
 import urllib.error
 import urllib.request
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import Optional
-
+from datetime import UTC, datetime
 
 _TOOL_ID = f"identity--{uuid.uuid5(uuid.NAMESPACE_DNS, 'ai-slopsq-detector')}"
 _TOOL_NAME = "ai-slopsquatting-detector"
@@ -33,7 +30,7 @@ _TOOL_VERSION = "2.0"
 
 
 def _now_ts() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
 def _new_id(prefix: str, *parts: str) -> str:

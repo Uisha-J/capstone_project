@@ -22,10 +22,8 @@ import re
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
-from typing import Optional
 
 from ..schema import Ecosystem
-
 
 # ─────────────── 결과 ───────────────
 
@@ -47,11 +45,11 @@ class ScorecardCheck:
 @dataclass
 class ScorecardReport:
     available: bool
-    repo: Optional[str] = None       # github.com/owner/repo
-    date: Optional[str] = None
-    overall_score: Optional[float] = None
+    repo: str | None = None       # github.com/owner/repo
+    date: str | None = None
+    overall_score: float | None = None
     checks: list[ScorecardCheck] = field(default_factory=list)
-    error: Optional[str] = None
+    error: str | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -85,7 +83,7 @@ _GH_SSH = re.compile(
 )
 
 
-def extract_github_repo(url: str) -> Optional[str]:
+def extract_github_repo(url: str) -> str | None:
     """다양한 형식의 URL 에서 'owner/repo' 추출."""
     if not url:
         return None
@@ -101,7 +99,7 @@ def extract_github_repo(url: str) -> Optional[str]:
 def find_github_repo_in_metadata(
     raw_metadata: dict | None,
     ecosystem: Ecosystem,
-) -> Optional[str]:
+) -> str | None:
     """PyPI/npm 메타데이터에서 GitHub owner/repo 추출."""
     if not raw_metadata:
         return None
@@ -276,7 +274,7 @@ if __name__ == "__main__":
     if rpt.available:
         print(f"  date         : {rpt.date}")
         print(f"  overall_score: {rpt.overall_score:.2f}/10")
-        print(f"  checks       :")
+        print("  checks       :")
         for c in rpt.checks:
             print(f"    - {c.name:<25}  {c.score:>5.1f}  {c.reason[:80]}")
         print()

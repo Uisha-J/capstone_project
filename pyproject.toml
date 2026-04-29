@@ -87,12 +87,18 @@ select = [
     "UP",  # pyupgrade
 ]
 ignore = [
-    "E501",  # line too long (해석 가독성 우선 케이스가 많음)
-    "B008",  # function call in default argument (dataclass field 패턴)
+    "E501",   # line too long (해석 가독성 우선 케이스가 많음)
+    "B008",   # function call in default argument (dataclass field 패턴)
+    "UP042",  # str Enum → StrEnum (대량 변경 위험, 별도 PR 추후)
+    "UP045",  # Optional → X | None (target-version 후 별도 정리)
+    "E402",   # module-import-not-at-top (pkgsentinel/_dotenv 로드 후 import 패턴)
+    "B007",   # unused loop variable (의도적인 enumerate 케이스 다수)
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["E402"]  # sys.path.insert before imports
+"tests/*" = ["E402", "F401"]   # sys.path.insert + 의도적 unused import (re-export)
+"src/pkgsentinel/_pipeline_state.py" = ["F401"]   # forward ref imports
+"scripts/*" = ["E402"]   # ROOT path setup before imports
 
 # ─────────────── pytest ───────────────
 [tool.pytest.ini_options]

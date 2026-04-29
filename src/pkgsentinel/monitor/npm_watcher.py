@@ -20,12 +20,10 @@ import json
 import time
 import urllib.parse
 import urllib.request
-from typing import Iterable
 
 from ..db.threat_db import ThreatDB, get_default_db
 from .priority_queue import PriorityQueue
 from .release_event import ReleaseEvent
-
 
 NPM_CHANGES = "https://replicate.npmjs.com/_changes"
 NPM_REPLICATE_BASE = "https://replicate.npmjs.com"
@@ -204,7 +202,8 @@ def poll_once(
 # ─────────────── CLI ───────────────
 
 if __name__ == "__main__":
-    import argparse, sys
+    import argparse
+    import sys
 
     p = argparse.ArgumentParser()
     p.add_argument("--limit", type=int, default=200,
@@ -218,7 +217,7 @@ if __name__ == "__main__":
     args = p.parse_args()
 
     if args.passphrase:
-        from ..db.threat_db import ThreatDB, DEFAULT_DB_PATH
+        from ..db.threat_db import DEFAULT_DB_PATH, ThreatDB
         db = ThreatDB(DEFAULT_DB_PATH, passphrase=args.passphrase)
     else:
         db = None

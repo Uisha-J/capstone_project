@@ -19,11 +19,8 @@ Falco TracingPolicy / 일반 Falco rule 자동 생성기.
 """
 from __future__ import annotations
 
-import json
 import os
-import urllib.parse
 from dataclasses import dataclass
-
 
 # ─────────────── 헬퍼 ───────────────
 
@@ -101,53 +98,53 @@ def to_falco_rules(report: dict) -> str:
     if iocs["domains"]:
         domains_str = ", ".join(f"'{_yaml_escape(d)}'" for d in iocs["domains"][:50])
         rules.append(f"- macro: aislopsq_known_bad_domains_{rule_id_base}")
-        rules.append(f"  condition: >")
+        rules.append("  condition: >")
         rules.append(f"    fd.sip.name in ({domains_str})")
         rules.append("")
 
         rules.append(f"- rule: AISLOPSQ Outbound to known-bad domain ({pkg})")
-        rules.append(f"  desc: >")
+        rules.append("  desc: >")
         rules.append(
             f"    Connection to a domain associated with malicious package "
             f"{eco}/{pkg}@{ver} (verdict={verdict})."
         )
-        rules.append(f"  condition: >")
+        rules.append("  condition: >")
         rules.append(
             f"    outbound and aislopsq_known_bad_domains_{rule_id_base}"
         )
-        rules.append(f"  output: >")
+        rules.append("  output: >")
         rules.append(
             f"    AISLOPSQ outbound connection to {pkg} IoC domain "
             f"(proc.cmdline=%proc.cmdline fd.name=%fd.name "
             f"container.id=%container.id)"
         )
-        rules.append(f"  priority: WARNING")
-        rules.append(f"  tags: [aislopsq, supply-chain, network]")
+        rules.append("  priority: WARNING")
+        rules.append("  tags: [aislopsq, supply-chain, network]")
         rules.append("")
 
     # rule: 의심 명령어
     if iocs["commands"]:
-        cmds_str = ", ".join(f"'{_yaml_escape(c)}'" for c in iocs["commands"][:30])
+        ", ".join(f"'{_yaml_escape(c)}'" for c in iocs["commands"][:30])
         rules.append(f"- rule: AISLOPSQ Suspicious exec ({pkg})")
-        rules.append(f"  desc: >")
+        rules.append("  desc: >")
         rules.append(
             f"    Execution of command pattern observed in malicious package "
             f"{eco}/{pkg}@{ver}."
         )
-        rules.append(f"  condition: >")
+        rules.append("  condition: >")
         rules.append(
-            f"    spawned_process and "
-            f"(proc.cmdline contains 'curl' or proc.cmdline contains 'wget' "
-            f"or proc.cmdline contains 'powershell -e' "
-            f"or proc.cmdline contains 'base64 -d')"
+            "    spawned_process and "
+            "(proc.cmdline contains 'curl' or proc.cmdline contains 'wget' "
+            "or proc.cmdline contains 'powershell -e' "
+            "or proc.cmdline contains 'base64 -d')"
         )
-        rules.append(f"  output: >")
+        rules.append("  output: >")
         rules.append(
             f"    AISLOPSQ suspicious exec linked to {pkg} "
             f"(proc.cmdline=%proc.cmdline)"
         )
-        rules.append(f"  priority: WARNING")
-        rules.append(f"  tags: [aislopsq, supply-chain, exec]")
+        rules.append("  priority: WARNING")
+        rules.append("  tags: [aislopsq, supply-chain, exec]")
         rules.append("")
 
     if not iocs["domains"] and not iocs["commands"]:

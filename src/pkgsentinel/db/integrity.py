@@ -30,8 +30,6 @@ import urllib.request
 import zipfile
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
-
 
 CHUNK_SIZE = 65536  # 64 KiB
 DEFAULT_TIMEOUT = 30
@@ -58,17 +56,17 @@ class Fingerprint:
     archive_url: str
 
     # fast
-    etag: Optional[str] = None
-    content_length: Optional[int] = None
-    last_modified: Optional[str] = None
+    etag: str | None = None
+    content_length: int | None = None
+    last_modified: str | None = None
 
     # strict
-    archive_sha256: Optional[str] = None
-    archive_size: Optional[int] = None
+    archive_sha256: str | None = None
+    archive_size: int | None = None
 
     # paranoid
     file_hashes: dict[str, str] = field(default_factory=dict)
-    merkle_root: Optional[str] = None
+    merkle_root: str | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -259,7 +257,7 @@ class IntegrityChecker:
     def _fingerprint_fast(self, url: str) -> Fingerprint:
         try:
             h = _http_head(url)
-        except Exception as e:
+        except Exception:
             return Fingerprint(mode=IntegrityMode.FAST, archive_url=url)
         cl = h.get("content-length")
         return Fingerprint(
@@ -322,7 +320,7 @@ class RowHMAC:
         self._key = key
 
     @classmethod
-    def from_passphrase(cls, passphrase: str) -> "RowHMAC":
+    def from_passphrase(cls, passphrase: str) -> RowHMAC:
         # HKDF 가 정석이지만 단순화: sha256(passphrase || "row-hmac-v1")
         derived = hashlib.sha256(
             passphrase.encode("utf-8") + b"|row-hmac-v1"
@@ -347,7 +345,6 @@ class RowHMAC:
 # ─────────────── CLI 자체 검증 ───────────────
 
 if __name__ == "__main__":
-    import sys
 
     # 외부 호출이 없는 자체 검증: 작은 byte stream 으로 강도별 동작 보여줌
     print("== Merkle root self-check ==")
@@ -362,7 +359,7 @@ if __name__ == "__main__":
     leaves2[2] = hashlib.sha256(b"tampered").hexdigest()
     root3 = _merkle_root(leaves2)
     assert root != root3
-    print(f"  tamper detection: OK (root changes)")
+    print("  tamper detection: OK (root changes)")
 
     print("\n== Row HMAC self-check ==")
     rh = RowHMAC.from_passphrase("dev-test-passphrase-9j2k4l8m")
@@ -379,7 +376,7 @@ if __name__ == "__main__":
     # 행 변조
     row["verdict"] = "CLEAN"
     assert not rh.verify(row, sig)
-    print(f"  tamper detection: OK (verify fails)")
+    print("  tamper detection: OK (verify fails)")
 
     print("\n== Mode comparison logic ==")
     chk = IntegrityChecker(IntegrityMode.STRICT)

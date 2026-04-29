@@ -16,27 +16,43 @@ AISLOPSQ — Agentic Package Security 모듈.
   - Meta AI 2025 — Agents Rule of Two
 """
 
-from .manifest import (
-    AISLOPSQManifest, parse_manifest, parse_python_pyproject, parse_npm_package,
-)
 from .capability_detector import (
-    Capability, CAPABILITIES,
-    extract_capabilities_python, extract_capabilities_js,
+    CAPABILITIES,
+    Capability,
+    extract_capabilities_js,
+    extract_capabilities_python,
     map_to_abc,
 )
-from .signals import (
-    SignalReport, AGENTIC_THRESHOLD,
-    detect_agentic_python, detect_agentic_js,
+from .classifier import (
+    AgenticClassification,
+    classify,
+)
+from .manifest import (
+    AISLOPSQManifest,
+    parse_manifest,
+    parse_npm_package,
+    parse_python_pyproject,
 )
 from .rule_of_two import (
-    LethalTrifectaCheck, has_lethal_trifecta, detect_human_in_the_loop,
+    LethalTrifectaCheck,
+    detect_human_in_the_loop,
+    has_lethal_trifecta,
 )
 from .rules import (
-    RuleHit, RuleReport, RuleSeverity,
-    R1_check, R2_check, R3_check, R4_check, run_all_rules,
+    R1_check,
+    R2_check,
+    R3_check,
+    R4_check,
+    RuleHit,
+    RuleReport,
+    RuleSeverity,
+    run_all_rules,
 )
-from .classifier import (
-    AgenticClassification, classify,
+from .signals import (
+    AGENTIC_THRESHOLD,
+    SignalReport,
+    detect_agentic_js,
+    detect_agentic_python,
 )
 
 __all__ = [

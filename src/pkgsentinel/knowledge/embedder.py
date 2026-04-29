@@ -42,7 +42,7 @@ def embed_ttps(entries: list[TTPEntry]) -> list[TTPEntry]:
     texts = [_ttp_to_text(e) for e in entries]
     print(f"[embedder] embedding {len(texts)} entries")
     vectors = model.encode(texts, show_progress_bar=True, normalize_embeddings=True)
-    for e, v in zip(entries, vectors):
+    for e, v in zip(entries, vectors, strict=False):
         e.embedding = v.tolist()
     return entries
 

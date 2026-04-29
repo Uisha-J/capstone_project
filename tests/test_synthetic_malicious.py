@@ -14,15 +14,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from pkgsentinel.schema import (
     Ecosystem,
-    Verdict,
-    LLMVerdict,
-    AttackDimension,
 )
-from pkgsentinel.stages.stage1_entry_point import ExtractedPackage, EntryFile
+from pkgsentinel.stages.stage1_entry_point import EntryFile, ExtractedPackage
 from pkgsentinel.stages.stage2_behavior import analyze as analyze_behavior
 from pkgsentinel.stages.stage4_ttp_match import match_ttps
 from pkgsentinel.stages.stage5_llm_review import review
-
 
 # ─────────────── 합성 악성 샘플 ───────────────
 

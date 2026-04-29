@@ -15,21 +15,17 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import sys
 import time
 import traceback
 from dataclasses import dataclass
-from typing import Optional
 
 from ..db.threat_db import ThreatDB, get_default_db
-from ..pipeline import run_pipeline, _report_to_serializable
-from ..schema import Ecosystem, Verdict
-from .priority_queue import PriorityQueue, QueuedJob
-
+from ..pipeline import _report_to_serializable, run_pipeline
+from ..realtime.sinks.falco_policy import FalcoPolicySink
 from ..realtime.sinks.stix_sink import STIXSink
 from ..realtime.sinks.webhook_sink import WebhookSink
-from ..realtime.sinks.falco_policy import FalcoPolicySink
-
+from ..schema import Ecosystem, Verdict
+from .priority_queue import PriorityQueue, QueuedJob
 
 # ─────────────── Sink 환경변수 설정 ───────────────
 
@@ -44,7 +40,7 @@ class SinkConfig:
     taxii_pass: str | None = None       # AISLOP_TAXII_PASS
 
     @classmethod
-    def from_env(cls) -> "SinkConfig":
+    def from_env(cls) -> SinkConfig:
         return cls(
             stix_out_dir=os.getenv("AISLOP_STIX_OUT_DIR"),
             webhook_url=os.getenv("AISLOP_WEBHOOK_URL"),
@@ -150,7 +146,7 @@ class JobResult:
     verdict: str
     elapsed_s: float
     sinks_emitted: dict
-    error: Optional[str] = None
+    error: str | None = None
 
 
 def process_one(
@@ -299,7 +295,7 @@ def _argparser() -> argparse.ArgumentParser:
 def main():
     args = _argparser().parse_args()
     if args.passphrase:
-        from ..db.threat_db import ThreatDB, DEFAULT_DB_PATH
+        from ..db.threat_db import DEFAULT_DB_PATH, ThreatDB
         db = ThreatDB(DEFAULT_DB_PATH, passphrase=args.passphrase)
     else:
         db = None

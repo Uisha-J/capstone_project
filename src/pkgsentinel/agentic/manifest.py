@@ -11,8 +11,6 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from typing import Optional
-
 
 # ─────────────── Schema ───────────────
 
@@ -72,7 +70,7 @@ class AISLOPSQManifest:
 
 # ─────────────── Python (pyproject.toml) ───────────────
 
-def parse_python_pyproject(content: str) -> Optional[AISLOPSQManifest]:
+def parse_python_pyproject(content: str) -> AISLOPSQManifest | None:
     """pyproject.toml 텍스트 → manifest. [tool.aislopsq] 없으면 None."""
     try:
         try:
@@ -92,7 +90,7 @@ def parse_python_pyproject(content: str) -> Optional[AISLOPSQManifest]:
 
 # ─────────────── npm (package.json) ───────────────
 
-def parse_npm_package(content: str) -> Optional[AISLOPSQManifest]:
+def parse_npm_package(content: str) -> AISLOPSQManifest | None:
     """package.json 텍스트 → manifest. 'aislopsq' 키 없으면 None."""
     try:
         data = json.loads(content)
@@ -138,7 +136,7 @@ def _normalize_keys(d: dict, mapping: dict[str, str]) -> dict:
 
 def parse_manifest(*, pyproject_text: str | None = None,
                    package_json_text: str | None = None,
-                   ) -> Optional[AISLOPSQManifest]:
+                   ) -> AISLOPSQManifest | None:
     """둘 중 하나만 있으면 그것 사용. 둘 다 있으면 npm 우선."""
     if package_json_text is not None:
         m = parse_npm_package(package_json_text)

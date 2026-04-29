@@ -19,17 +19,15 @@ from __future__ import annotations
 import argparse
 import csv
 import json
-import os
 import sys
 import time
 import traceback
-from dataclasses import dataclass, field, asdict
+from collections.abc import Iterable
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Iterable, Optional
 
-from ..schema import Ecosystem, Verdict
 from ..pipeline import run_pipeline
-
+from ..schema import Ecosystem, Verdict
 
 # ─────────────── 데이터셋 항목 ───────────────
 
@@ -38,7 +36,7 @@ class BenchmarkRow:
     package: str
     ecosystem: Ecosystem
     expected_label: str          # "malicious" | "benign"
-    version: Optional[str] = None
+    version: str | None = None
     note: str = ""
 
 
@@ -56,7 +54,7 @@ class BenchmarkResult:
     is_false_negative: bool = False
     is_error: bool = False
     elapsed_s: float = 0.0
-    error: Optional[str] = None
+    error: str | None = None
     evidence_count: int = 0
 
     def to_dict(self) -> dict:

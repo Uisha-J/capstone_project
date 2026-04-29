@@ -23,11 +23,9 @@ Sequential Pattern Mining for malicious behavior detection.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 from ..schema import AttackDimension, Severity
-from .stage2_behavior import APICall, FileSequence, BehaviorReport
-
+from .stage2_behavior import APICall, BehaviorReport, FileSequence
 
 # ─────────────── 슬롯 / 패턴 ───────────────
 
@@ -64,7 +62,7 @@ class SequenceMatch:
 @dataclass
 class SequenceMineReport:
     matches: list[SequenceMatch] = field(default_factory=list)
-    error: Optional[str] = None
+    error: str | None = None
 
 
 # ─────────────── 패턴 카탈로그 ───────────────
@@ -165,7 +163,7 @@ def _match_pattern_at(
     calls: list[APICall],
     start: int,
     pattern: SequencePattern,
-) -> Optional[tuple[int, int]]:
+) -> tuple[int, int] | None:
     """`calls[start:]` 에서 패턴이 시작 가능한지 검사.
 
     탐욕적으로 각 슬롯을 가능한 만큼 채운 뒤, 다음 슬롯도 만족하는지 확인.

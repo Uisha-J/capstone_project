@@ -21,7 +21,6 @@ from dataclasses import dataclass, field
 from ..schema import AttackDimension
 from ..stages.stage2_behavior import FileSequence
 
-
 # ─────────────── 카테고리 정의 ───────────────
 
 @dataclass
@@ -172,8 +171,8 @@ def detect_anomalies(
 if __name__ == "__main__":
     # 합성 예시
     from ..schema import AttackDimension as D
+    from ..stages.stage2_behavior import APICall, FileSequence
     from .anomaly_baseline import detect_anomalies  # noqa
-    from ..stages.stage2_behavior import FileSequence, APICall
 
     # 예: JSON 파서 카테고리 패키지인데 requests 를 사용
     fake_seq = FileSequence(path="evil-parser/__init__.py", language="python")

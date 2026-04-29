@@ -18,8 +18,7 @@ priority_queue 에 넣는다. worker 는 ReleaseEvent 단위로 처리.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field, asdict
-from typing import Optional
+from dataclasses import asdict, dataclass, field
 
 
 @dataclass
@@ -50,11 +49,11 @@ _RANK_BUCKETS = [
 
 def compute_priority(
     *,
-    rank: Optional[int] = None,
+    rank: int | None = None,
     has_recent_advisory: bool = False,
     is_first_seen: bool = False,
     has_typosquat_signal: bool = False,
-    archive_size_bytes: Optional[int] = None,
+    archive_size_bytes: int | None = None,
 ) -> int:
     """위 표 기반 우선순위 점수. 0 (가장 우선) ~ 1000."""
     score = _DEFAULT_PRIORITY

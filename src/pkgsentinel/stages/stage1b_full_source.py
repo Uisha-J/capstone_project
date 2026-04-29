@@ -17,7 +17,6 @@ import tarfile
 import urllib.request
 import zipfile
 from dataclasses import dataclass, field
-from typing import Optional
 
 from ..schema import Ecosystem
 from .stage1_entry_point import (
@@ -28,7 +27,6 @@ from .stage1_entry_point import (
     _detect_language,
     _safe_decode,
 )
-
 
 # ─────────────── 바이너리 / 분석 대상 분류 ───────────────
 
@@ -68,7 +66,7 @@ class FullSourceExtract:
     binary_files: list[str] = field(default_factory=list)     # 경로만 기록 (Phase C 용)
     all_file_names: list[str] = field(default_factory=list)
     skipped: list[tuple[str, str]] = field(default_factory=list)  # (path, reason)
-    error: Optional[str] = None
+    error: str | None = None
 
 
 # ─────────────── 파일 분류 ───────────────
@@ -187,8 +185,9 @@ def _extract_from_tar(data: bytes, ecosystem: Ecosystem):
             name = member.name
             all_names.append(name)
 
-            def _reader():
-                f = tf.extractfile(member)
+            def _reader(_m=member):
+                # default arg `_m=member` 으로 loop 변수 바인딩 (ruff B023)
+                f = tf.extractfile(_m)
                 return f.read() if f else b""
 
             src, bin_path, reason = _process_member(
@@ -294,6 +293,7 @@ def to_entry_files(full: FullSourceExtract) -> list[EntryFile]:
 if __name__ == "__main__":
     import sys
     from collections import Counter
+
     from .stage0_registry import check
 
     pkg = sys.argv[1] if len(sys.argv) > 1 else "flask"
@@ -322,6 +322,6 @@ if __name__ == "__main__":
     print(f"  lang dist     : {dict(lang_counts)}")
 
     if ext.binary_files:
-        print(f"\nBinary files (Phase C 분석 대상):")
+        print("\nBinary files (Phase C 분석 대상):")
         for b in ext.binary_files[:5]:
             print(f"  {b}")

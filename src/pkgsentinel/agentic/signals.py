@@ -12,10 +12,8 @@ Agentic 자동 판별 — manifest 부재 시 가중치 신호 합산.
 """
 from __future__ import annotations
 
-import ast
 import re
 from dataclasses import dataclass, field
-
 
 AGENTIC_THRESHOLD = 5
 

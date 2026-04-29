@@ -15,14 +15,12 @@ Stage 3B — 전 파일 버전 차이 분석.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
-from ..schema import Severity, VersionDiffInfo, AttackDimension
+from ..schema import AttackDimension, Severity, VersionDiffInfo
 from .stage0_registry import RegistryInfo
-from .stage1b_full_source import extract_all, FullSourceExtract, FullSourceFile
-from .stage2_behavior import analyze as analyze_behavior, BehaviorReport
 from .stage1_entry_point import EntryFile
-
+from .stage1b_full_source import FullSourceExtract, FullSourceFile, extract_all
+from .stage2_behavior import BehaviorReport
 
 # ─────────────── 결과 ───────────────
 
@@ -43,9 +41,9 @@ class FullDiffResult:
     file_diffs: list[FileDiff] = field(default_factory=list)
     overall_severity: Severity = Severity.LOW
     summary: str = ""
-    error: Optional[str] = None
+    error: str | None = None
 
-    def to_version_diff_info(self) -> Optional[VersionDiffInfo]:
+    def to_version_diff_info(self) -> VersionDiffInfo | None:
         if not self.compared_versions or self.error:
             return None
         # 통합 new_apis 리스트
@@ -80,7 +78,7 @@ def _sources_to_entry_files(extract: FullSourceExtract) -> list[EntryFile]:
 def _behavior_for_files(files: list[EntryFile]) -> BehaviorReport:
     """FullSource → Stage 2 재사용."""
     # Stage 2 는 ExtractedPackage를 받지만, 여기선 EntryFile 리스트만 필요
-    from .stage2_behavior import _analyze_python, _analyze_javascript, FileSequence
+    from .stage2_behavior import _analyze_javascript, _analyze_python
 
     report = BehaviorReport()
     for ef in files:
@@ -261,7 +259,7 @@ def analyze_full_diff(
     all_new_apis: set[str] = set()
     all_new_dims: set[AttackDimension] = set()
 
-    from .api_catalog import lookup_python, lookup_js
+    from .api_catalog import lookup_js, lookup_python
 
     for path, sf in curr_files.items():
         prev_sf = prev_files.get(path)
@@ -313,6 +311,7 @@ def analyze_full_diff(
 
 if __name__ == "__main__":
     import sys
+
     from ..schema import Ecosystem
     from .stage0_registry import check
 

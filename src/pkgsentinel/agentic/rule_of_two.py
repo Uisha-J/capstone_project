@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from .capability_detector import Capability, map_to_abc
+from .capability_detector import map_to_abc
 
 
 @dataclass

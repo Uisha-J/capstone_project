@@ -23,7 +23,10 @@ if not os.environ.get("AISLOP_DB_KEY"):
     os.environ["AISLOP_DB_KEY"] = "test-stage-cache-passphrase"
 
 from pkgsentinel.db.stage_cache import (
-    StageCache, StageCacheKey, all_supported_stages, stage_version_for,
+    StageCache,
+    StageCacheKey,
+    all_supported_stages,
+    stage_version_for,
 )
 
 

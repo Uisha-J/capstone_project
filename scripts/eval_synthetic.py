@@ -32,19 +32,18 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from pkgsentinel.schema import (
-    AnalysisReport, AttackDimension, Ecosystem, Evidence, LLMVerdict,
-    Severity, StageResult, TTPSource, Verdict, empty_report,
+    LLMVerdict,
+    Severity,
+    Verdict,
 )
-from pkgsentinel.stages.stage1_entry_point import EntryFile
-from pkgsentinel.stages.stage1b_full_source import FullSourceFile
-from pkgsentinel.stages.stage2_behavior import _analyze_python, BehaviorReport
-from pkgsentinel.stages.stage4_ttp_match import match_ttps
 from pkgsentinel.stages.indicator_matcher import match_all as match_47
 from pkgsentinel.stages.sequence_patterns import mine as mine_seq
-from pkgsentinel.stages.taint_slicer import analyze_python as taint_analyze
+from pkgsentinel.stages.stage1_entry_point import EntryFile
+from pkgsentinel.stages.stage1b_full_source import FullSourceFile
+from pkgsentinel.stages.stage2_behavior import BehaviorReport, _analyze_python
+from pkgsentinel.stages.stage4_ttp_match import match_ttps
 from pkgsentinel.stages.stage5_multi_agent import review_multi
-from pkgsentinel.knowledge.malicious_indicators import IndicatorCategory
-
+from pkgsentinel.stages.taint_slicer import analyze_python as taint_analyze
 
 # ─────────────── Fixture ───────────────
 

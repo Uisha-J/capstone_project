@@ -12,7 +12,6 @@ from ..stages.indicator_matcher import IndicatorHit
 from ..stages.sequence_patterns import SequenceMatch
 from ..stages.string_analysis import SuspiciousString
 
-
 # 단독으로는 약한 신호인 지표 코드 (정상 패키지에서도 흔히 사용됨).
 # 다른 지표와 조합되어야 의미 있음.
 STANDALONE_WEAK_INDICATORS = {

@@ -23,12 +23,11 @@ import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
-from typing import Optional
 
 
 def hmac_sign(secret: str, timestamp_ms: int, body: bytes) -> str:
     """HMAC-SHA256(secret, "<ts>.<body>") → hex digest."""
-    msg = f"{timestamp_ms}.".encode("utf-8") + body
+    msg = f"{timestamp_ms}.".encode() + body
     sig = hmac.new(
         secret.encode("utf-8"), msg, hashlib.sha256,
     ).hexdigest()

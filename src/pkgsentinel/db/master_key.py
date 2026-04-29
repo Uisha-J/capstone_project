@@ -20,8 +20,6 @@ import os
 import secrets
 import stat
 from pathlib import Path
-from typing import Optional
-
 
 ENV_KEY = "AISLOP_DB_KEY"
 KEYFILE_PATH = Path.home() / ".aislopsquatting" / "db.key"
@@ -31,12 +29,12 @@ KEYRING_USER = "threat-db"
 
 # ─────────────── 조회 ───────────────
 
-def from_env() -> Optional[str]:
+def from_env() -> str | None:
     v = os.environ.get(ENV_KEY)
     return v.strip() if v else None
 
 
-def from_keyfile() -> Optional[str]:
+def from_keyfile() -> str | None:
     if not KEYFILE_PATH.exists():
         return None
     try:
@@ -46,7 +44,7 @@ def from_keyfile() -> Optional[str]:
         return None
 
 
-def from_keyring() -> Optional[str]:
+def from_keyring() -> str | None:
     try:
         import keyring  # type: ignore
     except ImportError:
@@ -58,7 +56,7 @@ def from_keyring() -> Optional[str]:
         return None
 
 
-def resolve_passphrase() -> Optional[str]:
+def resolve_passphrase() -> str | None:
     return from_env() or from_keyfile() or from_keyring()
 
 
@@ -176,7 +174,9 @@ def _keyring_available() -> bool:
 # ─────────────── CLI ───────────────
 
 if __name__ == "__main__":
-    import argparse, json, sys
+    import argparse
+    import json
+    import sys
 
     p = argparse.ArgumentParser(description="DB master key manager")
     p.add_argument("--report", action="store_true", help="현재 키 상태 진단")

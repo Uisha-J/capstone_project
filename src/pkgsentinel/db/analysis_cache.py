@@ -19,17 +19,17 @@ from __future__ import annotations
 
 import hashlib
 import json
-import time
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 
-from .threat_db import ThreatDB, get_default_db
-from .integrity import (
-    Fingerprint, IntegrityChecker, IntegrityMode, RowHMAC,
-)
 from . import master_key as mk
-
+from .integrity import (
+    Fingerprint,
+    IntegrityChecker,
+    IntegrityMode,
+    RowHMAC,
+)
+from .threat_db import ThreatDB, get_default_db
 
 # ─────────────── 버전 해시 헬퍼 ───────────────
 
@@ -171,10 +171,10 @@ class AnalysisCache:
         try:
             cached_at = datetime.fromisoformat(row["analyzed_at"].replace("Z", "+00:00"))
             if cached_at.tzinfo is None:
-                cached_at = cached_at.replace(tzinfo=timezone.utc)
+                cached_at = cached_at.replace(tzinfo=UTC)
         except Exception:
-            cached_at = datetime.now(timezone.utc) - timedelta(days=self.ttl_days * 2)
-        age = datetime.now(timezone.utc) - cached_at
+            cached_at = datetime.now(UTC) - timedelta(days=self.ttl_days * 2)
+        age = datetime.now(UTC) - cached_at
         if age > timedelta(days=self.ttl_days):
             return CacheHit(False, f"TTL exceeded ({age.days}d > {self.ttl_days}d)")
 
@@ -399,7 +399,6 @@ class AnalysisCache:
 
 if __name__ == "__main__":
     # archive_url 없이 동작 확인 (무결성은 별도 테스트로)
-    import sys
 
     db = get_default_db()
     cache = AnalysisCache(db, integrity_mode=IntegrityMode.STRICT)

@@ -23,7 +23,6 @@ from dataclasses import dataclass, field
 
 from .stage1_entry_point import EntryFile
 
-
 # ─────────────────── source / sink 정의 ───────────────────
 
 # source 함수 호출 (이 결과가 변수에 담기면 tainted)

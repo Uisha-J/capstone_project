@@ -14,23 +14,25 @@ classify() 의 verdict 가 우선 (final). 일반 패키지 (non-agentic) 는 fa
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
-from ..agentic import classify, AgenticClassification
+from ..agentic import AgenticClassification, classify
 from ..agentic.rules import RuleSeverity
 from ..schema import (
-    AttackDimension, Ecosystem, Evidence, LLMVerdict, Severity,
-    TTPSource, Verdict,
+    Ecosystem,
+    Evidence,
+    LLMVerdict,
+    Severity,
+    TTPSource,
+    Verdict,
 )
-
 
 # ─────────────── 결과 ───────────────
 
 @dataclass
 class StageAgenticResult:
     triggered: bool                       # agentic 으로 판정되어 본 stage 가 verdict 결정
-    classification: Optional[AgenticClassification] = None
-    verdict: Optional[Verdict] = None
+    classification: AgenticClassification | None = None
+    verdict: Verdict | None = None
     evidence: list[Evidence] = None
     package_meta: dict = None
 
@@ -53,7 +55,7 @@ def _collect_sources(source_files, language_filter: str) -> dict[str, str]:
     return out
 
 
-def _find_manifest_text(source_files, basename: str) -> Optional[str]:
+def _find_manifest_text(source_files, basename: str) -> str | None:
     """basename (pyproject.toml / package.json) 매칭 첫 파일."""
     for sf in source_files or []:
         if sf.basename == basename or sf.path.endswith(f"/{basename}"):

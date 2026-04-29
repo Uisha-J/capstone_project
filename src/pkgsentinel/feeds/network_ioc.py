@@ -15,14 +15,12 @@ from __future__ import annotations
 
 import csv
 import hashlib
-import io
 import json
 import time
 import urllib.request
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from ..db.threat_db import ThreatDB, get_default_db
-
 
 URLHAUS_CSV = "https://urlhaus.abuse.ch/downloads/csv_recent/"
 FEODO_JSON  = "https://feodotracker.abuse.ch/downloads/ipblocklist.json"
@@ -58,7 +56,7 @@ ON CONFLICT(indicator, source) DO UPDATE SET
 
 def _record_meta(db: ThreatDB, *, source: str, count: int, sha: str,
                  error: str | None = None) -> str:
-    feed_version = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    feed_version = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     with db.cursor() as cur:
         cur.execute("""
             INSERT INTO feed_meta (source, last_fetched_at, record_count,
@@ -94,7 +92,7 @@ def ingest_urlhaus(*, db: ThreatDB | None = None,
                         (source_key,))
             row = cur.fetchone()
             if row and row[0] == sha:
-                print(f"[IOC] urlhaus unchanged, skip")
+                print("[IOC] urlhaus unchanged, skip")
                 return {"ok": True, "source": source_key, "skipped": True}
 
     # CSV 헤더 라인이 # 으로 시작 → skip
@@ -178,7 +176,7 @@ def ingest_feodo(*, db: ThreatDB | None = None,
                         (source_key,))
             row = cur.fetchone()
             if row and row[0] == sha:
-                print(f"[IOC] feodo unchanged, skip")
+                print("[IOC] feodo unchanged, skip")
                 return {"ok": True, "source": source_key, "skipped": True}
 
     try:
@@ -229,7 +227,8 @@ def lookup_indicator(db: ThreatDB, indicator: str) -> list[dict]:
 # ─────────────── CLI ───────────────
 
 if __name__ == "__main__":
-    import argparse, sys
+    import argparse
+    import sys
 
     p = argparse.ArgumentParser()
     p.add_argument("--source", choices=["urlhaus", "feodo", "all"], default="all")
@@ -238,7 +237,7 @@ if __name__ == "__main__":
     args = p.parse_args()
 
     if args.passphrase:
-        from ..db.threat_db import ThreatDB, DEFAULT_DB_PATH
+        from ..db.threat_db import DEFAULT_DB_PATH, ThreatDB
         db = ThreatDB(DEFAULT_DB_PATH, passphrase=args.passphrase)
     else:
         db = None

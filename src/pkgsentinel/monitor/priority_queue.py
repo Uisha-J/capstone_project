@@ -15,7 +15,6 @@ from __future__ import annotations
 import os
 import socket
 from dataclasses import dataclass
-from typing import Optional
 
 from ..db.threat_db import ThreatDB, get_default_db
 from ..feeds.popular import lookup_popular
@@ -36,7 +35,7 @@ class QueuedJob:
     priority: int
     source_event: str
     enqueued_at: str
-    locked_by: Optional[str] = None
+    locked_by: str | None = None
 
 
 class PriorityQueue:
@@ -75,7 +74,7 @@ class PriorityQueue:
 
     # ───── pop (lock) ─────
 
-    def lock_next(self, *, max_inflight: int = 1) -> Optional[QueuedJob]:
+    def lock_next(self, *, max_inflight: int = 1) -> QueuedJob | None:
         """가장 우선순위 높은 pending 작업 1건을 lock 해서 반환.
 
         max_inflight 는 하나의 worker 가 동시에 잡고 있을 수 있는 최대.

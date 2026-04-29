@@ -6,12 +6,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from pkgsentinel.schema import Ecosystem
-from pkgsentinel.stages.stage1_entry_point import EntryFile
-from pkgsentinel.stages.stage1b_full_source import FullSourceFile, FullSourceExtract
-from pkgsentinel.stages.stage2_behavior import _analyze_python
 from pkgsentinel.stages.indicator_matcher import match_all
-
+from pkgsentinel.stages.stage1_entry_point import EntryFile
+from pkgsentinel.stages.stage1b_full_source import FullSourceFile
+from pkgsentinel.stages.stage2_behavior import _analyze_python
 
 SAMPLE_MALICIOUS = '''
 """Setup.py — credential theft + reverse shell + obfuscation"""
@@ -102,13 +100,13 @@ def main():
         declared_deps=["psutil"],
     )
 
-    print(f"=== 47-Indicator Match Report ===")
+    print("=== 47-Indicator Match Report ===")
     print(f"total hits           : {len(report.hits)}")
     print(f"categories present   : {len(report.categories_present)}")
     print(f"  -> {[c.value for c in report.categories_present]}")
     print(f"high severity hits   : {report.high_severity_count}")
 
-    print(f"\n=== Hits Detail ===")
+    print("\n=== Hits Detail ===")
     for h in sorted(report.hits, key=lambda x: x.indicator.code):
         print(f"  [{h.indicator.code}] {h.indicator.name}")
         print(f"    severity   : {h.indicator.severity.value}")
@@ -116,7 +114,7 @@ def main():
         print(f"    file       : {h.file_path}:L{h.line}")
         print(f"    reason     : {h.reason}")
 
-    print(f"\n=== 검증 (탐지되어야 할 지표) ===")
+    print("\n=== 검증 (탐지되어야 할 지표) ===")
     expected = {
         "EXS-002",   # install-time exec (top-level setup.py)
         "EXS-003",   # cmdclass override

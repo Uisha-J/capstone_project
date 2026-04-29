@@ -10,7 +10,6 @@ Stub LLM vs Claude LLM 결과 비교.
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -62,7 +61,7 @@ def main():
         elif s_ok and (not c_ok):
             flipped_to_wrong.append((s, c))
 
-    print(f"=== Verdict change distribution ===")
+    print("=== Verdict change distribution ===")
     print(f"  Same correct  : {same_correct}")
     print(f"  Same wrong    : {same_wrong}")
     print(f"  → improved (wrong→correct) : {len(flipped_to_correct)}")
@@ -92,8 +91,8 @@ def main():
     # 두 결과의 metrics 비교
     sm = stub["metrics"]
     cm = claude["metrics"]
-    print(f"=== Metrics on common fixtures ===")
-    print(f"            stub      claude")
+    print("=== Metrics on common fixtures ===")
+    print("            stub      claude")
     print(f"  Precision {sm['precision']:.3f}     {cm['precision']:.3f}")
     print(f"  Recall    {sm['recall']:.3f}     {cm['recall']:.3f}")
     print(f"  F1        {sm['f1']:.3f}     {cm['f1']:.3f}")

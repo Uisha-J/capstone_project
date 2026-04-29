@@ -9,15 +9,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from ..knowledge.attack_index import AttackMatch, get_index
 from ..schema import (
     Ecosystem,
     Evidence,
+    LLMVerdict,
     Severity,
     TTPSource,
-    LLMVerdict,
-    AttackDimension,
 )
-from ..knowledge.attack_index import get_index, AttackMatch
 
 
 @dataclass

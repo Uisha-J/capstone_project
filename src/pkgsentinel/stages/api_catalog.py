@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from ..schema import AttackDimension
 
-
 # ───────────────────── Python ─────────────────────
 
 PYTHON_APIS: dict[str, AttackDimension] = {

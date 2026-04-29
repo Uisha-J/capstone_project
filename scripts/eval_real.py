@@ -36,17 +36,18 @@ DATA_DIR = ROOT / "scripts" / "eval_real_data"
 sys.path.insert(0, str(ROOT / "src"))
 
 from pkgsentinel.schema import (
-    AttackDimension, LLMVerdict, Severity, Verdict,
+    LLMVerdict,
+    Severity,
+    Verdict,
 )
-from pkgsentinel.stages.stage1_entry_point import EntryFile
-from pkgsentinel.stages.stage1b_full_source import FullSourceFile
-from pkgsentinel.stages.stage2_behavior import _analyze_python, _analyze_javascript, BehaviorReport
-from pkgsentinel.stages.stage4_ttp_match import match_ttps
 from pkgsentinel.stages.indicator_matcher import match_all as match_47
 from pkgsentinel.stages.sequence_patterns import mine as mine_seq
-from pkgsentinel.stages.taint_slicer import analyze_python as taint_analyze
+from pkgsentinel.stages.stage1_entry_point import EntryFile
+from pkgsentinel.stages.stage1b_full_source import FullSourceFile
+from pkgsentinel.stages.stage2_behavior import BehaviorReport, _analyze_javascript, _analyze_python
+from pkgsentinel.stages.stage4_ttp_match import match_ttps
 from pkgsentinel.stages.stage5_multi_agent import review_multi
-
+from pkgsentinel.stages.taint_slicer import analyze_python as taint_analyze
 
 # ─────────────── 아카이브 추출 ───────────────
 
@@ -854,7 +855,7 @@ def main():
             print("ERROR: ANTHROPIC_API_KEY not set. Add to .env or export.",
                   file=sys.stderr)
             sys.exit(2)
-        print(f"  LLM mode    : claude (Anthropic API will be called)")
+        print("  LLM mode    : claude (Anthropic API will be called)")
 
     fixtures_path = Path(args.fixtures)
     if not fixtures_path.exists():

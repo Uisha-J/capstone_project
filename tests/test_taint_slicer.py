@@ -11,7 +11,6 @@ from pkgsentinel.stages.taint_slicer import (
     slice_for_llm,
 )
 
-
 # 실제 악성 패턴 - credential theft + reverse shell
 MALICIOUS_SAMPLE = '''
 import os

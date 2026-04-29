@@ -8,7 +8,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from pkgsentinel.schema import Ecosystem
-from pkgsentinel.stages.stage_slsa import evaluate, SLSALevel
+from pkgsentinel.stages.stage_slsa import SLSALevel, evaluate
 
 
 def test_no_metadata():
@@ -113,7 +113,7 @@ def test_real_npm():
     from pkgsentinel.stages.stage0_registry import check
     info = check("sigstore", Ecosystem.NPM)
     rpt = evaluate(info.raw_metadata, Ecosystem.NPM)
-    print(f"\n== Live npm sigstore ==")
+    print("\n== Live npm sigstore ==")
     print(f"  level={rpt.level.value}, prov={rpt.has_provenance}")
     return rpt.has_provenance  # sigstore npm 은 provenance 보유
 

@@ -17,10 +17,8 @@ import json
 import re
 import urllib.request
 import zipfile
-from dataclasses import dataclass, field, asdict
-from datetime import datetime, timezone
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-
 
 # OSV 공개 덤프 (GCS)
 OSV_PYPI_ZIP = "https://osv-vulnerabilities.storage.googleapis.com/PyPI/all.zip"
@@ -272,7 +270,7 @@ if __name__ == "__main__":
     print(f"\n공격 유형 분포: {dict(type_counts)}")
 
     # 최근 5건 요약
-    print(f"\n최근 5건 샘플:")
+    print("\n최근 5건 샘플:")
     for p in sorted(patterns, key=lambda x: x.published, reverse=True)[:5]:
         print(f"\n  [{p.advisory_id}] {p.attack_type}  ({p.published[:10]})")
         print(f"    packages: {p.affected_packages[:3]}")

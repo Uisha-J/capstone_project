@@ -10,17 +10,22 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from pkgsentinel.schema import Verdict
 from pkgsentinel.agentic import (
-    classify, parse_manifest, parse_python_pyproject, parse_npm_package,
-    extract_capabilities_python, extract_capabilities_js,
-    Capability, map_to_abc,
-    detect_agentic_python, AGENTIC_THRESHOLD,
-    has_lethal_trifecta, detect_human_in_the_loop,
-    R1_check, R2_check, R3_check, R4_check, run_all_rules,
+    AGENTIC_THRESHOLD,
+    Capability,
+    R2_check,
+    R3_check,
+    R4_check,
     RuleSeverity,
+    classify,
+    detect_agentic_python,
+    detect_human_in_the_loop,
+    extract_capabilities_python,
+    map_to_abc,
+    parse_npm_package,
+    parse_python_pyproject,
 )
-
+from pkgsentinel.schema import Verdict
 
 # ─────────────── manifest 파서 ───────────────
 
@@ -77,7 +82,7 @@ def test_manifest_npm_camelcase():
     assert m.rule_of_two.satisfies == ["A", "B"]
     assert m.tool_registry.dynamic_tools
     assert m.tool_registry.tool_signature_verification
-    print(f"  OK camelCase normalized")
+    print("  OK camelCase normalized")
     return True
 
 
@@ -120,7 +125,7 @@ def f():
 def test_capability_credential_path():
     src = "open('~/.aws/credentials').read()"
     caps = extract_capabilities_python({"x.py": src})
-    print(f"\n== credential-paths detection ==")
+    print("\n== credential-paths detection ==")
     print(f"  caps: {sorted(caps)}")
     return Capability.CREDENTIAL_PATHS in caps
 
@@ -230,7 +235,7 @@ os.setuid(0)
                     has_hitl=False, declared_session_isolation=False)
     r22 = [h for h in hits if h.rule_id == "R2-2"]
     assert r22 and r22[0].severity == RuleSeverity.MALICIOUS
-    print(f"  OK MALICIOUS for setuid(0)")
+    print("  OK MALICIOUS for setuid(0)")
     return True
 
 
@@ -241,7 +246,7 @@ def test_r2_3_sandbox_escape():
                     has_hitl=False, declared_session_isolation=False)
     r23 = [h for h in hits if h.rule_id == "R2-3"]
     assert r23 and r23[0].severity == RuleSeverity.MALICIOUS
-    print(f"  OK MALICIOUS for docker.sock access")
+    print("  OK MALICIOUS for docker.sock access")
     return True
 
 
@@ -254,7 +259,7 @@ def test_r3_undeclared_dangerous():
     )
     r3 = [h for h in hits if h.rule_id == "R3-dangerous"]
     assert r3 and r3[0].severity == RuleSeverity.MALICIOUS
-    print(f"  OK MALICIOUS for undeclared shell")
+    print("  OK MALICIOUS for undeclared shell")
     return True
 
 
@@ -270,7 +275,7 @@ def log_interaction(query, response):
     hits = R4_check({"x.py": src}, detected_capabilities=set())
     r41 = [h for h in hits if h.rule_id == "R4-1"]
     assert r41 and r41[0].severity == RuleSeverity.MALICIOUS
-    print(f"  OK detected logging-named function with external POST")
+    print("  OK detected logging-named function with external POST")
     return True
 
 
@@ -419,7 +424,7 @@ def main():
             if not ok:
                 failed += 1
                 print(f"  ! {t.__name__} returned False")
-        except Exception as e:
+        except Exception:
             import traceback
             traceback.print_exc()
             failed += 1

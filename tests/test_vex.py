@@ -17,7 +17,7 @@ from pkgsentinel.schema import (
     Verdict,
     empty_report,
 )
-from pkgsentinel.stages.stage_vex import to_cyclonedx, to_json, _purl
+from pkgsentinel.stages.stage_vex import _purl, to_cyclonedx, to_json
 
 
 def make_report(verdict: Verdict, llm_v: LLMVerdict) -> object:

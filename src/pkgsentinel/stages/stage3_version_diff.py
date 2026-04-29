@@ -9,13 +9,11 @@ axios / event-stream 유형의 '합법 패키지에 악성 주입' 공격을 잡
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
-from ..schema import Severity, VersionDiffInfo, AttackDimension
+from ..schema import AttackDimension, Severity, VersionDiffInfo
 from .stage0_registry import RegistryInfo
-from .stage1_entry_point import extract, ExtractedPackage
-from .stage2_behavior import analyze, BehaviorReport
-
+from .stage1_entry_point import ExtractedPackage, extract
+from .stage2_behavior import BehaviorReport, analyze
 
 # ─────────────── 결과 ───────────────
 
@@ -27,9 +25,9 @@ class VersionDiffResult:
     new_dimensions: list[AttackDimension] = field(default_factory=list)
     risk_classification: Severity = Severity.LOW
     details: str = ""
-    error: Optional[str] = None
+    error: str | None = None
 
-    def to_version_diff_info(self) -> Optional[VersionDiffInfo]:
+    def to_version_diff_info(self) -> VersionDiffInfo | None:
         if not self.compared_versions or self.error:
             return None
         return VersionDiffInfo(
@@ -148,7 +146,7 @@ def analyze_version_diff(
     result.new_apis = new_apis
 
     # Dimension 집계
-    from .api_catalog import lookup_python, lookup_js
+    from .api_catalog import lookup_js, lookup_python
     new_dims: set[AttackDimension] = set()
     for api in new_apis:
         if api.startswith("shell:"):
@@ -181,6 +179,7 @@ def analyze_version_diff(
 
 if __name__ == "__main__":
     import sys
+
     from ..schema import Ecosystem
     from .stage0_registry import check
     from .stage1_entry_point import extract

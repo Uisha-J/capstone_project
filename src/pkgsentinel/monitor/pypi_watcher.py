@@ -14,12 +14,11 @@ import time
 import urllib.request
 import xml.etree.ElementTree as ET
 import xmlrpc.client
-from typing import Iterable
+from collections.abc import Iterable
 
 from ..db.threat_db import ThreatDB, get_default_db
 from .priority_queue import PriorityQueue
 from .release_event import ReleaseEvent
-
 
 PYPI_XMLRPC = "https://pypi.org/pypi"
 PYPI_RSS    = "https://pypi.org/rss/updates.xml"
@@ -191,7 +190,9 @@ def poll_once(*, db: ThreatDB | None = None,
 # ─────────────── CLI ───────────────
 
 if __name__ == "__main__":
-    import argparse, json, sys
+    import argparse
+    import json
+    import sys
 
     p = argparse.ArgumentParser()
     p.add_argument("--prefer", choices=["xmlrpc", "rss", "auto"], default="auto")
@@ -200,7 +201,7 @@ if __name__ == "__main__":
     args = p.parse_args()
 
     if args.passphrase:
-        from ..db.threat_db import ThreatDB, DEFAULT_DB_PATH
+        from ..db.threat_db import DEFAULT_DB_PATH, ThreatDB
         db = ThreatDB(DEFAULT_DB_PATH, passphrase=args.passphrase)
     else:
         db = None

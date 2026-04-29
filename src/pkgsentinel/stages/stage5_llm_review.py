@@ -19,7 +19,6 @@ from ..schema import LLMVerdict
 from .stage2_behavior import FileSequence
 from .stage4_ttp_match import TTPMatch
 
-
 # ─────────────── LLM 응답 ───────────────
 
 @dataclass
@@ -129,7 +128,7 @@ def _parse_llm_json(text: str) -> dict:
     if t.startswith("```"):
         # ```json ... ``` 제거
         lines = t.splitlines()
-        t = "\n".join(l for l in lines if not l.startswith("```"))
+        t = "\n".join(line for line in lines if not line.startswith("```"))
     return json.loads(t)
 
 
@@ -222,7 +221,7 @@ def review(
     try:
         parsed = _parse_llm_json(raw)
     except Exception as e:
-        raise RuntimeError(f"LLM JSON 파싱 실패: {e}\n원문: {raw[:300]}")
+        raise RuntimeError(f"LLM JSON 파싱 실패: {e}\n원문: {raw[:300]}") from e
 
     return LLMResponse(
         verdict=LLMVerdict(parsed.get("verdict", "benign")),
