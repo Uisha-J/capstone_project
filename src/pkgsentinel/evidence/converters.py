@@ -1,0 +1,284 @@
+"""각 탐지 단계 결과를 공통 Evidence 객체로 변환."""
+from __future__ import annotations
+
+from ..schema import (
+    AttackDimension,
+    Evidence,
+    LLMVerdict,
+    Severity,
+    TTPSource,
+)
+from ..stages.indicator_matcher import IndicatorHit
+from ..stages.sequence_patterns import SequenceMatch
+from ..stages.string_analysis import SuspiciousString
+
+
+# 단독으로는 약한 신호인 지표 코드 (정상 패키지에서도 흔히 사용됨).
+# 다른 지표와 조합되어야 의미 있음.
+STANDALONE_WEAK_INDICATORS = {
+    "EXM-001",   # exec/eval — Config 파일 로딩 등 정당한 용도 많음
+    "EXS-001",   # import-time call — 거의 모든 __init__.py 가 해당
+    "SYS-005",   # system info recon — 환경 진단/디버그용 흔함
+    "SYS-004",   # directory enumeration — 빌드 도구가 흔히 사용
+    "DEF-006",   # error suppression — 정당한 except: pass 도 많음
+    "MET-004",   # description anomaly — 정상 패키지에도 짧은 설명 흔함
+    "MET-001",   # author identity — author 비어있는 정상 패키지 많음
+    "EXM-005",   # dynamic import — 플러그인 시스템 등에 정당
+    "DEF-003",   # encoding — base64는 정당한 용도가 많음 (UUID, 토큰 등)
+}
+
+
+def sstr_to_evidence(
+    file_path: str,
+    strs: list[SuspiciousString],
+) -> list[Evidence]:
+    """SuspiciousString 리스트 → Evidence."""
+    out: list[Evidence] = []
+    for ss in strs:
+        if ss.encoding == "base64":
+            ttp_id = "T1140"
+            ttp_name = "Deobfuscate/Decode Files or Information"
+        elif ss.encoding == "hex":
+            ttp_id = "T1027.009"
+            ttp_name = "Obfuscated Files: Embedded Payloads"
+        else:
+            ttp_id = "T1027"
+            ttp_name = "Obfuscated Files or Information"
+
+        out.append(Evidence(
+            file_path=file_path,
+            line_start=ss.line,
+            line_end=ss.line,
+            code_snippet=f"[{ss.encoding}] {ss.short()}"
+                         + (f"\n-> decoded: {ss.decoded[:200]}" if ss.decoded else ""),
+            behavior_sequence=[f"string_const:{ss.encoding}"],
+            attack_dimensions=[AttackDimension.ENCODING],
+            ttp_id=ttp_id,
+            ttp_name=ttp_name,
+            ttp_source=TTPSource.MITRE_ATTACK,
+            ttp_url=f"https://attack.mitre.org/techniques/{ttp_id.split('.')[0]}/",
+            ttp_severity=Severity.MEDIUM if ss.decoded else Severity.LOW,
+            vector_similarity=1.0,
+            llm_verdict=LLMVerdict.SUSPICIOUS if ss.decoded else LLMVerdict.BENIGN,
+            llm_reasoning=f"String constant analysis: {ss.reason}",
+            llm_model="string-analysis-rule",
+            confidence=0.8 if ss.decoded else 0.4,
+        ))
+    return out
+
+
+def anomaly_to_evidence(finding) -> Evidence:
+    return Evidence(
+        file_path=finding.file_path,
+        line_start=0,
+        line_end=0,
+        code_snippet=f"Category baseline violation ({finding.category})",
+        behavior_sequence=[f"anomaly:{finding.category}"],
+        attack_dimensions=list(finding.unexpected_dimensions),
+        ttp_id="T1059" if AttackDimension.PAYLOAD_EXECUTION in finding.unexpected_dimensions
+               else "T1041",
+        ttp_name=f"Unexpected behavior for {finding.category} category",
+        ttp_source=TTPSource.MITRE_ATTACK,
+        ttp_url="https://attack.mitre.org/",
+        ttp_severity=Severity.MEDIUM,
+        vector_similarity=1.0,
+        llm_verdict=LLMVerdict.SUSPICIOUS,
+        llm_reasoning=finding.reason,
+        llm_model="anomaly-baseline",
+        confidence=0.75,
+    )
+
+
+def binary_to_evidence(finding) -> Evidence:
+    return Evidence(
+        file_path=finding.path,
+        line_start=0,
+        line_end=0,
+        code_snippet=(
+            f"[{finding.binary_type}] suspicious imports: "
+            f"{', '.join(finding.suspicious_imports[:10])}\n"
+            + (f"network strings: {', '.join(finding.network_strings[:3])}\n"
+               if finding.network_strings else "")
+            + (f"interesting strings: {', '.join(finding.strings_of_interest[:3])}"
+               if finding.strings_of_interest else "")
+        ),
+        behavior_sequence=[f"binary:{sym}" for sym in finding.suspicious_imports[:5]],
+        attack_dimensions=[AttackDimension.PAYLOAD_EXECUTION],
+        ttp_id="T1027.002",
+        ttp_name="Software Packing / Native Code",
+        ttp_source=TTPSource.MITRE_ATTACK,
+        ttp_url="https://attack.mitre.org/techniques/T1027/002/",
+        ttp_severity=Severity.HIGH,
+        vector_similarity=1.0,
+        llm_verdict=LLMVerdict.SUSPICIOUS,
+        llm_reasoning=(
+            f"Native binary contains suspicious imports: {finding.suspicious_imports[:5]}. "
+            f"Network strings detected: {bool(finding.network_strings)}"
+        ),
+        llm_model="binary-analysis-rule",
+        confidence=0.7,
+    )
+
+
+def sandbox_to_evidence(obs) -> Evidence:
+    return Evidence(
+        file_path="<sandbox>",
+        line_start=0,
+        line_end=0,
+        code_snippet=(
+            f"mode: {obs.mode}, duration: {obs.duration_s:.2f}s\n"
+            f"processes: {obs.process_spawns}\n"
+            f"network: {obs.network_requests}\n"
+            f"file writes: {obs.file_writes}"
+        ),
+        behavior_sequence=["sandbox:" + ",".join(obs.network_requests[:3])],
+        attack_dimensions=[AttackDimension.DATA_TRANSMISSION] if obs.network_requests else [],
+        ttp_id="T1041",
+        ttp_name="Exfiltration Over C2 Channel",
+        ttp_source=TTPSource.MITRE_ATTACK,
+        ttp_url="https://attack.mitre.org/techniques/T1041/",
+        ttp_severity=Severity.HIGH if obs.network_requests else Severity.LOW,
+        vector_similarity=1.0,
+        llm_verdict=LLMVerdict.SUSPICIOUS if obs.has_findings else LLMVerdict.BENIGN,
+        llm_reasoning=(
+            f"Sandbox observation ({obs.mode}). "
+            f"{'Unexpected runtime activity detected.' if obs.has_findings else 'No unexpected activity.'}"
+        ),
+        llm_model="sandbox-observer",
+        confidence=0.85 if obs.has_findings else 0.3,
+    )
+
+
+def indicator_hit_to_evidence(h: IndicatorHit, indicator_codes_present: set[str]) -> Evidence:
+    """47-Indicator IndicatorHit -> Evidence.
+
+    indicator_codes_present: 같은 패키지 내 매칭된 모든 지표 코드 집합.
+    조합 시 escalation 판단에 사용.
+    """
+    ind = h.indicator
+
+    ttp_id = ind.mitre_ttps[0] if ind.mitre_ttps else "GENERIC"
+    ttp_url = (
+        f"https://attack.mitre.org/techniques/{ttp_id.split('.')[0]}/"
+        if ttp_id != "GENERIC" else ""
+    )
+
+    is_standalone_weak = ind.code in STANDALONE_WEAK_INDICATORS
+
+    has_risk_combo = any(
+        c.startswith(("EXF-", "NET-002", "NET-007", "NET-008",
+                      "EXS-002", "EXS-003", "EXM-006", "EXM-008", "DEF-005"))
+        for c in indicator_codes_present
+    )
+
+    if is_standalone_weak and not has_risk_combo:
+        llm_v = LLMVerdict.BENIGN
+        confidence = min(h.confidence, 0.4)
+    elif ind.severity == Severity.HIGH and h.confidence >= 0.8:
+        llm_v = LLMVerdict.MALICIOUS
+        confidence = h.confidence
+    elif ind.severity in (Severity.HIGH, Severity.MEDIUM) and h.confidence >= 0.5:
+        llm_v = LLMVerdict.SUSPICIOUS
+        confidence = h.confidence
+    else:
+        llm_v = LLMVerdict.BENIGN
+        confidence = h.confidence
+
+    severity = (
+        Severity.LOW if (is_standalone_weak and not has_risk_combo)
+        else ind.severity
+    )
+
+    return Evidence(
+        file_path=h.file_path,
+        line_start=h.line,
+        line_end=h.line,
+        code_snippet=h.snippet[:1500],
+        behavior_sequence=[f"indicator:{ind.code}"],
+        attack_dimensions=list(ind.related_dimensions),
+        ttp_id=f"{ind.code}/{ttp_id}",
+        ttp_name=f"{ind.name} -- {ind.category.value}",
+        ttp_source=TTPSource.MITRE_ATTACK,
+        ttp_url=ttp_url,
+        ttp_severity=severity,
+        vector_similarity=1.0,
+        llm_verdict=llm_v,
+        llm_reasoning=f"[{ind.code}] {h.reason} (description: {ind.description})",
+        llm_model="indicator-rule-47",
+        confidence=confidence,
+    )
+
+
+def sequence_match_to_evidence(m: SequenceMatch) -> Evidence:
+    """Sequential pattern match -> Evidence."""
+    pat = m.pattern
+    line_start = m.matched_calls[0].line if m.matched_calls else 0
+    line_end = m.matched_calls[-1].line if m.matched_calls else 0
+    snippet_lines = []
+    for c in m.matched_calls[:8]:
+        snippet_lines.append(f"L{c.line:>4}  [{c.dimension.value[:4]}]  {c.name}")
+    snippet = "\n".join(snippet_lines)
+
+    ttp_id = pat.related_ttps[0] if pat.related_ttps else "GENERIC"
+    ttp_url = (
+        f"https://attack.mitre.org/techniques/{ttp_id.split('.')[0]}/"
+        if ttp_id != "GENERIC" else ""
+    )
+
+    if pat.severity == Severity.HIGH:
+        llm_v = LLMVerdict.MALICIOUS
+        confidence = 0.85
+    elif pat.severity == Severity.MEDIUM:
+        llm_v = LLMVerdict.SUSPICIOUS
+        confidence = 0.65
+    else:
+        llm_v = LLMVerdict.BENIGN
+        confidence = 0.4
+
+    return Evidence(
+        file_path=m.file_path,
+        line_start=line_start,
+        line_end=line_end,
+        code_snippet=snippet[:1500],
+        behavior_sequence=[c.name for c in m.matched_calls],
+        attack_dimensions=[c.dimension for c in m.matched_calls],
+        ttp_id=f"{pat.code}/{ttp_id}",
+        ttp_name=f"{pat.name} -- sequential pattern",
+        ttp_source=TTPSource.MITRE_ATTACK,
+        ttp_url=ttp_url,
+        ttp_severity=pat.severity,
+        vector_similarity=1.0,
+        llm_verdict=llm_v,
+        llm_reasoning=(
+            f"[{pat.code}] {pat.description} | "
+            f"matched span={m.span}, calls={len(m.matched_calls)}"
+        ),
+        llm_model="sequence-pattern-mine",
+        confidence=confidence,
+    )
+
+
+def dependency_to_evidence(dep_result) -> Evidence | None:
+    """SUSPICIOUS 이상인 경우만 Evidence 변환."""
+    if dep_result.verdict in ("CLEAN", "CANNOT_ANALYZE", "SKIPPED"):
+        return None
+    sev = Severity.HIGH if dep_result.verdict == "MALICIOUS" else Severity.MEDIUM
+    llm_v = LLMVerdict.MALICIOUS if dep_result.verdict == "MALICIOUS" else LLMVerdict.SUSPICIOUS
+    return Evidence(
+        file_path=f"<dependency: {dep_result.name}>",
+        line_start=0,
+        line_end=0,
+        code_snippet=f"dependency {dep_result.name} ({dep_result.version_spec})",
+        behavior_sequence=[f"dep_chain:{dep_result.name}"],
+        attack_dimensions=[],
+        ttp_id="T1195.001",
+        ttp_name="Supply Chain Compromise: Compromise Software Dependencies",
+        ttp_source=TTPSource.MITRE_ATTACK,
+        ttp_url="https://attack.mitre.org/techniques/T1195/001/",
+        ttp_severity=sev,
+        vector_similarity=1.0,
+        llm_verdict=llm_v,
+        llm_reasoning=dep_result.reason,
+        llm_model="dependency-analyzer",
+        confidence=0.9 if dep_result.verdict == "MALICIOUS" else 0.7,
+    )
