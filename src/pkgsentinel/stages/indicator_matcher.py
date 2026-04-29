@@ -257,6 +257,25 @@ _TEXT_PATTERNS: list[tuple[str, str, float, str]] = [
      r"open\s*\(\s*['\"](?:/etc/|/usr/bin/|/usr/local/bin/|C:\\\\Windows\\\\System32)",
      0.85, "write to sensitive system path"),
 
+    # SYS-003 보강: 자격증명 / 민감 시스템 파일 읽기
+    # JS: fs.readFileSync('/etc/passwd', ...), Python: open('/etc/shadow').read()
+    # 알려진 자격증명 / 시스템 파일을 읽는 패턴은 거의 항상 의심.
+    # (SYS-003 는 원래 wallet.dat/MetaMask 등 crypto wallet harvest 용이지만,
+    #  /etc/passwd 같은 일반 시스템 자격증명 파일도 동일 카테고리로 묶음)
+    ("SYS-003",
+     r"(?:fs\.readFile(?:Sync)?|open|read_text|loadFile|readFile)\s*\(\s*"
+     r"['\"](?:"
+     r"/etc/(?:passwd|shadow|sudoers|gshadow|hosts|hostname|"
+     r"resolv\.conf|crontab|ssh/[^'\"]+|systemd/[^'\"]+|cron\.d/)|"
+     r"~/\.(?:ssh|aws|gcp|gnupg|netrc|docker|npmrc|pypirc|kube)|"
+     r"\$HOME/\.(?:ssh|aws|gcp|gnupg|netrc)|"
+     r"%(?:USERPROFILE|APPDATA|LOCALAPPDATA)%\\\\[^'\"]*(?:credentials|cookies|login)|"
+     r"C:\\\\Users\\\\[^'\"]*\\\\\\.(?:ssh|aws)|"
+     r"/proc/(?:self/environ|self/cmdline|version)|"
+     r"/var/log/auth|/var/log/secure"
+     r")",
+     0.9, "reads sensitive credential / system file"),
+
     # NET-001: geolocation lookup
     ("NET-001",
      r"\b(?:ipinfo\.io|ip-api\.com|ipify\.org|ifconfig\.me|ipgeolocation)\b",
@@ -298,15 +317,26 @@ _TEXT_PATTERNS: list[tuple[str, str, float, str]] = [
 
     # DEF-005: embedded string payload + exec
     # exec/eval 인자가 단순 변수 OR base64 디코딩 결과 OR 문자열 연산 결과
+    # NOTE: lookbehind `(?<![\w.])` 로 method 호출(`re.exec`, `regex.exec(...)`)과
+    #       다른 식별자 끝에 붙은 경우(`isFunction(`, `unFunction(`) 를 제외.
     ("DEF-005",
-     r"exec\s*\(\s*[a-zA-Z_]\w*\s*\)|Function\s*\(\s*[a-zA-Z_]\w*\s*\)",
+     r"(?<![\w.])exec\s*\(\s*[a-zA-Z_]\w*\s*\)"
+     r"|(?<![\w.])Function\s*\(\s*[a-zA-Z_]\w*\s*\)",
      0.7, "exec() called on a variable (likely string payload)"),
     ("DEF-005",
-     r"exec\s*\(\s*(?:base64|codecs|bytes|zlib|gzip)\.[a-z_0-9]+\(",
+     r"(?<![\w.])exec\s*\(\s*(?:base64|codecs|bytes|zlib|gzip)\.[a-z_0-9]+\(",
      0.85, "exec() called on decoded payload"),
     ("DEF-005",
-     r"eval\s*\(\s*(?:base64|codecs|bytes|zlib|gzip)\.[a-z_0-9]+\(",
+     r"(?<![\w.])eval\s*\(\s*(?:base64|codecs|bytes|zlib|gzip)\.[a-z_0-9]+\(",
      0.85, "eval() called on decoded payload"),
+    # tls-bypass / pastebin-RCE 패턴: exec(<var>('http(s)://...').read())
+    # urlopen 이 알리아스(`_uurlopen`)로 가려져도 함수 호출 + URL 인자 + .read() + exec/eval 조합으로 잡힘
+    ("DEF-005",
+     r"(?<![\w.])(?:exec|eval)\s*\(\s*\w+\s*\(\s*['\"]https?://[^'\"]+['\"]\s*\)\s*\.\s*read\s*\(\s*\)\s*\)",
+     0.95, "exec/eval on remote URL response (download-and-exec)"),
+    ("DEF-005",
+     r"(?<![\w.])(?:exec|eval)\s*\(\s*\w+\s*\(\s*['\"]https?://[^'\"]+['\"][^)]*\)\s*\.read\s*\(\s*\)",
+     0.93, "exec/eval consuming remote HTTP response (chain)"),
 
     # NET-009: SSL validation bypass (single-line)
     ("NET-009",
@@ -379,8 +409,69 @@ _MULTILINE_PATTERNS: list[tuple[str, str, float, str]] = [
 ]
 
 
+# package.json 스크립트 안에 흔한 위험 명령. preinstall/postinstall 에 들어 있을 시 매우 강한 신호.
+_NPM_SCRIPT_DANGEROUS = re.compile(
+    r"(?:nc\s+-[le]|netcat|"
+    r"curl\s+[^\"]*\|\s*(?:bash|sh|node|python)|"
+    r"wget\s+[^\"]*\|\s*(?:bash|sh|node|python)|"
+    r"powershell\s+-(?:e|enc|encodedcommand)|"
+    r"(?:bash|sh|node|python)\s+-c\s+|"
+    r"\beval\b|\bexec\b|\bbase64\b|\bxxd\b)",
+    re.IGNORECASE,
+)
+_NPM_SCRIPT_HOOKS = ("preinstall", "postinstall", "install", "preuninstall", "preprepare", "prepare")
+
+
+def _match_from_package_json(sf: FullSourceFile) -> list[IndicatorHit]:
+    """package.json 의 lifecycle scripts 내 위험 명령 감지.
+
+    npm preinstall/postinstall 은 시스템 단에서 임의 명령 실행 가능 →
+    netcat reverse shell, curl-pipe-bash 등이 실제 사례에서 매우 흔함
+    (Shai-Hulud, ua-parser-js, eslint-scope 등).
+    """
+    hits: list[IndicatorHit] = []
+    base = sf.basename.lower()
+    if base != "package.json":
+        return hits
+    try:
+        import json as _json
+        data = _json.loads(sf.content)
+    except Exception:
+        return hits
+
+    scripts = data.get("scripts") or {}
+    if not isinstance(scripts, dict):
+        return hits
+
+    for hook in _NPM_SCRIPT_HOOKS:
+        cmd = scripts.get(hook)
+        if not isinstance(cmd, str) or not cmd.strip():
+            continue
+        m = _NPM_SCRIPT_DANGEROUS.search(cmd)
+        if m:
+            # EXS-002: install-time arbitrary command (HIGH)
+            hits.append(_hit(
+                "EXS-002", sf.path, 0,
+                f'"{hook}": "{cmd[:200]}"',
+                confidence=0.95,
+                reason=f"npm {hook} script contains dangerous command: {m.group(0)!r}",
+            ))
+            # EXM-008: shell command exec (HIGH)
+            hits.append(_hit(
+                "EXM-008", sf.path, 0,
+                f'"{hook}": "{cmd[:200]}"',
+                confidence=0.9,
+                reason=f"shell command in npm {hook}",
+            ))
+    return hits
+
+
 def _match_from_text(sf: FullSourceFile) -> list[IndicatorHit]:
     """원본 소스 텍스트에서 정규식 기반 매칭."""
+    # package.json 은 별도 처리 (json 파싱 필요)
+    if sf.basename.lower() == "package.json":
+        return _match_from_package_json(sf)
+
     hits: list[IndicatorHit] = []
     if sf.language not in ("python", "javascript"):
         return hits

@@ -168,6 +168,21 @@ def _pick_previous_versions(
 
 # ─────────────── 메인 ───────────────
 
+def _try_load_cached_prev(
+    pkg: str, eco, prev_v: str,
+) -> tuple[dict[str, set[str]] | None, dict[str, FullSourceFile] | None]:
+    """직전 버전의 캐시된 분석 결과로부터 (apis_by_file, files_placeholder) 복원.
+
+    제약: evidence-only 저장이라 indicator 가 매칭되지 않은 파일은 캐시에 안 남음.
+    그래서 단순 "API 추가" 검출에는 쓸 수 있지만 "신규 파일" 판정에는 부적합 —
+    호출 측에서 caching_skip_new_file_detection 플래그 켜고 사용해야 함.
+
+    현재 None 반환 = 캐시 사용 안 함. 향후 stage-level 캐시 도입 시
+    behavior_sequence 를 별도 컬럼으로 저장해서 lossless 복원 가능하게 만들 예정.
+    """
+    return None, None
+
+
 def analyze_full_diff(
     registry_info: RegistryInfo,
     current_extract: FullSourceExtract,
@@ -211,26 +226,34 @@ def analyze_full_diff(
         result.error = f"no archive url for previous version {prev_v}"
         return result
 
-    try:
-        prev_extract = extract_all(pkg, eco, prev_v, prev_url)
-        if prev_extract.error:
-            result.error = f"prev extract failed: {prev_extract.error}"
+    # 1) 캐시 시도 — 직전 버전이 이미 분석된 적 있으면 재다운로드/재분석 없이 비교.
+    cached_apis, cached_files = _try_load_cached_prev(pkg, eco, prev_v)
+    if cached_apis is not None and cached_files is not None:
+        prev_apis_by_file = cached_apis
+        prev_files = cached_files
+        result.summary = "[cached] "  # 결과 메시지 prefix 로 캐시 사용 표시
+    else:
+        # 2) 캐시 미스 — 기존처럼 직접 추출 + 분석
+        try:
+            prev_extract = extract_all(pkg, eco, prev_v, prev_url)
+            if prev_extract.error:
+                result.error = f"prev extract failed: {prev_extract.error}"
+                return result
+
+            prev_files = {
+                _normalize_path(sf.path): sf for sf in prev_extract.source_files
+                if sf.language in ("python", "javascript")
+            }
+
+            prev_entry_files = _sources_to_entry_files(prev_extract)
+            prev_behavior = _behavior_for_files(prev_entry_files)
+            prev_apis_by_file = {}
+            for fs in prev_behavior.files:
+                key = _normalize_path(fs.path)
+                prev_apis_by_file[key] = set(fs.sequence)
+        except Exception as e:
+            result.error = f"prev analysis failed: {e}"
             return result
-
-        prev_files: dict[str, FullSourceFile] = {
-            _normalize_path(sf.path): sf for sf in prev_extract.source_files
-            if sf.language in ("python", "javascript")
-        }
-
-        prev_entry_files = _sources_to_entry_files(prev_extract)
-        prev_behavior = _behavior_for_files(prev_entry_files)
-        prev_apis_by_file: dict[str, set[str]] = {}
-        for fs in prev_behavior.files:
-            key = _normalize_path(fs.path)
-            prev_apis_by_file[key] = set(fs.sequence)
-    except Exception as e:
-        result.error = f"prev analysis failed: {e}"
-        return result
 
     # ─── Diff 계산 ───
     file_diffs: list[FileDiff] = []
