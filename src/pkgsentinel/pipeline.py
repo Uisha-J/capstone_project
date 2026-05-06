@@ -134,7 +134,7 @@ from .stages.taint_slicer import (
 from .stages.taint_slicer import (
     slice_for_llm as taint_slice_for_llm,
 )
-from .verdict_rules import apply_popular_downgrade, decide_verdict
+from .verdict_rules import decide_verdict
 
 # ─────────────── 메인 ───────────────
 
@@ -934,19 +934,6 @@ def run_pipeline(
 
     # ========== Stage 9: Verdict + 리포트 ==========
     verdict = decide_verdict(ctx.evidence, ctx.stage_results, registry_found=True)
-
-    # popular×benign 다운그레이드 — 인기 legitimate 패키지의 dangerous-API
-    # 정당 사용으로 인한 FP 억제 (numpy/pandas/django/webpack 등).
-    # 결정적 신호 (multi-taint / cooccur / LLM_MALICIOUS) 가 있으면 보호.
-    verdict = apply_popular_downgrade(
-        verdict,
-        ctx.evidence,
-        ctx.package,
-        ctx.ecosystem.value,
-        ctx.options.llm_mode,
-        taint_total=taint_total_flows,
-        source_file_count=len(ctx.ext.source_files) if ctx.ext else 0,
-    )
 
     report = empty_report(package, ecosystem, target_version)
     report.verdict = verdict
