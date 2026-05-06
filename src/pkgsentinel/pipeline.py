@@ -613,10 +613,16 @@ def run_pipeline(
             author=author,
             declared_deps=declared_deps,
         )
-        # 모든 매칭된 지표 코드 집합 (조합 escalation 판단용)
-        codes_present = {h.indicator.code for h in ind_report.hits}
+        # 파일별 지표 코드 집합 — risk_combo escalation 은 file-local 판정.
+        # 패키지 전역 집합을 쓰면 한 파일의 결정적 코드가 다른 파일 수십 개의
+        # weak 지표를 모두 HIGH 로 부풀려 합법 프레임워크 FP 폭증 (django 케이스).
+        codes_per_file: dict[str, set[str]] = {}
         for h in ind_report.hits:
-            ctx.evidence.append(_indicator_hit_to_evidence(h, codes_present))
+            codes_per_file.setdefault(h.file_path, set()).add(h.indicator.code)
+        for h in ind_report.hits:
+            ctx.evidence.append(
+                _indicator_hit_to_evidence(h, codes_per_file.get(h.file_path, set()))
+            )
         ctx.stage_results.append(StageResult(
             stage="stage_4c_indicator_matcher",
             success=True,

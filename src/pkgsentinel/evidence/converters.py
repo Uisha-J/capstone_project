@@ -148,11 +148,20 @@ def sandbox_to_evidence(obs) -> Evidence:
     )
 
 
-def indicator_hit_to_evidence(h: IndicatorHit, indicator_codes_present: set[str]) -> Evidence:
+def indicator_hit_to_evidence(h: IndicatorHit, indicator_codes_same_file: set[str]) -> Evidence:
     """47-Indicator IndicatorHit -> Evidence.
 
-    indicator_codes_present: 같은 패키지 내 매칭된 모든 지표 코드 집합.
-    조합 시 escalation 판단에 사용.
+    indicator_codes_same_file: **같은 파일 안에서** 매칭된 지표 코드 집합.
+    여기에 결정적 코드 (EXF-, NET-002/007/008, EXS-002/003, EXM-006/008,
+    DEF-005) 가 있으면 standalone-weak 지표를 escalate.
+
+    이전엔 패키지 전역 집합을 사용했는데, 한 파일의 DEF-005 가 다른 파일
+    수십 개의 standalone-weak 지표 (EXS-001 import-time 등) 를 모두 HIGH
+    로 부풀려서 django/numpy 같은 합법 대형 프레임워크의 FP 가 폭증.
+    File-local 로 바꾸면 단일-파일 공격은 그대로 잡히고 (모든 신호가 같은
+    파일에 모임), 분산-payload 공격은 결정적 코드 자체가 HIGH 라
+    standalone-weak escalation 없이도 발화. 합법 도구의 흩뿌려진 weak
+    신호만 BENIGN/LOW 로 정확히 머무름.
     """
     ind = h.indicator
 
@@ -167,7 +176,7 @@ def indicator_hit_to_evidence(h: IndicatorHit, indicator_codes_present: set[str]
     has_risk_combo = any(
         c.startswith(("EXF-", "NET-002", "NET-007", "NET-008",
                       "EXS-002", "EXS-003", "EXM-006", "EXM-008", "DEF-005"))
-        for c in indicator_codes_present
+        for c in indicator_codes_same_file
     )
 
     if is_standalone_weak and not has_risk_combo:
