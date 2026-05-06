@@ -205,4 +205,104 @@ def decide_verdict(
     return Verdict.CLEAN
 
 
+# ─────────────────────── popular×benign 다운그레이드 ───────────────────────
+
+def apply_popular_downgrade(
+    verdict: Verdict,
+    evidence: list[Evidence],
+    package: str,
+    ecosystem: str,
+    llm_mode: str,
+    *,
+    taint_total: int = 0,
+    source_file_count: int = 0,
+) -> Verdict:
+    """인기 패키지의 약~중간 신호 verdict 를 CLEAN 으로 다운그레이드.
+
+    이전 직전 평가에서 numpy/pandas/django/webpack 등 인기 legitimate
+    패키지가 stub 모드에서 8/9 SUSPICIOUS+ 오분류된 것을 해소하기 위해,
+    scripts/eval_real.py 에 있던 popular×benign 룰 3 종을 코어 verdict
+    로직으로 이식.
+
+    적용 조건:
+      - is_popular(package, ecosystem) 통과
+      - 현재 verdict ∈ {SUSPICIOUS, HIGH_RISK} (CLEAN/MALICIOUS 는 영향 없음)
+
+    적용되는 3 가지 룰 (순서대로 평가, 하나라도 매칭되면 CLEAN):
+
+      Rule A — popular + medium-strength signals:
+          cooccur_files == 0 AND taint < 2 AND ind_high < 5 AND seq_high < 2
+
+      Rule B — large popular tool with spread signals:
+          source_file_count > 50 AND max_high_per_file ≤ 2 AND
+          cooccur_files == 0 AND taint == 0 AND seq_high < 2
+
+      Rule C — popular + LLM benign (claude 모드 한정):
+          llm_mode == "claude" AND any LLM_BENIGN AND
+          taint < 2 AND cooccur_files ≤ 2
+
+    multi-taint, 결정적 코드 cooccurrence, MALICIOUS LLM 판정 등 강한
+    신호가 하나라도 있으면 보호 (다운그레이드 안 됨).
+    """
+    from .knowledge.popular import is_popular
+
+    if verdict not in (Verdict.SUSPICIOUS, Verdict.HIGH_RISK):
+        return verdict
+    if not is_popular(package, ecosystem):
+        return verdict
+
+    # Evidence 기반 aggregate 계산
+    ind_evidence = [e for e in evidence if e.llm_model == "indicator-rule-47"]
+    seq_evidence = [e for e in evidence if e.llm_model == "sequence-pattern-mine"]
+    ind_high = sum(1 for e in ind_evidence if e.ttp_severity == Severity.HIGH)
+    high_sev_seq = sum(1 for e in seq_evidence if e.ttp_severity == Severity.HIGH)
+
+    # cooccur 근사: 동일 파일에 indicator-HIGH 와 sequence-HIGH 가 함께 발화
+    files_with_high_ind = {e.file_path for e in ind_evidence if e.ttp_severity == Severity.HIGH}
+    files_with_high_seq = {e.file_path for e in seq_evidence if e.ttp_severity == Severity.HIGH}
+    cooccur_files = files_with_high_ind & files_with_high_seq
+
+    # 한 파일에 집중된 HIGH indicator 개수
+    max_high_per_file = 0
+    if files_with_high_ind:
+        from collections import Counter
+        cnt = Counter(e.file_path for e in ind_evidence if e.ttp_severity == Severity.HIGH)
+        max_high_per_file = max(cnt.values())
+
+    # 보호: 어떤 evidence 라도 LLM 이 MALICIOUS 로 판정했으면 다운그레이드 금지
+    if any(e.llm_verdict == LLMVerdict.MALICIOUS for e in evidence):
+        return verdict
+
+    # Rule A — popular + medium-strength signals
+    if (
+        len(cooccur_files) == 0
+        and taint_total < 2
+        and ind_high < 5
+        and high_sev_seq < 2
+    ):
+        return Verdict.CLEAN
+
+    # Rule B — large popular tool with spread signals
+    if (
+        source_file_count > 50
+        and max_high_per_file <= 2
+        and len(cooccur_files) == 0
+        and taint_total == 0
+        and high_sev_seq < 2
+    ):
+        return Verdict.CLEAN
+
+    # Rule C — popular + LLM benign (claude 모드 한정)
+    has_llm_benign = any(e.llm_verdict == LLMVerdict.BENIGN for e in evidence)
+    if (
+        llm_mode == "claude"
+        and has_llm_benign
+        and taint_total < 2
+        and len(cooccur_files) <= 2
+    ):
+        return Verdict.CLEAN
+
+    return verdict
+
+
 # 자체 테스트 (sanity check) 는 tests/test_verdict_rules.py 로 이관됨.
