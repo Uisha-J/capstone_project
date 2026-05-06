@@ -117,7 +117,7 @@ def _build_parser() -> argparse.ArgumentParser:
     s.add_argument("--max", type=int, default=10)
     s.add_argument("--loop", action="store_true")
     s.add_argument("--poll-interval", type=float, default=30.0)
-    s.add_argument("--llm-mode", choices=["stub", "claude"], default="stub")
+    s.add_argument("--llm-mode", choices=["stub", "claude"], default="claude")
     s.add_argument("--integrity-mode",
                    choices=["fast", "strict", "paranoid"], default="strict")
     s.add_argument("--verbose", "-v", action="store_true")

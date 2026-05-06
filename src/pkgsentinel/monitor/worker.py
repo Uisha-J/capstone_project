@@ -283,7 +283,7 @@ def _argparser() -> argparse.ArgumentParser:
                    help="continuous loop (데몬 모드)")
     p.add_argument("--poll-interval", type=float, default=30.0,
                    help="loop 시 대기 시간 (초)")
-    p.add_argument("--llm-mode", choices=["stub", "claude"], default="stub")
+    p.add_argument("--llm-mode", choices=["stub", "claude"], default="claude")
     p.add_argument("--integrity-mode",
                    choices=["fast", "strict", "paranoid"], default="strict")
     p.add_argument("--passphrase", default=None)

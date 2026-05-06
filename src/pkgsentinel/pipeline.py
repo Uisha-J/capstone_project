@@ -142,7 +142,7 @@ def run_pipeline(
     package: str,
     ecosystem: Ecosystem,
     version: str | None = None,
-    llm_mode: str = "stub",
+    llm_mode: str = "claude",
     enable_deps: bool = False,
     enable_sandbox: bool = False,
     verbose: bool = False,
@@ -172,6 +172,25 @@ def run_pipeline(
         version=version,
         options=options,
     )
+
+    # ─── LLM 모드 사전 검증 ───
+    # claude 모드인데 키가 없으면, 8 단계 정적 분석을 다 돌리고 Stage 5 에서야
+    # 실패하는 대신 즉시 ERROR 리포트로 종료. 사용자가 80 초씩 기다리지 않도록.
+    if ctx.options.llm_mode == "claude":
+        import os as _os
+        if not _os.getenv("ANTHROPIC_API_KEY"):
+            report = empty_report(package, ecosystem, version or "unknown")
+            report.verdict = Verdict.ERROR
+            report.stage_results = [StageResult(
+                stage="preflight_llm_check",
+                success=False,
+                error=(
+                    "ANTHROPIC_API_KEY 환경변수 미설정. "
+                    "키를 설정하거나, 정적 분석만 원하면 --llm stub 으로 실행. "
+                    "단, stub 모드는 인기 패키지에서 FP 율이 매우 높음."
+                ),
+            )]
+            return report
 
     # ─── 무결성 모드 정규화 ───
     try:

@@ -13,7 +13,16 @@ def main() -> None:
     parser.add_argument("package")
     parser.add_argument("--ecosystem", "-e", choices=["PyPI", "npm"], default="PyPI")
     parser.add_argument("--version", "-v", default=None)
-    parser.add_argument("--llm", choices=["stub", "claude"], default="stub")
+    parser.add_argument(
+        "--llm",
+        choices=["stub", "claude"],
+        default="claude",
+        help=(
+            "Stage 5 LLM 검증 모드 (default: claude). "
+            "stub 은 정적 분석만 — 인기 패키지에서 FP 율이 매우 높아 단독 사용 비권장. "
+            "claude 모드는 ANTHROPIC_API_KEY 환경변수 필요."
+        ),
+    )
     parser.add_argument("--deps", action="store_true", help="의존성 재귀 분석")
     parser.add_argument("--sandbox", action="store_true", help="샌드박스 동적 분석")
     parser.add_argument("--json", action="store_true")

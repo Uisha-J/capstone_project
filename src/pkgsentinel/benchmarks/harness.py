@@ -315,7 +315,7 @@ def _argparser() -> argparse.ArgumentParser:
     p.add_argument("--output", default=None,
                    help="결과 JSONL 출력 (한 줄에 한 결과)")
     p.add_argument("--summary", default=None, help="요약 JSON 출력 경로")
-    p.add_argument("--llm-mode", default="stub", choices=["stub", "claude"])
+    p.add_argument("--llm-mode", default="claude", choices=["stub", "claude"])
     p.add_argument("--single-agent", action="store_true",
                    help="multi-agent 비활성, legacy single-agent 모드 사용")
     return p

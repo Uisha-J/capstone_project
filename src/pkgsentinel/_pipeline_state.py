@@ -19,7 +19,7 @@ class PipelineOptions:
     분석 결과에는 영향을 주지 않고 어떤 단계를 켜고 끄거나
     무결성/캐싱 정책을 바꾸는 용도.
     """
-    llm_mode: str = "stub"
+    llm_mode: str = "claude"
     enable_deps: bool = False
     enable_sandbox: bool = False
     verbose: bool = False
