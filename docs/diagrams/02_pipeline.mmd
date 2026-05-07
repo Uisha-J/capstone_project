@@ -1,0 +1,50 @@
+flowchart TB
+    IN[패키지 입력<br/>name + ecosystem + version?]
+    OUT[AnalysisReport<br/>verdict + Evidence list]
+
+    S0[Stage 0: registry<br/>존재 / 메타데이터]
+    S0A[Stage 0A: threat_filter<br/>known_malicious 게이트]
+    S0B[Stage 0B: attack_history<br/>OSV exact match]
+    S0C[Stage 0C: scorecard<br/>OpenSSF]
+    S0D[Stage 0D: SLSA<br/>provenance]
+    S0E[Stage 0E: cache_lookup<br/>6-trigger 무효화]
+
+    S1B[Stage 1B: full_source<br/>archive 메모리 추출]
+    S1C[Stage 1C: AISLOPSQ<br/>agentic classify]
+
+    S2[Stage 2: behavior<br/>AST + tree-sitter]
+    S2B[Stage 2B: string<br/>base64 / hex / entropy]
+
+    S3B[Stage 3B: version_diff<br/>full file vs N-1]
+
+    S4[Stage 4: TTP match<br/>MITRE 임베딩]
+    S4B[Stage 4B: anomaly]
+    S4C[Stage 4C: 47-indicator]
+    S4D[Stage 4D: taint slicing]
+    S4E[Stage 4E: sequence pattern]
+
+    S5[Stage 5: LLM review<br/>LAMPS 3-agent]
+    S6[Stage 6: dependency<br/>옵션 --deps]
+    S7[Stage 7: binary<br/>.so/.dll 존재 시]
+    S8[Stage 8: sandbox<br/>옵션 --sandbox]
+
+    S9[Stage 9: verdict_rules<br/>decide_verdict]
+
+    IN --> S0 --> S0A
+    S0A -->|known malicious| OUT
+    S0A --> S0B --> S0C --> S0D --> S0E
+    S0E -->|cache hit| OUT
+    S0E --> S1B --> S1C
+    S1C -->|agentic MAL| OUT
+    S1C --> S2 --> S2B --> S3B
+    S3B --> S4
+    S3B --> S4B
+    S3B --> S4C
+    S3B --> S4D
+    S3B --> S4E
+    S4 --> S5
+    S4B --> S5
+    S4C --> S5
+    S4D --> S5
+    S4E --> S5
+    S5 --> S6 --> S7 --> S8 --> S9 --> OUT

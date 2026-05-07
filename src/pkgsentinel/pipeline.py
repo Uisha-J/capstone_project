@@ -20,6 +20,7 @@
 """
 from __future__ import annotations
 
+import hashlib
 import traceback
 
 # .env 자동 로드 (ANTHROPIC_API_KEY, OPENAI_API_KEY 등).
@@ -94,6 +95,7 @@ from .stages.stage0b_attack_history import (
     to_evidence as attack_history_to_evidence,
 )
 from .stages.stage1b_full_source import extract_all, to_entry_files
+from .stages.stage2_behavior import BehaviorReport
 from .stages.stage2_behavior import analyze as analyze_behavior
 from .stages.stage3b_full_diff import analyze_full_diff
 from .stages.stage4_ttp_match import match_ttps
@@ -390,6 +392,14 @@ def run_pipeline(
     try:
         ctx.ext = extract_all(package, ecosystem, target_version, archive_url)
         ok = ctx.ext.error is None
+        if ok:
+            # stage_cache 키용 sha — 정렬된 path+content 기준
+            _h = hashlib.sha256()
+            for sf in sorted(ctx.ext.source_files, key=lambda f: f.path):
+                _h.update(sf.path.encode("utf-8"))
+                _h.update(b"\x00")
+                _h.update(sf.content.encode("utf-8", errors="replace"))
+            ctx.archive_sha256 = _h.hexdigest()[:32]
         ctx.stage_results.append(StageResult(
             stage="stage_1b_full_source",
             success=ok,
@@ -399,6 +409,7 @@ def run_pipeline(
                 "source_files": len(ctx.ext.source_files),
                 "binary_files": len(ctx.ext.binary_files),
                 "total_files": len(ctx.ext.all_file_names),
+                "ext_sha256": ctx.archive_sha256,
             },
         ))
         if not ok:
@@ -490,8 +501,34 @@ def run_pipeline(
     ext_for_behavior.version = target_version
 
     # ========== Stage 2: Behavior Sequence ==========
+    # stage_cache 통합 — 같은 (pkg, ver, ext_sha) + 같은 stage_2 코드 hash 면
+    # AST 재파싱 없이 캐시된 BehaviorReport 재사용. 패키지 1000개 분석 시
+    # 두 번째 분석부터 효과 큼.
+    _stage2_cache_status = "skipped"
     try:
-        ctx.behavior = analyze_behavior(ext_for_behavior)
+        from .db.stage_cache import StageCache, StageCacheKey
+        _sc = StageCache() if ctx.options.use_cache else None
+        _ck2 = StageCacheKey(
+            package=package, ecosystem=ecosystem.value,
+            version=target_version, stage="stage_2_behavior",
+        )
+        _hit = (
+            _sc.get(_ck2, archive_sha256=ctx.archive_sha256)
+            if _sc and not ctx.options.force_rescan
+            else None
+        )
+        if _hit is not None and _hit.hit:
+            ctx.behavior = BehaviorReport.from_dict(_hit.payload)
+            _stage2_cache_status = "hit"
+        else:
+            ctx.behavior = analyze_behavior(ext_for_behavior)
+            _stage2_cache_status = "miss" if _hit is not None else "disabled"
+            if _sc:
+                _sc.put(
+                    _ck2, ctx.behavior.to_dict(),
+                    archive_sha256=ctx.archive_sha256,
+                )
+
         ctx.stage_results.append(StageResult(
             stage="stage_2_behavior_sequence",
             success=True,
@@ -499,6 +536,7 @@ def run_pipeline(
                 "files_analyzed": len(ctx.behavior.files),
                 "files_with_calls": sum(1 for fs in ctx.behavior.files if fs.calls),
                 "total_calls": len(ctx.behavior.all_calls()),
+                "stage_cache": _stage2_cache_status,
             },
         ))
     except Exception as e:

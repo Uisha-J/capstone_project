@@ -1,0 +1,10 @@
+flowchart LR
+    INPUT[패키지명] --> ENTRY{진입점}
+    ENTRY -->|CLI| PIPE
+    ENTRY -->|watcher → queue → worker| PIPE
+    PIPE[13-stage pipeline] --> CACHE[(SQLCipher<br/>cache + intel)]
+    PIPE --> LLM[Stage 5: Anthropic API]
+    PIPE --> VERDICT[verdict_rules<br/>decide_verdict]
+    VERDICT --> REPORT[AnalysisReport<br/>JSON / CycloneDX VEX]
+    VERDICT -->|≥ SUSPICIOUS| SINKS[STIX / Webhook / Falco]
+    CACHE -.rules_version<br/>kb_version<br/>feed_version.-> PIPE

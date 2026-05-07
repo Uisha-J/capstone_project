@@ -1,0 +1,51 @@
+flowchart TB
+    %% ─────────── 기술 스택 (상단 좌측 정렬, 5 항목 가로 배치) ───────────
+    subgraph stack[ 기술 스택 ]
+        direction LR
+        S1["<b>개발 도구</b><br/>VS Code · Git / GitHub<br/>npm · mermaid-cli"]:::stack
+        S2["<b>개발 언어</b><br/>Python 3.11+<br/>JavaScript (tree-sitter)<br/>Markdown / mermaid"]:::stack
+        S3["<b>주요 기술</b><br/>SQLCipher (AES-256)<br/>Anthropic Claude API<br/>sentence-transformers<br/>AST · pytest · ruff<br/>pip-audit · xhtml2pdf"]:::stack
+        S4["<b>표준 / 피드</b><br/>MITRE ATT&amp;CK / ATLAS<br/>OWASP LLM Top 10<br/>STIX 2.1 · TAXII<br/>CycloneDX VEX<br/>OSV / GHSA · urlhaus"]:::stack
+        S5["<b>인프라 / 출력</b><br/>systemd unit<br/>GitHub Actions CI<br/>(Ubuntu / Windows<br/>× Py 3.11 / 3.12)<br/>Falco / Tetragon"]:::stack
+    end
+
+    %% ─────────── 클라이언트 ───────────
+    CLI[CLI<br/>pkgsentinel]:::client
+    EXT[Chrome / VSCode<br/>Extension]:::client
+
+    %% ─────────── 외부 ───────────
+    LLM[Anthropic<br/>Claude Sonnet 4.5<br/>API]:::ext
+    DATA[PyPI / npm<br/>OSV / GHSA<br/>피드]:::ext
+    SINK[STIX / Webhook<br/>Falco / Tetragon]:::sink
+
+    %% ─────────── 코어 ───────────
+    subgraph core[로컬 서버 - SQLCipher AES-256 암호화 DB]
+        direction TB
+        PIPE[pipeline.py<br/>13-stage<br/>분석 엔진]:::corebox
+        AISLOPSQ[AISLOPSQ<br/>Manifest<br/>분류기]:::corebox
+        VERDICT[verdict_rules<br/>최종 판정]:::corebox
+        DB[(threat_db<br/>SQLCipher)]:::dbbox
+    end
+
+    %% 스택 박스를 다이어그램과 시각적으로 분리만 (연결 없음)
+    stack ~~~ core
+
+    CLI <--> PIPE
+    EXT <--> PIPE
+
+    PIPE <--> AISLOPSQ
+    PIPE <--> VERDICT
+    PIPE <--> DB
+    VERDICT <--> DB
+
+    PIPE <--> LLM
+    DATA --> DB
+    VERDICT -->|verdict ≥ SUSPICIOUS| SINK
+
+    %% ─────────── 스타일 ───────────
+    classDef stack fill:#f8f8f8,stroke:#666,color:#1a1a1a,stroke-width:1px
+    classDef client fill:#dde7ff,stroke:#3a4f7a,color:#1a2a4a
+    classDef ext fill:#fff3d6,stroke:#a06a00,color:#5a3a00
+    classDef sink fill:#ffd6d6,stroke:#7a3a3a,color:#5a1a1a
+    classDef corebox fill:#e8f7e8,stroke:#3a7a3a,color:#1a4a1a
+    classDef dbbox fill:#f7e8f7,stroke:#7a3a7a,color:#4a1a4a

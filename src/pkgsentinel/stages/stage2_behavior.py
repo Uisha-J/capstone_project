@@ -30,6 +30,23 @@ class APICall:
     def __repr__(self):
         return f"{self.name}@L{self.line}"
 
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "line": self.line,
+            "dimension": self.dimension.value,
+            "snippet": self.snippet,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> APICall:
+        return cls(
+            name=d["name"],
+            line=d["line"],
+            dimension=AttackDimension(d["dimension"]),
+            snippet=d.get("snippet", ""),
+        )
+
 
 @dataclass
 class FileSequence:
@@ -51,6 +68,23 @@ class FileSequence:
                 seen.append(c.dimension)
         return seen
 
+    def to_dict(self) -> dict:
+        return {
+            "path": self.path,
+            "language": self.language,
+            "calls": [c.to_dict() for c in self.calls],
+            "parse_error": self.parse_error,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> FileSequence:
+        return cls(
+            path=d["path"],
+            language=d["language"],
+            calls=[APICall.from_dict(c) for c in d.get("calls", [])],
+            parse_error=d.get("parse_error"),
+        )
+
 
 @dataclass
 class BehaviorReport:
@@ -62,6 +96,14 @@ class BehaviorReport:
 
     def all_sequence(self) -> list[str]:
         return [c.name for c in self.all_calls()]
+
+    def to_dict(self) -> dict:
+        """stage_cache 직렬화용. APICall / FileSequence 도 같이 직렬화."""
+        return {"files": [f.to_dict() for f in self.files]}
+
+    @classmethod
+    def from_dict(cls, d: dict) -> BehaviorReport:
+        return cls(files=[FileSequence.from_dict(f) for f in d.get("files", [])])
 
 
 # ─────────────── Python AST 방문자 ───────────────

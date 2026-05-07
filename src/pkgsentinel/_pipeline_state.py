@@ -53,3 +53,7 @@ class PipelineContext:
     behavior: BehaviorReport | None = None
     diff: object | None = None         # stage3b_full_diff.DiffReport
     description: str | None = None
+
+    # stage_cache 키용. Stage 1B 후 ext.source_files 의 정렬된 path+content sha256 합산.
+    # archive 자체의 sha 가 아니라 *분석에 사용된 입력의 sha* — cache 키 일관성 목적.
+    archive_sha256: str | None = None

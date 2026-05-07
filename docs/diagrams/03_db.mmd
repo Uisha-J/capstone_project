@@ -1,0 +1,29 @@
+flowchart LR
+    subgraph threat_db[threat_db.sqlcipher - AES-256]
+        KM[known_malicious<br/>OSV / GHSA advisories]
+        KP[known_popular<br/>top-PyPI / npm]
+        NB[network_blocklist<br/>domain / IP / URL]
+        FM[feed_meta<br/>refresh state]
+        AN[analyses<br/>full report cache]
+        SC[stage_cache<br/>per-stage 결과]
+        CIL[cache_invalidation_log]
+        SQ[scan_queue<br/>watcher 적재 / worker pop]
+        SL[sink_log<br/>발송 이력]
+    end
+
+    KM -.트리거.-> CIL
+    KM -.트리거.-> SC
+
+    INTEG[integrity.py<br/>fingerprint / Merkle / row HMAC]:::sec
+    KEY[master_key.py<br/>env / file / KMS]:::sec
+    AC[analysis_cache.py<br/>6-trigger]:::cache
+    SCC[stage_cache.py<br/>9 stage 별 hash]:::cache
+
+    AC --> AN
+    SCC --> SC
+    AC --> CIL
+    INTEG --> AN
+    KEY --> threat_db
+
+    classDef sec fill:#fff3e0,stroke:#a06a00
+    classDef cache fill:#eef7e8,stroke:#3a7a3a

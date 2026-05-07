@@ -17,9 +17,9 @@ from pkgsentinel.evidence.converters import (
     STANDALONE_WEAK_INDICATORS,
     indicator_hit_to_evidence,
 )
+from pkgsentinel.knowledge.malicious_indicators import get as get_indicator
 from pkgsentinel.schema import LLMVerdict, Severity
 from pkgsentinel.stages.indicator_matcher import IndicatorHit
-from pkgsentinel.knowledge.malicious_indicators import get as get_indicator
 
 
 def _hit(code: str, file_path: str, *, confidence: float = 0.85) -> IndicatorHit:

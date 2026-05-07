@@ -1,0 +1,27 @@
+flowchart LR
+    IN[패키지<br/>아카이브]:::input
+
+    L1[<b>1단계: 게이트</b><br/>threat_filter<br/>attack_history<br/>OSV / known_malicious<br/>exact match]:::layer
+    L2[<b>2단계: 정적 신호</b><br/>behavior + 47-indicator<br/>sequence pattern<br/>taint slicing<br/>version diff]:::layer
+    L3[<b>3단계: 의미 분석</b><br/>LAMPS multi-agent<br/>Claude Sonnet 4.5<br/>semantic / diff / dependency]:::layer
+    L4[<b>4단계: 합성 판정</b><br/>verdict_rules<br/>decide_verdict<br/>+ quorum + popular guard]:::layer
+
+    OUT_M[MALICIOUS]:::vmal
+    OUT_H[HIGH_RISK]:::vhigh
+    OUT_S[SUSPICIOUS]:::vsus
+    OUT_C[CLEAN]:::vclean
+
+    IN --> L1
+    L1 -->|즉시 차단| OUT_M
+    L1 -->|통과| L2 --> L3 --> L4
+    L4 --> OUT_M
+    L4 --> OUT_H
+    L4 --> OUT_S
+    L4 --> OUT_C
+
+    classDef input fill:#dde7ff,stroke:#3a4f7a,color:#1a2a4a
+    classDef layer fill:#fffbe6,stroke:#a08a30,color:#3a3000
+    classDef vmal fill:#d62828,stroke:#7a1010,color:#fff
+    classDef vhigh fill:#f77f00,stroke:#7a3a00,color:#fff
+    classDef vsus fill:#fcbf49,stroke:#7a5a10,color:#3a2a00
+    classDef vclean fill:#3a8a3a,stroke:#1a4a1a,color:#fff

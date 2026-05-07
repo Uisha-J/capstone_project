@@ -7,7 +7,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 2,
+        "ttp_match": 0,
         "ind_47": 4,
         "ind_47_high": 2,
         "seq_pattern": 1,
@@ -15,7 +15,7 @@
         "taint_flows": 1,
         "llm_stub": "suspicious"
       },
-      "elapsed_s": 6.97,
+      "elapsed_s": 0.01,
       "note": "SP-001 + EXF-001"
     },
     {
@@ -25,7 +25,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 2,
+        "ttp_match": 0,
         "ind_47": 5,
         "ind_47_high": 4,
         "seq_pattern": 0,
@@ -33,7 +33,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.22,
+      "elapsed_s": 0.0,
       "note": "SP-003 + DEF-005 + EXM-001"
     },
     {
@@ -43,7 +43,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 4,
         "ind_47_high": 3,
         "seq_pattern": 0,
@@ -51,7 +51,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.19,
+      "elapsed_s": 0.0,
       "note": "EXM-008 + NET-007"
     },
     {
@@ -61,7 +61,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 4,
         "ind_47_high": 1,
         "seq_pattern": 2,
@@ -69,7 +69,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.21,
+      "elapsed_s": 0.0,
       "note": "SP-004 (recon + exfil)"
     },
     {
@@ -79,7 +79,7 @@
       "expected": true,
       "severity_max": "MEDIUM",
       "matchers": {
-        "ttp_match": 2,
+        "ttp_match": 0,
         "ind_47": 1,
         "ind_47_high": 0,
         "seq_pattern": 0,
@@ -87,7 +87,7 @@
         "taint_flows": 1,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.22,
+      "elapsed_s": 0.0,
       "note": "taint: subprocess → upload"
     },
     {
@@ -97,7 +97,7 @@
       "expected": false,
       "severity_max": "MEDIUM",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 2,
         "ind_47_high": 0,
         "seq_pattern": 0,
@@ -105,7 +105,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.04,
+      "elapsed_s": 0.0,
       "note": "DEF-006 + EXM-001"
     },
     {
@@ -115,7 +115,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 4,
         "ind_47_high": 3,
         "seq_pattern": 1,
@@ -123,7 +123,7 @@
         "taint_flows": 1,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.19,
+      "elapsed_s": 0.0,
       "note": "EXF-004"
     },
     {
@@ -133,7 +133,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 5,
         "ind_47_high": 4,
         "seq_pattern": 0,
@@ -141,7 +141,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.06,
+      "elapsed_s": 0.0,
       "note": "EXS-002 + EXS-003 + EXM-008"
     },
     {
@@ -151,7 +151,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 3,
         "ind_47_high": 1,
         "seq_pattern": 1,
@@ -159,7 +159,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.05,
+      "elapsed_s": 0.0,
       "note": "NET-009 + EXF-001"
     },
     {
@@ -169,7 +169,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 2,
+        "ttp_match": 0,
         "ind_47": 1,
         "ind_47_high": 0,
         "seq_pattern": 1,
@@ -177,7 +177,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.24,
+      "elapsed_s": 0.0,
       "note": "pickle RCE"
     },
     {
@@ -187,7 +187,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 4,
         "ind_47_high": 1,
         "seq_pattern": 1,
@@ -195,7 +195,7 @@
         "taint_flows": 1,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.05,
+      "elapsed_s": 0.0,
       "note": "env-specific trigger"
     },
     {
@@ -213,7 +213,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.19,
+      "elapsed_s": 0.0,
       "note": "time-based trigger"
     },
     {
@@ -223,7 +223,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 2,
+        "ttp_match": 0,
         "ind_47": 3,
         "ind_47_high": 1,
         "seq_pattern": 1,
@@ -231,7 +231,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.04,
+      "elapsed_s": 0.0,
       "note": "dropper"
     },
     {
@@ -241,7 +241,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 2,
+        "ttp_match": 0,
         "ind_47": 3,
         "ind_47_high": 2,
         "seq_pattern": 1,
@@ -249,7 +249,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.17,
+      "elapsed_s": 0.0,
       "note": "crypto miner"
     },
     {
@@ -267,7 +267,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.19,
+      "elapsed_s": 0.0,
       "note": "DNS exfil"
     },
     {
@@ -295,7 +295,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 4,
         "ind_47_high": 3,
         "seq_pattern": 0,
@@ -303,7 +303,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.21,
+      "elapsed_s": 0.0,
       "note": "preinstall pattern"
     },
     {
@@ -313,7 +313,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 2,
         "ind_47_high": 1,
         "seq_pattern": 0,
@@ -321,7 +321,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.04,
+      "elapsed_s": 0.0,
       "note": "clipboard hijack"
     },
     {
@@ -331,7 +331,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 3,
         "ind_47_high": 1,
         "seq_pattern": 1,
@@ -339,7 +339,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.03,
+      "elapsed_s": 0.0,
       "note": "creds-paths + EXF-001"
     },
     {
@@ -349,7 +349,7 @@
       "expected": true,
       "severity_max": "MEDIUM",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 2,
         "ind_47_high": 0,
         "seq_pattern": 0,
@@ -357,7 +357,7 @@
         "taint_flows": 1,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.18,
+      "elapsed_s": 0.0,
       "note": "alias of obfuscated-import-exec — 변수 추적 한계 알려진 케이스"
     },
     {
@@ -367,7 +367,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 4,
         "ind_47_high": 3,
         "seq_pattern": 0,
@@ -375,7 +375,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.03,
+      "elapsed_s": 0.0,
       "note": "SYS-001"
     },
     {
@@ -393,7 +393,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.04,
+      "elapsed_s": 0.0,
       "note": "SYS-002"
     },
     {
@@ -403,7 +403,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 3,
         "ind_47_high": 1,
         "seq_pattern": 1,
@@ -411,7 +411,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.03,
+      "elapsed_s": 0.0,
       "note": "SYS-003"
     },
     {
@@ -421,7 +421,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 3,
         "ind_47_high": 2,
         "seq_pattern": 0,
@@ -429,7 +429,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.03,
+      "elapsed_s": 0.0,
       "note": "EXM-004"
     },
     {
@@ -439,7 +439,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 3,
         "ind_47_high": 1,
         "seq_pattern": 1,
@@ -447,7 +447,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.17,
+      "elapsed_s": 0.0,
       "note": "NET-001 + EXF-001"
     },
     {
@@ -465,7 +465,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.03,
+      "elapsed_s": 0.0,
       "note": "EXF-005 (.onion)"
     },
     {
@@ -493,7 +493,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 2,
+        "ttp_match": 0,
         "ind_47": 3,
         "ind_47_high": 2,
         "seq_pattern": 1,
@@ -501,7 +501,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.16,
+      "elapsed_s": 0.0,
       "note": "EXF-005 + EXM-001"
     },
     {
@@ -529,7 +529,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 2,
         "ind_47_high": 1,
         "seq_pattern": 1,
@@ -537,7 +537,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.04,
+      "elapsed_s": 0.0,
       "note": "credential-paths + EXF-001"
     },
     {
@@ -547,7 +547,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 3,
         "ind_47_high": 2,
         "seq_pattern": 1,
@@ -555,7 +555,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.04,
+      "elapsed_s": 0.0,
       "note": "실제 사례: PyPI/npm Discord token grabber 다수"
     },
     {
@@ -565,7 +565,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 2,
         "ind_47_high": 1,
         "seq_pattern": 1,
@@ -573,7 +573,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.04,
+      "elapsed_s": 0.0,
       "note": "실제 사례: 다수 info-stealer 변형"
     },
     {
@@ -591,7 +591,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.04,
+      "elapsed_s": 0.0,
       "note": "실제 사례 변형 (pynput 기반)"
     },
     {
@@ -601,7 +601,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 3,
+        "ttp_match": 0,
         "ind_47": 5,
         "ind_47_high": 4,
         "seq_pattern": 1,
@@ -609,7 +609,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.17,
+      "elapsed_s": 0.0,
       "note": "다단계 loader (실제 사례: request typosquat 변형)"
     },
     {
@@ -619,7 +619,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 3,
+        "ttp_match": 0,
         "ind_47": 3,
         "ind_47_high": 1,
         "seq_pattern": 1,
@@ -627,7 +627,7 @@
         "taint_flows": 1,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.16,
+      "elapsed_s": 0.0,
       "note": "anti-analysis 기법"
     },
     {
@@ -727,7 +727,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 4,
         "ind_47_high": 3,
         "seq_pattern": 0,
@@ -735,7 +735,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.04,
+      "elapsed_s": 0.0,
       "note": "EXS-003 변형 (egg_info)"
     },
     {
@@ -745,7 +745,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 5,
         "ind_47_high": 4,
         "seq_pattern": 0,
@@ -753,7 +753,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.04,
+      "elapsed_s": 0.0,
       "note": "EXS-003 (build_py)"
     },
     {
@@ -763,7 +763,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 3,
+        "ttp_match": 0,
         "ind_47": 6,
         "ind_47_high": 3,
         "seq_pattern": 1,
@@ -771,7 +771,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.18,
+      "elapsed_s": 0.0,
       "note": "dependency confusion + recon"
     },
     {
@@ -781,7 +781,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 2,
+        "ttp_match": 0,
         "ind_47": 3,
         "ind_47_high": 2,
         "seq_pattern": 1,
@@ -789,7 +789,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.04,
+      "elapsed_s": 0.0,
       "note": "EXM-003 (ctypes) + dropper"
     },
     {
@@ -807,7 +807,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.25,
+      "elapsed_s": 0.0,
       "note": "NET-003 (mining pool) 변형"
     },
     {
@@ -907,7 +907,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 2,
+        "ttp_match": 0,
         "ind_47": 3,
         "ind_47_high": 2,
         "seq_pattern": 1,
@@ -915,7 +915,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.05,
+      "elapsed_s": 0.0,
       "note": "실제: event-stream incident 패턴 (npm)"
     },
     {
@@ -925,7 +925,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 5,
         "ind_47_high": 3,
         "seq_pattern": 1,
@@ -933,7 +933,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.05,
+      "elapsed_s": 0.0,
       "note": "실제: ua-parser-js incident 패턴"
     },
     {
@@ -961,7 +961,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 3,
         "ind_47_high": 1,
         "seq_pattern": 0,
@@ -969,7 +969,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.04,
+      "elapsed_s": 0.0,
       "note": "실제: node-ipc protestware"
     },
     {
@@ -979,7 +979,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 3,
         "ind_47_high": 1,
         "seq_pattern": 1,
@@ -987,7 +987,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.04,
+      "elapsed_s": 0.0,
       "note": "실제: xz utils backdoor 변형 (정적 검출 가능 영역만)"
     },
     {
@@ -1095,7 +1095,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.22,
+      "elapsed_s": 0.0,
       "note": "실제: ctx 패키지 incident"
     },
     {
@@ -1105,7 +1105,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 2,
+        "ttp_match": 0,
         "ind_47": 5,
         "ind_47_high": 3,
         "seq_pattern": 2,
@@ -1113,7 +1113,7 @@
         "taint_flows": 0,
         "llm_stub": "suspicious"
       },
-      "elapsed_s": 0.22,
+      "elapsed_s": 0.0,
       "note": "실제: pytorch nightly torchtriton incident"
     },
     {
@@ -1131,7 +1131,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.04,
+      "elapsed_s": 0.0,
       "note": "실제: ssh-decorate hijack"
     },
     {
@@ -1141,7 +1141,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 2,
         "ind_47_high": 1,
         "seq_pattern": 2,
@@ -1149,7 +1149,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.2,
+      "elapsed_s": 0.0,
       "note": "실제: shai-hulud worm"
     },
     {
@@ -1159,7 +1159,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 3,
+        "ttp_match": 0,
         "ind_47": 2,
         "ind_47_high": 1,
         "seq_pattern": 2,
@@ -1167,7 +1167,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.2,
+      "elapsed_s": 0.0,
       "note": "역직렬화 RCE 패턴 보강"
     },
     {
@@ -1267,7 +1267,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 2,
+        "ttp_match": 0,
         "ind_47": 3,
         "ind_47_high": 0,
         "seq_pattern": 1,
@@ -1275,7 +1275,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.04,
+      "elapsed_s": 0.0,
       "note": "botnet flooder"
     },
     {
@@ -1285,7 +1285,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 2,
         "ind_47_high": 1,
         "seq_pattern": 0,
@@ -1293,7 +1293,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.21,
+      "elapsed_s": 0.0,
       "note": "WebShell — POST cmd → eval"
     },
     {
@@ -1303,7 +1303,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 2,
         "ind_47_high": 1,
         "seq_pattern": 0,
@@ -1311,7 +1311,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.22,
+      "elapsed_s": 0.0,
       "note": "Windows post-exploit"
     },
     {
@@ -1321,7 +1321,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 2,
         "ind_47_high": 1,
         "seq_pattern": 0,
@@ -1329,7 +1329,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.23,
+      "elapsed_s": 0.0,
       "note": "SYS-002 cron persistence"
     },
     {
@@ -1339,7 +1339,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 2,
         "ind_47_high": 1,
         "seq_pattern": 2,
@@ -1347,7 +1347,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.05,
+      "elapsed_s": 0.0,
       "note": "creds-paths 변형"
     },
     {
@@ -1447,7 +1447,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 2,
         "ind_47_high": 1,
         "seq_pattern": 0,
@@ -1455,7 +1455,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.04,
+      "elapsed_s": 0.0,
       "note": ""
     },
     {
@@ -1473,7 +1473,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.04,
+      "elapsed_s": 0.0,
       "note": ""
     },
     {
@@ -1483,7 +1483,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 2,
         "ind_47_high": 1,
         "seq_pattern": 0,
@@ -1491,7 +1491,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.05,
+      "elapsed_s": 0.0,
       "note": ""
     },
     {
@@ -1509,7 +1509,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.04,
+      "elapsed_s": 0.0,
       "note": ""
     },
     {
@@ -1519,7 +1519,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 3,
         "ind_47_high": 1,
         "seq_pattern": 2,
@@ -1527,7 +1527,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.22,
+      "elapsed_s": 0.0,
       "note": ""
     },
     {
@@ -1537,7 +1537,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 1,
+        "ttp_match": 0,
         "ind_47": 4,
         "ind_47_high": 2,
         "seq_pattern": 0,
@@ -1545,7 +1545,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.22,
+      "elapsed_s": 0.0,
       "note": "EXS-001 (Import-Time Execution)"
     },
     {
@@ -1563,7 +1563,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.05,
+      "elapsed_s": 0.0,
       "note": "time-conditional + dangerous action"
     },
     {
@@ -1573,7 +1573,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 2,
+        "ttp_match": 0,
         "ind_47": 3,
         "ind_47_high": 2,
         "seq_pattern": 1,
@@ -1581,7 +1581,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.04,
+      "elapsed_s": 0.0,
       "note": "description-behavior mismatch"
     },
     {
@@ -1609,7 +1609,7 @@
       "expected": true,
       "severity_max": "HIGH",
       "matchers": {
-        "ttp_match": 2,
+        "ttp_match": 0,
         "ind_47": 3,
         "ind_47_high": 1,
         "seq_pattern": 0,
@@ -1617,7 +1617,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.22,
+      "elapsed_s": 0.0,
       "note": "CDP-based stealing"
     },
     {
@@ -1851,7 +1851,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.21,
+      "elapsed_s": 0.0,
       "note": ""
     },
     {
@@ -2171,5 +2171,5 @@
     "f1": 0.9916,
     "accuracy": 0.9917
   },
-  "elapsed_total_s": 14.09
+  "elapsed_total_s": 0.13
 }

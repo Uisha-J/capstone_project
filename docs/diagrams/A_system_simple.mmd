@@ -1,0 +1,36 @@
+flowchart LR
+    %% 클라이언트 (사용자 입력)
+    CLI[CLI<br/>pkgsentinel]:::client
+    EXT[Chrome / VSCode<br/>Extension]:::client
+
+    %% 외부 서비스 (오른쪽)
+    LLM[Anthropic<br/>Claude Sonnet 4.5<br/>API]:::ext
+    DATA[PyPI / npm<br/>OSV / GHSA<br/>피드]:::ext
+    SINK[STIX / Webhook<br/>Falco / Tetragon]:::sink
+
+    %% 코어 (가운데 박스)
+    subgraph core[로컬 서버 - SQLCipher AES-256 암호화 DB]
+        direction TB
+        PIPE[pipeline.py<br/>13-stage<br/>분석 엔진]:::corebox
+        AISLOPSQ[AISLOPSQ<br/>Manifest<br/>분류기]:::corebox
+        VERDICT[verdict_rules<br/>최종 판정]:::corebox
+        DB[(threat_db<br/>SQLCipher)]:::dbbox
+    end
+
+    CLI <--> PIPE
+    EXT <--> PIPE
+
+    PIPE <--> AISLOPSQ
+    PIPE <--> VERDICT
+    PIPE <--> DB
+    VERDICT <--> DB
+
+    PIPE <--> LLM
+    DATA --> DB
+    VERDICT -->|verdict ≥ SUSPICIOUS| SINK
+
+    classDef client fill:#dde7ff,stroke:#3a4f7a,color:#1a2a4a
+    classDef ext fill:#fff3d6,stroke:#a06a00,color:#5a3a00
+    classDef sink fill:#ffd6d6,stroke:#7a3a3a,color:#5a1a1a
+    classDef corebox fill:#e8f7e8,stroke:#3a7a3a,color:#1a4a1a
+    classDef dbbox fill:#f7e8f7,stroke:#7a3a7a,color:#4a1a4a
