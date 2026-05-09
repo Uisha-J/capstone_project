@@ -3,38 +3,28 @@
 
 목적
 ----
-좁은 anomaly_baseline 카테고리 (parser/formatter/date/math) 와 별개로,
-**기능 도메인** 단위 분류:
-  - web_framework      : HTTP 서빙, 라우팅, 요청 처리 (flask/django/fastapi/express ...)
-  - data_science       : 수치/통계/ML 라이브러리 (numpy/pandas/scipy/sklearn/torch ...)
-  - dev_tool           : 빌드/패키징/테스트 도구 (pip/setuptools/poetry/pytest ...)
-  - bundler_transpiler : 코드 변환/번들링 (webpack/babel/typescript/vite ...)
-  - runtime_interpreter: 인터랙티브/REPL/노트북 (ipython/jupyter/cython ...)
+잘 알려진 합법 도구 (프레임워크 / 라이브러리 / 빌드 도구 등) 를 식별해 FP cascade
+차단. 분류 결과는 다음 곳에서 사용:
 
-이런 카테고리에 속한 패키지는 **자기 도메인의 합법 동작** 으로 위험 차원 호출이 빈번:
-  - web_framework: HTTP 송수신 (DATA_TRANSMISSION) + 동적 라우팅 (PAYLOAD_EXECUTION) 정상
-  - data_science: 외부 데이터 fetch + ML 모델 로드 정상
-  - dev_tool: subprocess + 파일 조작 정상
-  - bundler: eval-like 코드 평가 정상
-
-본 모듈은 분류만 함 — 분류 결과를 어떻게 활용할지는 호출자 결정:
   - anomaly_baseline: 분류된 패키지는 좁은 카테고리 이상 탐지 스킵
-  - evidence/converters: 카테고리별 STANDALONE_WEAK 확장
-  - report.package_meta: 분류 결과 노출 (UI / 디버깅용)
+  - sequence_patterns: SP-002 같은 broad fetch+exec 패턴 차단
+  - evidence/converters: 카테고리별 STANDALONE_WEAK 정책 (BROAD_PURPOSE_ONLY_WEAK)
+
+설계 결정 (2026-05-06)
+---------------------
+초기 디자인은 enum 5개 (web_framework / data_science / dev_tool / bundler /
+runtime) 였으나 모든 정책이 binary (broad-purpose vs unknown) 만 사용 →
+enum 단순화. 도메인별 차별 정책이 실제로 필요해지면 그때 분리.
+
+  PackageCategory:
+    - BROAD_PURPOSE  (잘 알려진 합법 도구)
+    - UNKNOWN        (분류 실패 / 신규 / typosquat)
 
 분류 신호 (다중)
 ---------------
-  1. 패키지 이름 (정확 매칭, e.g. 'flask' / 'fastapi')
-  2. 설명 (description) 의 phrase 매칭 (e.g. 'web framework')
-  3. 의존성 (declared_deps) 의 시그니처 (e.g. 'asgiref' -> web_framework)
-
-설계 원칙
---------
-- 분류 실패 (= unknown) 가 default. **추정에 자신 있을 때만 분류**.
-- 한 패키지는 1 카테고리만. 충돌 시 우선순위 적용.
-- 신뢰도 (confidence) 같이 반환 — 호출자가 임계 정할 수 있게.
-
-본 모듈은 verdict 결정에 직접 영향 X — anomaly_baseline 처럼 evidence 발화 정책에만 영향.
+  1. 패키지 이름 (정확 매칭, 80+ entries)
+  2. 설명 (description) phrase 매칭 (25+ phrases, word-boundary)
+  3. 의존성 시그니처 (boost only)
 """
 from __future__ import annotations
 
@@ -46,13 +36,9 @@ from enum import Enum
 # ─────────────── Enum ───────────────
 
 class PackageCategory(str, Enum):
-    """패키지 기능 카테고리."""
-    WEB_FRAMEWORK = "web_framework"
-    DATA_SCIENCE = "data_science"
-    DEV_TOOL = "dev_tool"
-    BUNDLER_TRANSPILER = "bundler_transpiler"
-    RUNTIME_INTERPRETER = "runtime_interpreter"
-    UNKNOWN = "unknown"
+    """패키지 카테고리 — 정책 결정에 사용되는 binary 분류."""
+    BROAD_PURPOSE = "broad_purpose"   # 잘 알려진 합법 framework/library/tool
+    UNKNOWN = "unknown"               # 분류 실패 / 신규 / typosquat
 
 
 @dataclass
@@ -68,166 +54,153 @@ class CategoryGuess:
 
 
 # ─────────────── 분류 룰 (정확 매칭) ───────────────
-# 가장 강한 신호: 잘 알려진 패키지 이름. 이름 자체가 카테고리를 의미.
+# 잘 알려진 합법 패키지. 도메인 (web/data/dev/...) 정보는 reason 에 메모로만 남김.
 
-_NAME_TO_CATEGORY: dict[str, PackageCategory] = {
-    # web framework — 풀 스택 / API / WSGI / ASGI 서버
-    "flask": PackageCategory.WEB_FRAMEWORK,
-    "fastapi": PackageCategory.WEB_FRAMEWORK,
-    "django": PackageCategory.WEB_FRAMEWORK,
-    "starlette": PackageCategory.WEB_FRAMEWORK,
-    "tornado": PackageCategory.WEB_FRAMEWORK,
-    "bottle": PackageCategory.WEB_FRAMEWORK,
-    "pyramid": PackageCategory.WEB_FRAMEWORK,
-    "sanic": PackageCategory.WEB_FRAMEWORK,
-    "aiohttp": PackageCategory.WEB_FRAMEWORK,
-    "quart": PackageCategory.WEB_FRAMEWORK,
-    "uvicorn": PackageCategory.WEB_FRAMEWORK,
-    "gunicorn": PackageCategory.WEB_FRAMEWORK,
-    "werkzeug": PackageCategory.WEB_FRAMEWORK,
-    "express": PackageCategory.WEB_FRAMEWORK,
-    "koa": PackageCategory.WEB_FRAMEWORK,
-    "fastify": PackageCategory.WEB_FRAMEWORK,
-    "hapi": PackageCategory.WEB_FRAMEWORK,
-    "next": PackageCategory.WEB_FRAMEWORK,
-    "nuxt": PackageCategory.WEB_FRAMEWORK,
-    "nestjs": PackageCategory.WEB_FRAMEWORK,
-    "@nestjs/core": PackageCategory.WEB_FRAMEWORK,
+_NAME_BROAD_PURPOSE: dict[str, str] = {
+    # ─── web framework / API / WSGI / ASGI 서버 ───
+    "flask": "web framework",
+    "fastapi": "web framework",
+    "django": "web framework",
+    "starlette": "web framework",
+    "tornado": "web framework",
+    "bottle": "web framework",
+    "pyramid": "web framework",
+    "sanic": "web framework",
+    "aiohttp": "web framework",
+    "quart": "web framework",
+    "uvicorn": "web framework",
+    "gunicorn": "web framework",
+    "werkzeug": "web framework",
+    "express": "web framework",
+    "koa": "web framework",
+    "fastify": "web framework",
+    "hapi": "web framework",
+    "next": "web framework",
+    "nuxt": "web framework",
+    "nestjs": "web framework",
+    "@nestjs/core": "web framework",
 
-    # data science / ML
-    "numpy": PackageCategory.DATA_SCIENCE,
-    "pandas": PackageCategory.DATA_SCIENCE,
-    "scipy": PackageCategory.DATA_SCIENCE,
-    "scikit-learn": PackageCategory.DATA_SCIENCE,
-    "sklearn": PackageCategory.DATA_SCIENCE,
-    "matplotlib": PackageCategory.DATA_SCIENCE,
-    "seaborn": PackageCategory.DATA_SCIENCE,
-    "statsmodels": PackageCategory.DATA_SCIENCE,
-    "sympy": PackageCategory.DATA_SCIENCE,
-    "torch": PackageCategory.DATA_SCIENCE,
-    "tensorflow": PackageCategory.DATA_SCIENCE,
-    "keras": PackageCategory.DATA_SCIENCE,
-    "transformers": PackageCategory.DATA_SCIENCE,
-    "datasets": PackageCategory.DATA_SCIENCE,
-    "polars": PackageCategory.DATA_SCIENCE,
-    "xarray": PackageCategory.DATA_SCIENCE,
+    # ─── data science / ML ───
+    "numpy": "data science",
+    "pandas": "data science",
+    "scipy": "data science",
+    "scikit-learn": "data science",
+    "sklearn": "data science",
+    "matplotlib": "data science",
+    "seaborn": "data science",
+    "statsmodels": "data science",
+    "sympy": "data science",
+    "torch": "data science",
+    "tensorflow": "data science",
+    "keras": "data science",
+    "transformers": "data science",
+    "datasets": "data science",
+    "polars": "data science",
+    "xarray": "data science",
 
-    # dev tool / build / package management
-    "pip": PackageCategory.DEV_TOOL,
-    "setuptools": PackageCategory.DEV_TOOL,
-    "wheel": PackageCategory.DEV_TOOL,
-    "build": PackageCategory.DEV_TOOL,
-    "poetry": PackageCategory.DEV_TOOL,
-    "hatch": PackageCategory.DEV_TOOL,
-    "tox": PackageCategory.DEV_TOOL,
-    "pytest": PackageCategory.DEV_TOOL,
-    "unittest2": PackageCategory.DEV_TOOL,
-    "nose": PackageCategory.DEV_TOOL,
-    "nose2": PackageCategory.DEV_TOOL,
-    "pre-commit": PackageCategory.DEV_TOOL,
-    "twine": PackageCategory.DEV_TOOL,
-    "ruff": PackageCategory.DEV_TOOL,
-    "mypy": PackageCategory.DEV_TOOL,
-    "npm": PackageCategory.DEV_TOOL,
-    "yarn": PackageCategory.DEV_TOOL,
-    "pnpm": PackageCategory.DEV_TOOL,
-    "lerna": PackageCategory.DEV_TOOL,
-    "jest": PackageCategory.DEV_TOOL,
-    "mocha": PackageCategory.DEV_TOOL,
-    "eslint": PackageCategory.DEV_TOOL,
-    "prettier": PackageCategory.DEV_TOOL,
+    # ─── dev tool / build / package management / test / lint ───
+    "pip": "dev tool",
+    "setuptools": "dev tool",
+    "wheel": "dev tool",
+    "build": "dev tool",
+    "poetry": "dev tool",
+    "hatch": "dev tool",
+    "tox": "dev tool",
+    "pytest": "dev tool",
+    "unittest2": "dev tool",
+    "nose": "dev tool",
+    "nose2": "dev tool",
+    "pre-commit": "dev tool",
+    "twine": "dev tool",
+    "ruff": "dev tool",
+    "mypy": "dev tool",
+    "npm": "dev tool",
+    "yarn": "dev tool",
+    "pnpm": "dev tool",
+    "lerna": "dev tool",
+    "jest": "dev tool",
+    "mocha": "dev tool",
+    "eslint": "dev tool",
+    "prettier": "dev tool",
 
-    # bundler / transpiler
-    "webpack": PackageCategory.BUNDLER_TRANSPILER,
-    "vite": PackageCategory.BUNDLER_TRANSPILER,
-    "rollup": PackageCategory.BUNDLER_TRANSPILER,
-    "parcel": PackageCategory.BUNDLER_TRANSPILER,
-    "esbuild": PackageCategory.BUNDLER_TRANSPILER,
-    "swc": PackageCategory.BUNDLER_TRANSPILER,
-    "babel": PackageCategory.BUNDLER_TRANSPILER,
-    "@babel/core": PackageCategory.BUNDLER_TRANSPILER,
-    "typescript": PackageCategory.BUNDLER_TRANSPILER,
-    "ts-node": PackageCategory.BUNDLER_TRANSPILER,
-    "cython": PackageCategory.BUNDLER_TRANSPILER,
-    "pyodide": PackageCategory.BUNDLER_TRANSPILER,
+    # ─── bundler / transpiler ───
+    "webpack": "bundler",
+    "vite": "bundler",
+    "rollup": "bundler",
+    "parcel": "bundler",
+    "esbuild": "bundler",
+    "swc": "bundler",
+    "babel": "bundler",
+    "@babel/core": "bundler",
+    "typescript": "bundler",
+    "ts-node": "bundler",
+    "cython": "bundler",
+    "pyodide": "bundler",
 
-    # runtime / interpreter / notebook
-    "ipython": PackageCategory.RUNTIME_INTERPRETER,
-    "jupyter": PackageCategory.RUNTIME_INTERPRETER,
-    "notebook": PackageCategory.RUNTIME_INTERPRETER,
-    "jupyterlab": PackageCategory.RUNTIME_INTERPRETER,
-    "ptpython": PackageCategory.RUNTIME_INTERPRETER,
-    "bpython": PackageCategory.RUNTIME_INTERPRETER,
+    # ─── runtime / interpreter / notebook ───
+    "ipython": "interactive runtime",
+    "jupyter": "interactive runtime",
+    "notebook": "interactive runtime",
+    "jupyterlab": "interactive runtime",
+    "ptpython": "interactive runtime",
+    "bpython": "interactive runtime",
 }
 
 
 # ─────────────── 분류 룰 (description phrase) ───────────────
 # 약한 신호: 설명 문구. 정확 매칭이 없을 때 fallback.
-# (phrase, category, confidence) 순. word-boundary 매칭 후 우선순위 평가.
+# (phrase, confidence) — 모두 BROAD_PURPOSE 로 분류. 도메인 정보는 reason 에만.
 
-_DESCRIPTION_PHRASES: list[tuple[str, PackageCategory, float]] = [
-    # Web framework
-    ("web framework", PackageCategory.WEB_FRAMEWORK, 0.9),
-    ("application framework", PackageCategory.WEB_FRAMEWORK, 0.7),
-    ("web server", PackageCategory.WEB_FRAMEWORK, 0.85),
-    ("http server", PackageCategory.WEB_FRAMEWORK, 0.85),
-    ("api framework", PackageCategory.WEB_FRAMEWORK, 0.8),
-    ("rest framework", PackageCategory.WEB_FRAMEWORK, 0.8),
-    ("wsgi", PackageCategory.WEB_FRAMEWORK, 0.7),
-    ("asgi", PackageCategory.WEB_FRAMEWORK, 0.7),
-    ("microframework", PackageCategory.WEB_FRAMEWORK, 0.85),
-
-    # Data science / ML
-    ("data analysis", PackageCategory.DATA_SCIENCE, 0.8),
-    ("data structures for", PackageCategory.DATA_SCIENCE, 0.7),
-    ("scientific computing", PackageCategory.DATA_SCIENCE, 0.85),
-    ("numerical computing", PackageCategory.DATA_SCIENCE, 0.85),
-    ("array computing", PackageCategory.DATA_SCIENCE, 0.85),
-    ("machine learning", PackageCategory.DATA_SCIENCE, 0.9),
-    ("deep learning", PackageCategory.DATA_SCIENCE, 0.9),
-    ("neural network", PackageCategory.DATA_SCIENCE, 0.85),
-    ("statistical computing", PackageCategory.DATA_SCIENCE, 0.85),
-
-    # Dev tool
-    ("build system", PackageCategory.DEV_TOOL, 0.85),
-    ("build tool", PackageCategory.DEV_TOOL, 0.85),
-    ("packaging tool", PackageCategory.DEV_TOOL, 0.85),
-    ("package manager", PackageCategory.DEV_TOOL, 0.9),
-    ("test framework", PackageCategory.DEV_TOOL, 0.85),
-    ("testing framework", PackageCategory.DEV_TOOL, 0.85),
-    ("linter", PackageCategory.DEV_TOOL, 0.7),
-    ("type checker", PackageCategory.DEV_TOOL, 0.85),
-
-    # Bundler / transpiler
-    ("module bundler", PackageCategory.BUNDLER_TRANSPILER, 0.95),
-    ("javascript bundler", PackageCategory.BUNDLER_TRANSPILER, 0.95),
-    ("transpiler", PackageCategory.BUNDLER_TRANSPILER, 0.85),
-    ("compiler for", PackageCategory.BUNDLER_TRANSPILER, 0.7),
-
-    # Runtime / interpreter
-    ("interactive shell", PackageCategory.RUNTIME_INTERPRETER, 0.9),
-    ("interactive computing", PackageCategory.RUNTIME_INTERPRETER, 0.85),
-    ("notebook environment", PackageCategory.RUNTIME_INTERPRETER, 0.9),
-    ("repl", PackageCategory.RUNTIME_INTERPRETER, 0.7),
+_DESCRIPTION_PHRASES: list[tuple[str, float, str]] = [
+    # web
+    ("web framework", 0.9, "web framework"),
+    ("application framework", 0.7, "application framework"),
+    ("web server", 0.85, "web server"),
+    ("http server", 0.85, "http server"),
+    ("api framework", 0.8, "api framework"),
+    ("rest framework", 0.8, "rest framework"),
+    ("wsgi", 0.7, "wsgi"),
+    ("asgi", 0.7, "asgi"),
+    ("microframework", 0.85, "microframework"),
+    # data science
+    ("data analysis", 0.8, "data analysis"),
+    ("data structures for", 0.7, "data structures library"),
+    ("scientific computing", 0.85, "scientific computing"),
+    ("numerical computing", 0.85, "numerical computing"),
+    ("array computing", 0.85, "array computing"),
+    ("machine learning", 0.9, "machine learning"),
+    ("deep learning", 0.9, "deep learning"),
+    ("neural network", 0.85, "neural network"),
+    ("statistical computing", 0.85, "statistical computing"),
+    # dev tool
+    ("build system", 0.85, "build system"),
+    ("build tool", 0.85, "build tool"),
+    ("packaging tool", 0.85, "packaging tool"),
+    ("package manager", 0.9, "package manager"),
+    ("test framework", 0.85, "test framework"),
+    ("testing framework", 0.85, "testing framework"),
+    ("linter", 0.7, "linter"),
+    ("type checker", 0.85, "type checker"),
+    # bundler / transpiler
+    ("module bundler", 0.95, "module bundler"),
+    ("javascript bundler", 0.95, "javascript bundler"),
+    ("transpiler", 0.85, "transpiler"),
+    ("compiler for", 0.7, "compiler"),
+    # runtime
+    ("interactive shell", 0.9, "interactive shell"),
+    ("interactive computing", 0.85, "interactive computing"),
+    ("notebook environment", 0.9, "notebook environment"),
+    ("repl", 0.7, "repl"),
 ]
 
 
 # ─────────────── 분류 룰 (의존성 시그니처) ───────────────
-# 매우 약한 신호: 의존성 패키지가 카테고리를 시사.
-# 단독 신호로는 부족 (다른 신호와 결합 시 confidence boost).
+# 매우 약한 신호: 의존성이 broad-purpose 도구 시사. boost 용.
 
-_DEP_HINTS: dict[str, PackageCategory] = {
-    "asgiref": PackageCategory.WEB_FRAMEWORK,
-    "starlette": PackageCategory.WEB_FRAMEWORK,
-    "uvicorn": PackageCategory.WEB_FRAMEWORK,
-    "gunicorn": PackageCategory.WEB_FRAMEWORK,
-    "werkzeug": PackageCategory.WEB_FRAMEWORK,
-    "click": PackageCategory.DEV_TOOL,
-    "build": PackageCategory.DEV_TOOL,
-    "wheel": PackageCategory.DEV_TOOL,
-    "numpy": PackageCategory.DATA_SCIENCE,
-    "scipy": PackageCategory.DATA_SCIENCE,
-    "pandas": PackageCategory.DATA_SCIENCE,
+_DEP_HINTS: set[str] = {
+    "asgiref", "starlette", "uvicorn", "gunicorn", "werkzeug",
+    "click", "build", "wheel",
+    "numpy", "scipy", "pandas",
 }
 
 
@@ -238,9 +211,9 @@ def classify(
     description: str = "",
     declared_deps: list[str] | None = None,
 ) -> CategoryGuess:
-    """패키지를 기능 카테고리로 분류.
+    """패키지를 BROAD_PURPOSE 또는 UNKNOWN 으로 분류.
 
-    여러 신호를 조합:
+    여러 신호 조합:
       1. 정확 패키지명 매칭 (가장 강한 신호, confidence 1.0)
       2. description phrase 매칭 (word-boundary, confidence 0.7~0.9)
       3. 의존성 시그니처 (약한 신호, confidence boost only)
@@ -253,62 +226,65 @@ def classify(
     dep_lower = {(d or "").strip().lower() for d in declared_deps}
 
     # 1. 정확 패키지명 매칭
-    if name_lower in _NAME_TO_CATEGORY:
-        cat = _NAME_TO_CATEGORY[name_lower]
+    if name_lower in _NAME_BROAD_PURPOSE:
+        domain = _NAME_BROAD_PURPOSE[name_lower]
         return CategoryGuess(
-            category=cat, confidence=1.0,
-            reason=f"exact name match: {name_lower!r} -> {cat.value}",
+            category=PackageCategory.BROAD_PURPOSE,
+            confidence=1.0,
+            reason=f"exact name match: {name_lower!r} ({domain})",
         )
 
     # 2. description phrase 매칭
-    desc_matches: list[tuple[PackageCategory, float, str]] = []
-    for phrase, cat, conf in _DESCRIPTION_PHRASES:
+    desc_matches: list[tuple[float, str]] = []
+    for phrase, conf, domain in _DESCRIPTION_PHRASES:
         if re.search(r"\b" + re.escape(phrase) + r"\b", desc_lower):
-            desc_matches.append((cat, conf, phrase))
+            desc_matches.append((conf, domain))
 
     # 3. 의존성 시그니처 (boost 용)
-    dep_categories = {_DEP_HINTS[d] for d in dep_lower if d in _DEP_HINTS}
+    dep_hit = bool(dep_lower & _DEP_HINTS)
 
     if desc_matches:
         # 가장 높은 confidence 의 phrase 매칭 선택
-        desc_matches.sort(key=lambda x: -x[1])
-        cat, conf, phrase = desc_matches[0]
-        # 의존성 신호로 confidence 보강
-        if cat in dep_categories:
+        desc_matches.sort(key=lambda x: -x[0])
+        conf, domain = desc_matches[0]
+        if dep_hit:
             conf = min(1.0, conf + 0.1)
-            reason = f"description phrase {phrase!r} + dep signal -> {cat.value}"
+            reason = f"description phrase ({domain}) + dep signal"
         else:
-            reason = f"description phrase {phrase!r} -> {cat.value}"
-        return CategoryGuess(category=cat, confidence=conf, reason=reason)
+            reason = f"description phrase ({domain})"
+        return CategoryGuess(
+            category=PackageCategory.BROAD_PURPOSE,
+            confidence=conf,
+            reason=reason,
+        )
 
     # description 신호 없을 때, 의존성 단독으로는 분류 안 함 (FP 우려).
-    # dep 만 있는 경우 unknown 으로 둠 — 다른 신호 없으면 자신 없는 분류.
 
     return CategoryGuess(
-        category=PackageCategory.UNKNOWN, confidence=0.0,
+        category=PackageCategory.UNKNOWN,
+        confidence=0.0,
         reason="no exact name / description / dep evidence",
     )
 
 
 # ─────────────── 헬퍼 ───────────────
 
-# 카테고리별 'broad' 성격: 좁은 anomaly 카테고리 분류 거부 + 추가 STANDALONE_WEAK 정책 가능.
-BROAD_PURPOSE_CATEGORIES = frozenset({
-    PackageCategory.WEB_FRAMEWORK,
-    PackageCategory.DATA_SCIENCE,
-    PackageCategory.DEV_TOOL,
-    PackageCategory.BUNDLER_TRANSPILER,
-    PackageCategory.RUNTIME_INTERPRETER,
-})
+def is_broad_purpose(guess: CategoryGuess, min_confidence: float = 0.6) -> bool:
+    """이 분류가 broad-purpose 이고 신뢰도 임계 이상인가."""
+    return (
+        guess.category == PackageCategory.BROAD_PURPOSE
+        and guess.confidence >= min_confidence
+    )
 
 
-# 2026-05-06: broad-purpose 패키지에서만 약한 신호로 처리할 indicator 코드.
-# popular-benign N=300 측정에서 FP rate ≥ 5% 였지만 합성 fixture (unknown
-# 카테고리) 의 진짜 악성 패턴 (ssh-key-theft 등) 에선 핵심 신호.
-# → broad-purpose 일 때만 STANDALONE_WEAK 처리, unknown 카테고리엔 full severity.
-#
-# 합성 fixture eval 결과 (PR1 ∪ PR4): R=0.87 (-0.12 회귀) 의 동력. 이 set 을
-# 카테고리 조건부로 처리하면 recall 보존 + popular-benign FP 억제 양립.
+# 호환성 별칭 (이전 코드가 사용했던 set)
+BROAD_PURPOSE_CATEGORIES = frozenset({PackageCategory.BROAD_PURPOSE})
+
+
+# 2026-05-06: BROAD_PURPOSE 패키지에서만 약한 신호로 처리할 indicator 코드.
+# popular-benign N=300 측정에서 FP rate ≥ 5% 였지만 unknown 카테고리의 진짜
+# 악성 패턴 (ssh-key-theft 등) 에선 핵심 신호.
+# → BROAD_PURPOSE 일 때만 STANDALONE_WEAK 처리, UNKNOWN 카테고리엔 full severity.
 BROAD_PURPOSE_ONLY_WEAK_INDICATORS: frozenset[str] = frozenset({
     "EXM-002",   # platform conditional check — cross-platform 도구에 빈번
     "SYS-002",   # .bashrc/crontab 키워드 — 합법 shell completion 안내
@@ -321,14 +297,6 @@ BROAD_PURPOSE_ONLY_WEAK_INDICATORS: frozenset[str] = frozenset({
     "NET-009",   # verify=False — 사내 cert 환경
     "NET-010",   # http:// URL — 테스트/예제 코드 빈번
 })
-
-
-def is_broad_purpose(guess: CategoryGuess, min_confidence: float = 0.6) -> bool:
-    """이 분류가 broad-purpose 카테고리이고 신뢰도 임계 이상인가."""
-    return (
-        guess.category in BROAD_PURPOSE_CATEGORIES
-        and guess.confidence >= min_confidence
-    )
 
 
 # ─────────────── CLI ───────────────
@@ -349,4 +317,4 @@ if __name__ == "__main__":
     for name, desc in samples:
         g = classify(name, desc)
         marker = "OK " if g.is_known else "?? "
-        print(f"  {marker} {name:<22s} -> {g.category.value:<22s} conf={g.confidence:.2f}  ({g.reason})")
+        print(f"  {marker} {name:<22s} -> {g.category.value:<14s} conf={g.confidence:.2f}  ({g.reason})")

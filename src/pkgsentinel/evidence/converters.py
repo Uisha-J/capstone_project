@@ -243,8 +243,17 @@ def indicator_hit_to_evidence(
     )
 
 
-def sequence_match_to_evidence(m: SequenceMatch) -> Evidence:
-    """Sequential pattern match -> Evidence."""
+def sequence_match_to_evidence(
+    m: SequenceMatch,
+    is_broad_purpose_pkg: bool = False,
+) -> Evidence:
+    """Sequential pattern match -> Evidence.
+
+    is_broad_purpose_pkg: BROAD_PURPOSE 패키지면 SP-005 같은 약한 패턴의
+    severity 를 LOW 로 강등 (django shell.py 같은 합법 cross-platform shell
+    호출 FP 차단). UNKNOWN 패키지에선 패턴 자체 severity (MEDIUM) 유지 —
+    ssh-key-theft 같은 진짜 악성 신호 보존.
+    """
     pat = m.pattern
     line_start = m.matched_calls[0].line if m.matched_calls else 0
     line_end = m.matched_calls[-1].line if m.matched_calls else 0
@@ -259,10 +268,15 @@ def sequence_match_to_evidence(m: SequenceMatch) -> Evidence:
         if ttp_id != "GENERIC" else ""
     )
 
-    if pat.severity == Severity.HIGH:
+    # 카테고리 인식 severity — broad-purpose 에서만 SP-005 약화
+    severity = pat.severity
+    if pat.code == "SP-005" and is_broad_purpose_pkg:
+        severity = Severity.LOW   # broad-purpose: 합법 cross-platform shell 호출
+
+    if severity == Severity.HIGH:
         llm_v = LLMVerdict.MALICIOUS
         confidence = 0.85
-    elif pat.severity == Severity.MEDIUM:
+    elif severity == Severity.MEDIUM:
         llm_v = LLMVerdict.SUSPICIOUS
         confidence = 0.65
     else:
@@ -280,7 +294,7 @@ def sequence_match_to_evidence(m: SequenceMatch) -> Evidence:
         ttp_name=f"{pat.name} -- sequential pattern",
         ttp_source=TTPSource.MITRE_ATTACK,
         ttp_url=ttp_url,
-        ttp_severity=pat.severity,
+        ttp_severity=severity,   # 카테고리 인식 (위에서 SP-005 broad-purpose 시 LOW)
         vector_similarity=1.0,
         llm_verdict=llm_v,
         llm_reasoning=(

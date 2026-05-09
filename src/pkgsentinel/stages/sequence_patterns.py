@@ -184,36 +184,46 @@ def _match_pattern_at(
     return (start, pos)
 
 
-# 2026-05-06: 카테고리 인지 가드 — broad-purpose 패키지에서 약화시킬 패턴.
-# 카테고리의 합법 동작에 매칭되는 시퀀스를 차단.
-# 예:
-#   - SP-002 (Download-and-execute): web_framework 가 외부 리소스 fetch 정상,
-#     dev_tool / bundler 가 빌드 시 fetch+process 정상. 이 카테고리는 매칭 안 함.
-#   - SP-001 (Credential exfiltration): 어떤 카테고리든 INFO->ENCODE->TRANSMIT
-#     체인은 의심 — 카테고리 가드 적용 안 함.
-_CATEGORY_GUARDED_PATTERNS: dict[str, set[str]] = {
-    # SP code -> 이 카테고리에선 매칭 안 함
-    "SP-002": {"web_framework", "data_science", "dev_tool",
-               "bundler_transpiler", "runtime_interpreter"},
-}
+# 2026-05-06: BROAD_PURPOSE 패키지에서 약화시킬 패턴.
+# 잘 알려진 합법 도구 (web framework / data science / dev tool 등) 의 도메인
+# 동작에 매칭되는 시퀀스를 차단. UNKNOWN 카테고리에선 정상 매칭.
+# - SP-002 (Download-and-execute): broad-purpose 의 정상 fetch + 처리 패턴
+# - SP-001/SP-006 (Credential exfil / Full kill-chain) 등은 어떤 카테고리든 의심 — 가드 적용 안 함
+_BROAD_PURPOSE_GUARDED_PATTERNS: frozenset[str] = frozenset({
+    "SP-002",   # Download-and-execute — broad-purpose 의 정상 fetch+process
+})
 
 
 def _mine_sequence_in_file(
     file_seq: FileSequence,
-    category: str | None = None,
+    is_broad_purpose: bool = False,
 ) -> list[SequenceMatch]:
     """한 파일의 calls 리스트 안에서 모든 패턴 매칭.
 
-    category: 패키지의 broad-purpose 카테고리 (web_framework/data_science/...).
-    분류된 패키지는 _CATEGORY_GUARDED_PATTERNS 에 명시된 SP 패턴을 약화 (매칭 안 함).
+    is_broad_purpose: 패키지가 BROAD_PURPOSE 카테고리인가.
+    True 면:
+      - _BROAD_PURPOSE_GUARDED_PATTERNS 의 SP 차단 (예: SP-002)
+      - SP-003 의 requires_in_file 가드 적용 (PR1 의 zlib+pickle FP 차단)
+    False (UNKNOWN 카테고리) 면:
+      - 모든 SP 매칭 시도 (진짜 악성 신호 보존)
+      - SP-003 의 requires_in_file 가드 무시 — obfuscated-import-exec 같은
+        INFO 없는 진짜 악성 패턴 잡음
     """
     matches: list[SequenceMatch] = []
     n = len(file_seq.calls)
+    # 파일에 등장하는 모든 차원 (requires_in_file 가드용 — 1회만 계산)
+    dims_in_file = {c.dimension.value for c in file_seq.calls}
     for pat in PATTERNS:
-        # 카테고리 가드: broad-purpose 패키지의 합법 동작 매칭 차단
-        if category and pat.code in _CATEGORY_GUARDED_PATTERNS:
-            if category in _CATEGORY_GUARDED_PATTERNS[pat.code]:
-                continue
+        # 가드 1: requires_in_file 차원 검사 — broad-purpose 패키지에만 적용
+        if (
+            is_broad_purpose
+            and pat.requires_in_file
+            and not all(d in dims_in_file for d in pat.requires_in_file)
+        ):
+            continue
+        # 가드 2: BROAD_PURPOSE 패키지에선 일부 SP 패턴 차단
+        if is_broad_purpose and pat.code in _BROAD_PURPOSE_GUARDED_PATTERNS:
+            continue
         # 한 파일에서 같은 패턴은 최대 한 번만 보고 (중복 제거)
         for i in range(n):
             span = _match_pattern_at(file_seq.calls, i, pat)
@@ -232,13 +242,15 @@ def _mine_sequence_in_file(
 
 def mine(
     behavior: BehaviorReport,
-    category: str | None = None,
+    is_broad_purpose: bool = False,
 ) -> SequenceMineReport:
-    """시퀀스 패턴 매칭. category 가 broad-purpose 면 일부 SP 약화."""
+    """시퀀스 패턴 매칭. is_broad_purpose=True 면 일부 SP 약화."""
     rpt = SequenceMineReport()
     try:
         for fs in behavior.files:
-            rpt.matches.extend(_mine_sequence_in_file(fs, category=category))
+            rpt.matches.extend(
+                _mine_sequence_in_file(fs, is_broad_purpose=is_broad_purpose)
+            )
     except Exception as e:
         rpt.error = f"{type(e).__name__}: {e}"
     return rpt

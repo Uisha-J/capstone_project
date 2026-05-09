@@ -696,15 +696,15 @@ def run_pipeline(
 
     # ========== Stage 4E: Sequential Pattern Mining ==========
     try:
-        # 카테고리 인지 매칭 — web_framework/data_science 등은 SP-002 약화
-        _cat_value = (
-            ctx.category.category.value
-            if ctx.category and ctx.category.is_known
-            else None
-        )
-        seq_rpt = mine_sequences(ctx.behavior, category=_cat_value)
+        # 카테고리 인지 매칭 — BROAD_PURPOSE 패키지는 SP-002 차단 + SP-003 가드 적용
+        # + SP-005 severity LOW. UNKNOWN 패키지는 모든 SP 정상 매칭 (recall 보존).
+        from .knowledge.package_categories import is_broad_purpose
+        _is_broad = bool(ctx.category and is_broad_purpose(ctx.category))
+        seq_rpt = mine_sequences(ctx.behavior, is_broad_purpose=_is_broad)
         for m in seq_rpt.matches:
-            ctx.evidence.append(_sequence_match_to_evidence(m))
+            ctx.evidence.append(
+                _sequence_match_to_evidence(m, is_broad_purpose_pkg=_is_broad)
+            )
         ctx.stage_results.append(StageResult(
             stage="stage_4e_sequence_mining",
             success=seq_rpt.error is None,
