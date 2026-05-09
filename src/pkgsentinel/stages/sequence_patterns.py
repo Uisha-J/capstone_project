@@ -45,6 +45,10 @@ class SequencePattern:
     severity: Severity
     slots: list[SeqSlot]
     related_ttps: list[str] = field(default_factory=list)
+    # 같은 파일 안에 이 dimension 들이 모두 등장해야 매칭 채택 (문맥 가드).
+    # 빈 리스트면 가드 없음 (기존 동작).
+    # 2026-05-06 추가: SP-003 이 zlib+pickle 같은 합법 cache 패턴에 fire 하는 FP 차단용.
+    requires_in_file: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -96,16 +100,20 @@ PATTERNS: list[SequencePattern] = [
     ),
 
     # SP-003: 인코딩 후 실행 (base64 -> exec)
+    # 2026-05-06: 합법 cache 백엔드 (zlib.decompress + pickle.loads) FP 차단을 위해
+    #             "같은 파일에 INFORMATION_READING 차원 호출 존재" 를 문맥 가드로 추가.
+    #             진짜 악성 패턴(env 읽기 → base64 → exec)은 보존, 합법 cache I/O 는 제외.
     SequencePattern(
         code="SP-003",
         name="Encoded payload execution",
-        description="인코딩 디코드 → 실행",
+        description="인코딩 디코드 → 실행 (단, 파일 어딘가 INFO source 존재 시)",
         severity=Severity.HIGH,
         slots=[
             SeqSlot("ENCODING", min=1, max=3),
             SeqSlot("PAYLOAD_EXECUTION", min=1, max=2),
         ],
         related_ttps=["T1027", "T1059", "T1140"],
+        requires_in_file=["INFORMATION_READING"],
     ),
 
     # SP-004: 시스템 정보 수집 → 송신
@@ -122,11 +130,14 @@ PATTERNS: list[SequencePattern] = [
     ),
 
     # SP-005: 정보읽기 → 실행 (예: env-controlled exec)
+    # 2026-05-06: 합법 dev 도구 (django shell.py, DB drivers, IPython) FP 차단을 위해
+    #             severity MEDIUM → LOW 로 낮추고, 단독 매칭은 _has_any_strong_ttp_match
+    #             통과 못하도록 함. 진짜 의심 패턴은 SP-006 풀 체인이 잡음.
     SequencePattern(
         code="SP-005",
         name="Info-driven execution",
-        description="정보 읽기 → 즉시 실행",
-        severity=Severity.MEDIUM,
+        description="정보 읽기 → 즉시 실행 (약한 신호 — cross-platform shell 호출 다수 포함)",
+        severity=Severity.LOW,
         slots=[
             SeqSlot("INFORMATION_READING", min=1, max=3),
             SeqSlot("PAYLOAD_EXECUTION", min=1, max=2),
@@ -188,7 +199,14 @@ def _mine_sequence_in_file(file_seq: FileSequence) -> list[SequenceMatch]:
     """한 파일의 calls 리스트 안에서 모든 패턴 매칭."""
     matches: list[SequenceMatch] = []
     n = len(file_seq.calls)
+    # 파일에 등장하는 모든 차원 (requires_in_file 가드용 — 1회만 계산)
+    dims_in_file = {c.dimension.value for c in file_seq.calls}
     for pat in PATTERNS:
+        # 문맥 가드: requires_in_file 의 모든 차원이 파일에 있어야 매칭 채택
+        if pat.requires_in_file and not all(
+            d in dims_in_file for d in pat.requires_in_file
+        ):
+            continue
         # 한 파일에서 같은 패턴은 최대 한 번만 보고 (중복 제거)
         for i in range(n):
             span = _match_pattern_at(file_seq.calls, i, pat)

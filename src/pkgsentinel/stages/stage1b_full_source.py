@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 
 from ..schema import Ecosystem
 from .stage1_entry_point import (
+    EXCLUDE_DIR_PREFIXES,
     EXCLUDE_DIR_SEGMENTS,
     MAX_ARCHIVE_SIZE,
     MAX_TEXT_FILE_SIZE,
@@ -73,7 +74,13 @@ class FullSourceExtract:
 
 def _is_excluded_path(name: str) -> bool:
     parts = name.replace("\\", "/").split("/")
-    return any(seg in EXCLUDE_DIR_SEGMENTS for seg in parts)
+    for seg in parts:
+        if seg in EXCLUDE_DIR_SEGMENTS:
+            return True
+        for pfx in EXCLUDE_DIR_PREFIXES:
+            if seg.startswith(pfx):
+                return True
+    return False
 
 
 def _classify_file(name: str) -> str:

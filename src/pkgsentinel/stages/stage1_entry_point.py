@@ -87,11 +87,27 @@ EXCLUDE_DIR_SEGMENTS = {
     "examples", "example", "tests", "test", "__tests__", "docs",
     "doc", "sample", "samples", "fixtures", "fixture", "demo", "demos",
     "node_modules", ".git", ".github",
+    # 2026-05-06 추가: 벤더된 3rd party 코드 — 분석 대상 아님
+    # (django/.../static/admin/js/vendor/xregexp 같은 케이스에서 DEF-005 FP 발생)
+    "vendor", "vendored", "third_party", "thirdparty", "_vendor",
 }
+
+# 정확 매칭 외에, segment 가 이 prefix 들 중 하나로 시작하면 제외.
+# numpy 의 `vendored-meson/`, `vendored-numpy/` 같은 하이픈 결합 디렉토리 대응.
+EXCLUDE_DIR_PREFIXES = (
+    "vendored-",   # vendored-meson, vendored-numpy 등
+    "_vendor_",    # 일부 빌드 도구의 vendoring 패턴
+)
 
 
 def _has_excluded_segment(parts: list[str]) -> bool:
-    return any(seg in EXCLUDE_DIR_SEGMENTS for seg in parts)
+    for seg in parts:
+        if seg in EXCLUDE_DIR_SEGMENTS:
+            return True
+        for pfx in EXCLUDE_DIR_PREFIXES:
+            if seg.startswith(pfx):
+                return True
+    return False
 
 
 def _is_tier1_pypi(name: str) -> bool:

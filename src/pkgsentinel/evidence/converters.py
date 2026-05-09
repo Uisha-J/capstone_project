@@ -24,6 +24,17 @@ STANDALONE_WEAK_INDICATORS = {
     "MET-001",   # author identity — author 비어있는 정상 패키지 많음
     "EXM-005",   # dynamic import — 플러그인 시스템 등에 정당
     "DEF-003",   # encoding — base64는 정당한 용도가 많음 (UUID, 토큰 등)
+    # ─── 추가 (2026-05-06, Fix-4+) ───
+    # popular-benign N=100 측정 기반 (docs/2026-05-06-fp-root-cause.md):
+    "EXM-002",   # 22% FP — `if platform.system() == ...` cross-platform 분기 흔함
+    "SYS-002",   # 14% FP — .bashrc/crontab 키워드가 shell completion 안내에 등장
+    "EXM-008",   # 13% FP — subprocess.run 빌드/테스트/CLI 도구
+    "EXM-003",   # 9% FP — ctypes.CDLL 정상 native binding 다수
+    "EXS-002",   # 8% FP — setup.py top-level 호출은 거의 모든 패키지 발화
+    "EXM-006",   # 6% FP — dev-mode self-install (pip 등)
+    "EXF-001",   # 6% FP — telemetry/error reporter 흔함
+    "SYS-001",   # 2% FP — 일부 cross-platform 도구의 PATH 조작
+    "NET-009",   # 4% FP — verify=False 가 사내 cert 환경에서 정당
 }
 
 
@@ -173,9 +184,21 @@ def indicator_hit_to_evidence(h: IndicatorHit, indicator_codes_same_file: set[st
 
     is_standalone_weak = ind.code in STANDALONE_WEAK_INDICATORS
 
+    # Fix-4 (2026-05-06): popular-benign N=100 측정 결과 기반 trigger 명단 축소.
+    # 제거: EXM-008 (FP 13%), EXS-002 (FP 8%), EXM-006 (FP 6%), EXF-001 (FP 6%)
+    #       — 합법 foundation 도구 (numpy/pip/setuptools/pytest/pandas) 가
+    #       정상 기능으로 동시 발화시켜 STANDALONE_WEAK downgrade 무력화.
+    # 유지: NET-002/007/008, EXS-003, DEF-005, EXF-002~005
+    #       — popular-benign N=100 에서 FP rate ≤ 1% 로 변별력 우수.
+    # 근거: docs/2026-05-06-fp-root-cause.md
+    _STRONG_TRIGGER_CODES = {
+        "EXF-002", "EXF-003", "EXF-004", "EXF-005",  # File/DNS/Webhook/Sus-domain exfil
+        "NET-002", "NET-007", "NET-008",             # Mining / curl|bash / reverse shell
+        "EXS-003",                                   # cmdclass override
+        "DEF-005",                                   # Embedded payload + exec
+    }
     has_risk_combo = any(
-        c.startswith(("EXF-", "NET-002", "NET-007", "NET-008",
-                      "EXS-002", "EXS-003", "EXM-006", "EXM-008", "DEF-005"))
+        c in _STRONG_TRIGGER_CODES
         for c in indicator_codes_same_file
     )
 
