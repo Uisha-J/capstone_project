@@ -29,6 +29,9 @@ def format_report(report: AnalysisReport) -> str:
             report.package_meta.setdefault("clean_with_noise", True)
 
     lines.append(f"Verdict   : {verdict_str}")
+    # 합법 도구 분류 (web framework / data science / dev tool 등 — 단순 boolean 노출)
+    if report.package_meta and report.package_meta.get("legitimate_tool"):
+        lines.append("Type      : legitimate tool (broad-purpose framework/library)")
     lines.append("=" * 70)
 
     lines.append("\n[Stage Results]")

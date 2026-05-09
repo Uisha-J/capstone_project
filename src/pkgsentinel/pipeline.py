@@ -1007,13 +1007,13 @@ def run_pipeline(
         "source_files": len(ctx.ext.source_files),
         "binary_files": len(ctx.ext.binary_files),
     }
-    # 패키지 기능 카테고리 (web_framework / data_science 등 — 분류된 경우만)
+    # 합법 도구 분류 결과 — **사용자 노출은 boolean 만**.
+    # 내부 5개 세부 카테고리 (web_framework/data_science/dev_tool/...) 는 미래
+    # 카테고리별 가드 확장 위해 코드 내에서만 사용. 사용자 입장에선 도구 분류
+    # 라벨이 정보 과잉이고, 현재 모든 broad-purpose 가 SP-002 등에 동일 가드 적용
+    # 중이라 외부 노출은 boolean 으로 충분.
     if ctx.category and ctx.category.is_known:
-        report.package_meta["category"] = {
-            "name": ctx.category.category.value,
-            "confidence": round(ctx.category.confidence, 2),
-            "reason": ctx.category.reason,
-        }
+        report.package_meta["legitimate_tool"] = True
     # AISLOPSQ agentic classification (판정 영향 — Step 1C 단계에서 이미 처리됨)
     if agentic_result is not None and agentic_result.classification is not None:
         report.package_meta["aislopsq"] = (
