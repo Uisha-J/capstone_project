@@ -226,6 +226,17 @@ def run_pipeline(
         report.package_meta = {"reason": "registry_not_found"}
         return report
 
+    # ─── 패키지 카테고리 분류 (Stage 0 이후, broad-purpose 인식용) ───
+    # web_framework / data_science / dev_tool 등으로 분류되면 후속 단계에서
+    # 이를 활용해 합법 도구의 FP cascade 차단.
+    try:
+        from .knowledge.package_categories import classify as classify_package
+        _info = (reg.raw_metadata or {}).get("info", {}) or {}
+        _desc = _info.get("summary", "") or _info.get("description", "")[:300]
+        ctx.category = classify_package(package, _desc)
+    except Exception:
+        ctx.category = None
+
     # ========== Stage 0A: Threat Filter (게이트) ==========
     # 암호화 DB 의 known_malicious / popular / typosquat 매칭.
     # exact match 발견 시 즉시 MALICIOUS verdict 로 단축.
@@ -678,7 +689,13 @@ def run_pipeline(
 
     # ========== Stage 4E: Sequential Pattern Mining ==========
     try:
-        seq_rpt = mine_sequences(ctx.behavior)
+        # 카테고리 인지 매칭 — web_framework/data_science 등은 SP-002 약화
+        _cat_value = (
+            ctx.category.category.value
+            if ctx.category and ctx.category.is_known
+            else None
+        )
+        seq_rpt = mine_sequences(ctx.behavior, category=_cat_value)
         for m in seq_rpt.matches:
             ctx.evidence.append(_sequence_match_to_evidence(m))
         ctx.stage_results.append(StageResult(
@@ -990,6 +1007,13 @@ def run_pipeline(
         "source_files": len(ctx.ext.source_files),
         "binary_files": len(ctx.ext.binary_files),
     }
+    # 패키지 기능 카테고리 (web_framework / data_science 등 — 분류된 경우만)
+    if ctx.category and ctx.category.is_known:
+        report.package_meta["category"] = {
+            "name": ctx.category.category.value,
+            "confidence": round(ctx.category.confidence, 2),
+            "reason": ctx.category.reason,
+        }
     # AISLOPSQ agentic classification (판정 영향 — Step 1C 단계에서 이미 처리됨)
     if agentic_result is not None and agentic_result.classification is not None:
         report.package_meta["aislopsq"] = (

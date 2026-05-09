@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from .knowledge.package_categories import CategoryGuess
 from .schema import Ecosystem, Evidence, StageResult
 from .stages.stage1b_full_source import FullSourceExtract
 from .stages.stage2_behavior import BehaviorReport
@@ -57,3 +58,8 @@ class PipelineContext:
     # stage_cache 키용. Stage 1B 후 ext.source_files 의 정렬된 path+content sha256 합산.
     # archive 자체의 sha 가 아니라 *분석에 사용된 입력의 sha* — cache 키 일관성 목적.
     archive_sha256: str | None = None
+
+    # 패키지 기능 카테고리 (web_framework / data_science / dev_tool 등).
+    # Stage 0 (registry) 후 metadata.description 으로 분류. broad-purpose 카테고리는
+    # 좁은 anomaly 검사 스킵 + sequence_patterns / indicator_matcher 의 가드 용.
+    category: CategoryGuess | None = None

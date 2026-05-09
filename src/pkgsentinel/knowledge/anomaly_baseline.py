@@ -95,37 +95,23 @@ CATEGORIES: list[Category] = [
 
 # ─────────────── 카테고리 추정 ───────────────
 
-# 카테고리 추정에 disqualifying 키워드 — 있으면 좁은 카테고리로 분류 안 함.
-# 합법 multi-purpose 도구 (numpy / pandas / scipy / jupyter 등) 가 narrow
-# category 로 잘못 분류되어 anomaly_baseline FP 폭증하는 것 방지.
-# 2026-05-06 추가: pandas 가 "statistics" 의 substring 매칭 "stat" 으로
-# math_utility 로 분류되어 13건 anomaly 발생 — 이걸 차단.
-#
-# "library" 같은 일반 단어는 의도적으로 제외 (거의 모든 패키지 설명에 등장).
-_BROAD_PURPOSE_HINTS = {
-    "data analysis", "data structures", "dataframe",
-    "scientific computing", "numerical computing",
-    "machine learning", "deep learning",
-    "web framework", "application framework",
-    "ide", "notebook", "interactive shell",
-    "build system",
-}
-
-
 def guess_category(package_name: str, description: str = "") -> Category | None:
-    """패키지 이름/설명에서 카테고리 추정.
+    """패키지 이름/설명에서 좁은 anomaly 카테고리 추정.
 
     매칭 정책:
-      1. **word-boundary** 매칭 사용 (substring 매칭 X)
-         "stat" 는 "statistics" 와 매칭하지 않음 — 별도 단어일 때만.
-      2. broad-purpose 힌트가 description 에 있으면 narrow category 분류 거부.
-         (numpy/pandas/scipy 같은 multi-purpose 도구의 misclassification 방지)
+      1. 먼저 package_categories.classify() 로 broad-purpose 카테고리 확인.
+         broad-purpose (web_framework / data_science / dev_tool / bundler /
+         runtime) 면 좁은 anomaly 카테고리 분류 거부 (None 반환).
+      2. word-boundary 매칭 사용 (substring 매칭 X) — "stat" 가 "statistics"
+         와 매칭하지 않음.
     """
-    text = (package_name + " " + description).lower()
-
-    # broad-purpose 힌트 — 있으면 분류 안 함
-    if any(hint in text for hint in _BROAD_PURPOSE_HINTS):
+    # broad-purpose 분류 확인 (web_framework 포함)
+    from .package_categories import classify, is_broad_purpose
+    cat_guess = classify(package_name, description)
+    if is_broad_purpose(cat_guess):
         return None
+
+    text = (package_name + " " + description).lower()
 
     for cat in CATEGORIES:
         for kw in cat.keywords:

@@ -184,11 +184,36 @@ def _match_pattern_at(
     return (start, pos)
 
 
-def _mine_sequence_in_file(file_seq: FileSequence) -> list[SequenceMatch]:
-    """한 파일의 calls 리스트 안에서 모든 패턴 매칭."""
+# 2026-05-06: 카테고리 인지 가드 — broad-purpose 패키지에서 약화시킬 패턴.
+# 카테고리의 합법 동작에 매칭되는 시퀀스를 차단.
+# 예:
+#   - SP-002 (Download-and-execute): web_framework 가 외부 리소스 fetch 정상,
+#     dev_tool / bundler 가 빌드 시 fetch+process 정상. 이 카테고리는 매칭 안 함.
+#   - SP-001 (Credential exfiltration): 어떤 카테고리든 INFO->ENCODE->TRANSMIT
+#     체인은 의심 — 카테고리 가드 적용 안 함.
+_CATEGORY_GUARDED_PATTERNS: dict[str, set[str]] = {
+    # SP code -> 이 카테고리에선 매칭 안 함
+    "SP-002": {"web_framework", "data_science", "dev_tool",
+               "bundler_transpiler", "runtime_interpreter"},
+}
+
+
+def _mine_sequence_in_file(
+    file_seq: FileSequence,
+    category: str | None = None,
+) -> list[SequenceMatch]:
+    """한 파일의 calls 리스트 안에서 모든 패턴 매칭.
+
+    category: 패키지의 broad-purpose 카테고리 (web_framework/data_science/...).
+    분류된 패키지는 _CATEGORY_GUARDED_PATTERNS 에 명시된 SP 패턴을 약화 (매칭 안 함).
+    """
     matches: list[SequenceMatch] = []
     n = len(file_seq.calls)
     for pat in PATTERNS:
+        # 카테고리 가드: broad-purpose 패키지의 합법 동작 매칭 차단
+        if category and pat.code in _CATEGORY_GUARDED_PATTERNS:
+            if category in _CATEGORY_GUARDED_PATTERNS[pat.code]:
+                continue
         # 한 파일에서 같은 패턴은 최대 한 번만 보고 (중복 제거)
         for i in range(n):
             span = _match_pattern_at(file_seq.calls, i, pat)
@@ -205,11 +230,15 @@ def _mine_sequence_in_file(file_seq: FileSequence) -> list[SequenceMatch]:
     return matches
 
 
-def mine(behavior: BehaviorReport) -> SequenceMineReport:
+def mine(
+    behavior: BehaviorReport,
+    category: str | None = None,
+) -> SequenceMineReport:
+    """시퀀스 패턴 매칭. category 가 broad-purpose 면 일부 SP 약화."""
     rpt = SequenceMineReport()
     try:
         for fs in behavior.files:
-            rpt.matches.extend(_mine_sequence_in_file(fs))
+            rpt.matches.extend(_mine_sequence_in_file(fs, category=category))
     except Exception as e:
         rpt.error = f"{type(e).__name__}: {e}"
     return rpt
