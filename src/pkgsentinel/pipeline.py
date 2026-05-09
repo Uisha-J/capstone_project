@@ -668,9 +668,16 @@ def run_pipeline(
         codes_per_file: dict[str, set[str]] = {}
         for h in ind_report.hits:
             codes_per_file.setdefault(h.file_path, set()).add(h.indicator.code)
+        # 카테고리 인식 STANDALONE_WEAK — broad-purpose 패키지에서만 확장 정책
+        from .knowledge.package_categories import is_broad_purpose
+        _is_broad = bool(ctx.category and is_broad_purpose(ctx.category))
         for h in ind_report.hits:
             ctx.evidence.append(
-                _indicator_hit_to_evidence(h, codes_per_file.get(h.file_path, set()))
+                _indicator_hit_to_evidence(
+                    h,
+                    codes_per_file.get(h.file_path, set()),
+                    is_broad_purpose_pkg=_is_broad,
+                )
             )
         ctx.stage_results.append(StageResult(
             stage="stage_4c_indicator_matcher",

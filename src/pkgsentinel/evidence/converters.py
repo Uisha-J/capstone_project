@@ -148,12 +148,21 @@ def sandbox_to_evidence(obs) -> Evidence:
     )
 
 
-def indicator_hit_to_evidence(h: IndicatorHit, indicator_codes_same_file: set[str]) -> Evidence:
+def indicator_hit_to_evidence(
+    h: IndicatorHit,
+    indicator_codes_same_file: set[str],
+    is_broad_purpose_pkg: bool = False,
+) -> Evidence:
     """47-Indicator IndicatorHit -> Evidence.
 
     indicator_codes_same_file: **같은 파일 안에서** 매칭된 지표 코드 집합.
     여기에 결정적 코드 (EXF-, NET-002/007/008, EXS-002/003, EXM-006/008,
     DEF-005) 가 있으면 standalone-weak 지표를 escalate.
+
+    is_broad_purpose_pkg: 패키지가 broad-purpose (web_framework / data_science /
+    dev_tool / bundler / runtime) 카테고리인가. True 면 BROAD_PURPOSE_ONLY_WEAK_
+    INDICATORS 가 추가로 STANDALONE_WEAK 처리. False (unknown 카테고리) 면
+    base STANDALONE_WEAK 만 적용 — 진짜 악성 신호 (EXF-001, SYS-002 등) 보존.
 
     이전엔 패키지 전역 집합을 사용했는데, 한 파일의 DEF-005 가 다른 파일
     수십 개의 standalone-weak 지표 (EXS-001 import-time 등) 를 모두 HIGH
@@ -162,7 +171,15 @@ def indicator_hit_to_evidence(h: IndicatorHit, indicator_codes_same_file: set[st
     파일에 모임), 분산-payload 공격은 결정적 코드 자체가 HIGH 라
     standalone-weak escalation 없이도 발화. 합법 도구의 흩뿌려진 weak
     신호만 BENIGN/LOW 로 정확히 머무름.
+
+    카테고리 인식 STANDALONE_WEAK (2026-05-06):
+    - flask/numpy/pip 같은 broad-purpose 도구: 추가 10개 indicator 도 weak 처리
+      (FP 억제). PR1 의 STANDALONE_WEAK 확장 정책.
+    - unknown 카테고리 (typosquat / 신규 / 합성 fixture): base 9개만 weak —
+      EXF-001/SYS-002 같은 실 악성 신호 보존. 합성 fixture 8 FN 회복 위해 필수.
     """
+    from ..knowledge.package_categories import BROAD_PURPOSE_ONLY_WEAK_INDICATORS
+
     ind = h.indicator
 
     ttp_id = ind.mitre_ttps[0] if ind.mitre_ttps else "GENERIC"
@@ -171,7 +188,16 @@ def indicator_hit_to_evidence(h: IndicatorHit, indicator_codes_same_file: set[st
         if ttp_id != "GENERIC" else ""
     )
 
+    # 카테고리 인식 STANDALONE_WEAK 판정:
+    # - broad-purpose 패키지: 전체 STANDALONE_WEAK 적용 (확장된 정책)
+    # - unknown 패키지: base 만 — BROAD_PURPOSE_ONLY 항목 제외
     is_standalone_weak = ind.code in STANDALONE_WEAK_INDICATORS
+    if (
+        is_standalone_weak
+        and not is_broad_purpose_pkg
+        and ind.code in BROAD_PURPOSE_ONLY_WEAK_INDICATORS
+    ):
+        is_standalone_weak = False  # unknown 카테고리에선 weak 아님
 
     has_risk_combo = any(
         c.startswith(("EXF-", "NET-002", "NET-007", "NET-008",

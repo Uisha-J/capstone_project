@@ -302,6 +302,27 @@ BROAD_PURPOSE_CATEGORIES = frozenset({
 })
 
 
+# 2026-05-06: broad-purpose 패키지에서만 약한 신호로 처리할 indicator 코드.
+# popular-benign N=300 측정에서 FP rate ≥ 5% 였지만 합성 fixture (unknown
+# 카테고리) 의 진짜 악성 패턴 (ssh-key-theft 등) 에선 핵심 신호.
+# → broad-purpose 일 때만 STANDALONE_WEAK 처리, unknown 카테고리엔 full severity.
+#
+# 합성 fixture eval 결과 (PR1 ∪ PR4): R=0.87 (-0.12 회귀) 의 동력. 이 set 을
+# 카테고리 조건부로 처리하면 recall 보존 + popular-benign FP 억제 양립.
+BROAD_PURPOSE_ONLY_WEAK_INDICATORS: frozenset[str] = frozenset({
+    "EXM-002",   # platform conditional check — cross-platform 도구에 빈번
+    "SYS-002",   # .bashrc/crontab 키워드 — 합법 shell completion 안내
+    "EXM-008",   # subprocess.run — 빌드/테스트/CLI 도구
+    "EXM-003",   # ctypes.CDLL — 정상 native binding
+    "EXS-002",   # setup.py top-level — 거의 모든 패키지
+    "EXM-006",   # dev-mode self-install — pip 등
+    "EXF-001",   # info+transmit — telemetry/error reporter
+    "SYS-001",   # PATH 조작 — cross-platform 도구
+    "NET-009",   # verify=False — 사내 cert 환경
+    "NET-010",   # http:// URL — 테스트/예제 코드 빈번
+})
+
+
 def is_broad_purpose(guess: CategoryGuess, min_confidence: float = 0.6) -> bool:
     """이 분류가 broad-purpose 카테고리이고 신뢰도 임계 이상인가."""
     return (
