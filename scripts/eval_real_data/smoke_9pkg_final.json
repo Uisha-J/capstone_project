@@ -1,0 +1,98 @@
+{
+  "label": "final",
+  "llm_mode": "stub",
+  "generated_at": "2026-05-09T04:49:33",
+  "elapsed_total_s": 289.5,
+  "results": [
+    {
+      "name": "requests",
+      "ecosystem": "PyPI",
+      "verdict": "HIGH_RISK",
+      "evidence_count": 36,
+      "elapsed_s": 23.2,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "flask",
+      "ecosystem": "PyPI",
+      "verdict": "CLEAN  (noisy: 38 weak evidence)",
+      "evidence_count": 38,
+      "elapsed_s": 23.87,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "django",
+      "ecosystem": "PyPI",
+      "verdict": "CLEAN  (noisy: 369 weak evidence)",
+      "evidence_count": 369,
+      "elapsed_s": 40.32,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "numpy",
+      "ecosystem": "PyPI",
+      "verdict": "HIGH_RISK",
+      "evidence_count": 1461,
+      "elapsed_s": 57.26,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "pandas",
+      "ecosystem": "PyPI",
+      "verdict": "HIGH_RISK",
+      "evidence_count": 380,
+      "elapsed_s": 39.1,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "boto3",
+      "ecosystem": "PyPI",
+      "verdict": "CLEAN  (noisy: 25 weak evidence)",
+      "evidence_count": 25,
+      "elapsed_s": 16.08,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "lodash",
+      "ecosystem": "npm",
+      "verdict": "SUSPICIOUS",
+      "evidence_count": 939,
+      "elapsed_s": 32.44,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "react",
+      "ecosystem": "npm",
+      "verdict": "HIGH_RISK",
+      "evidence_count": 39,
+      "elapsed_s": 21.21,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "webpack",
+      "ecosystem": "npm",
+      "verdict": "HIGH_RISK",
+      "evidence_count": 677,
+      "elapsed_s": 35.95,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    }
+  ]
+}

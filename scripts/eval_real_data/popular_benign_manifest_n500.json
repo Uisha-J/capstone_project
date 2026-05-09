@@ -1,0 +1,2112 @@
+{
+  "generated_at": "2026-05-06T15:26:15.013921+00:00",
+  "source_pypi": "https://hugovk.github.io/top-pypi-packages/top-pypi-packages.json",
+  "source_npm": "https://anvaka.github.io/npmrank/online/npmrank.json",
+  "counts": {
+    "benign": 300,
+    "pypi": 250,
+    "npm": 50
+  },
+  "fixtures": [
+    {
+      "name": "boto3",
+      "ecosystem": "PyPI",
+      "version": "1.43.4",
+      "label": "benign",
+      "source": "popular_pypi:rank=1"
+    },
+    {
+      "name": "packaging",
+      "ecosystem": "PyPI",
+      "version": "26.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=2"
+    },
+    {
+      "name": "urllib3",
+      "ecosystem": "PyPI",
+      "version": "2.6.3",
+      "label": "benign",
+      "source": "popular_pypi:rank=3"
+    },
+    {
+      "name": "certifi",
+      "ecosystem": "PyPI",
+      "version": "2026.4.22",
+      "label": "benign",
+      "source": "popular_pypi:rank=4"
+    },
+    {
+      "name": "requests",
+      "ecosystem": "PyPI",
+      "version": "2.33.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=5"
+    },
+    {
+      "name": "typing-extensions",
+      "ecosystem": "PyPI",
+      "version": "4.15.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=6"
+    },
+    {
+      "name": "idna",
+      "ecosystem": "PyPI",
+      "version": "3.13",
+      "label": "benign",
+      "source": "popular_pypi:rank=7"
+    },
+    {
+      "name": "charset-normalizer",
+      "ecosystem": "PyPI",
+      "version": "3.4.7",
+      "label": "benign",
+      "source": "popular_pypi:rank=8"
+    },
+    {
+      "name": "setuptools",
+      "ecosystem": "PyPI",
+      "version": "82.0.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=9"
+    },
+    {
+      "name": "botocore",
+      "ecosystem": "PyPI",
+      "version": "1.43.4",
+      "label": "benign",
+      "source": "popular_pypi:rank=10"
+    },
+    {
+      "name": "cryptography",
+      "ecosystem": "PyPI",
+      "version": "48.0.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=11"
+    },
+    {
+      "name": "aiobotocore",
+      "ecosystem": "PyPI",
+      "version": "3.6.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=12"
+    },
+    {
+      "name": "python-dateutil",
+      "ecosystem": "PyPI",
+      "version": "2.9.0.post0",
+      "label": "benign",
+      "source": "popular_pypi:rank=13"
+    },
+    {
+      "name": "six",
+      "ecosystem": "PyPI",
+      "version": "1.17.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=14"
+    },
+    {
+      "name": "pyyaml",
+      "ecosystem": "PyPI",
+      "version": "6.0.3",
+      "label": "benign",
+      "source": "popular_pypi:rank=15"
+    },
+    {
+      "name": "cffi",
+      "ecosystem": "PyPI",
+      "version": "2.0.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=16"
+    },
+    {
+      "name": "pydantic",
+      "ecosystem": "PyPI",
+      "version": "2.13.4",
+      "label": "benign",
+      "source": "popular_pypi:rank=17"
+    },
+    {
+      "name": "pygments",
+      "ecosystem": "PyPI",
+      "version": "2.20.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=18"
+    },
+    {
+      "name": "click",
+      "ecosystem": "PyPI",
+      "version": "8.3.3",
+      "label": "benign",
+      "source": "popular_pypi:rank=19"
+    },
+    {
+      "name": "numpy",
+      "ecosystem": "PyPI",
+      "version": "2.4.4",
+      "label": "benign",
+      "source": "popular_pypi:rank=20"
+    },
+    {
+      "name": "grpcio-status",
+      "ecosystem": "PyPI",
+      "version": "1.80.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=21"
+    },
+    {
+      "name": "pycparser",
+      "ecosystem": "PyPI",
+      "version": "3.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=22"
+    },
+    {
+      "name": "pydantic-core",
+      "ecosystem": "PyPI",
+      "version": "2.46.4",
+      "label": "benign",
+      "source": "popular_pypi:rank=23"
+    },
+    {
+      "name": "pluggy",
+      "ecosystem": "PyPI",
+      "version": "1.6.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=24"
+    },
+    {
+      "name": "s3transfer",
+      "ecosystem": "PyPI",
+      "version": "0.17.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=25"
+    },
+    {
+      "name": "protobuf",
+      "ecosystem": "PyPI",
+      "version": "7.34.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=26"
+    },
+    {
+      "name": "anyio",
+      "ecosystem": "PyPI",
+      "version": "4.13.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=27"
+    },
+    {
+      "name": "attrs",
+      "ecosystem": "PyPI",
+      "version": "26.1.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=28"
+    },
+    {
+      "name": "h11",
+      "ecosystem": "PyPI",
+      "version": "0.16.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=29"
+    },
+    {
+      "name": "fsspec",
+      "ecosystem": "PyPI",
+      "version": "2026.4.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=30"
+    },
+    {
+      "name": "annotated-types",
+      "ecosystem": "PyPI",
+      "version": "0.7.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=31"
+    },
+    {
+      "name": "pytest",
+      "ecosystem": "PyPI",
+      "version": "9.0.3",
+      "label": "benign",
+      "source": "popular_pypi:rank=32"
+    },
+    {
+      "name": "pandas",
+      "ecosystem": "PyPI",
+      "version": "3.0.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=33"
+    },
+    {
+      "name": "httpx",
+      "ecosystem": "PyPI",
+      "version": "0.28.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=34"
+    },
+    {
+      "name": "iniconfig",
+      "ecosystem": "PyPI",
+      "version": "2.3.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=35"
+    },
+    {
+      "name": "httpcore",
+      "ecosystem": "PyPI",
+      "version": "1.0.9",
+      "label": "benign",
+      "source": "popular_pypi:rank=36"
+    },
+    {
+      "name": "s3fs",
+      "ecosystem": "PyPI",
+      "version": "2026.4.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=37"
+    },
+    {
+      "name": "typing-inspection",
+      "ecosystem": "PyPI",
+      "version": "0.4.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=38"
+    },
+    {
+      "name": "markupsafe",
+      "ecosystem": "PyPI",
+      "version": "3.0.3",
+      "label": "benign",
+      "source": "popular_pypi:rank=39"
+    },
+    {
+      "name": "platformdirs",
+      "ecosystem": "PyPI",
+      "version": "4.9.6",
+      "label": "benign",
+      "source": "popular_pypi:rank=40"
+    },
+    {
+      "name": "python-dotenv",
+      "ecosystem": "PyPI",
+      "version": "1.2.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=41"
+    },
+    {
+      "name": "pip",
+      "ecosystem": "PyPI",
+      "version": "26.1.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=42"
+    },
+    {
+      "name": "jinja2",
+      "ecosystem": "PyPI",
+      "version": "3.1.6",
+      "label": "benign",
+      "source": "popular_pypi:rank=43"
+    },
+    {
+      "name": "pyjwt",
+      "ecosystem": "PyPI",
+      "version": "2.12.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=44"
+    },
+    {
+      "name": "jmespath",
+      "ecosystem": "PyPI",
+      "version": "1.1.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=45"
+    },
+    {
+      "name": "importlib-metadata",
+      "ecosystem": "PyPI",
+      "version": "9.0.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=46"
+    },
+    {
+      "name": "rich",
+      "ecosystem": "PyPI",
+      "version": "15.0.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=47"
+    },
+    {
+      "name": "filelock",
+      "ecosystem": "PyPI",
+      "version": "3.29.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=48"
+    },
+    {
+      "name": "aiohttp",
+      "ecosystem": "PyPI",
+      "version": "3.13.5",
+      "label": "benign",
+      "source": "popular_pypi:rank=49"
+    },
+    {
+      "name": "zipp",
+      "ecosystem": "PyPI",
+      "version": "3.23.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=50"
+    },
+    {
+      "name": "pathspec",
+      "ecosystem": "PyPI",
+      "version": "1.1.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=51"
+    },
+    {
+      "name": "wheel",
+      "ecosystem": "PyPI",
+      "version": "0.47.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=52"
+    },
+    {
+      "name": "jsonschema",
+      "ecosystem": "PyPI",
+      "version": "4.26.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=53"
+    },
+    {
+      "name": "markdown-it-py",
+      "ecosystem": "PyPI",
+      "version": "4.0.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=54"
+    },
+    {
+      "name": "pytz",
+      "ecosystem": "PyPI",
+      "version": "2026.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=55"
+    },
+    {
+      "name": "pyasn1",
+      "ecosystem": "PyPI",
+      "version": "0.6.3",
+      "label": "benign",
+      "source": "popular_pypi:rank=56"
+    },
+    {
+      "name": "multidict",
+      "ecosystem": "PyPI",
+      "version": "6.7.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=57"
+    },
+    {
+      "name": "yarl",
+      "ecosystem": "PyPI",
+      "version": "1.23.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=58"
+    },
+    {
+      "name": "mdurl",
+      "ecosystem": "PyPI",
+      "version": "0.1.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=59"
+    },
+    {
+      "name": "googleapis-common-protos",
+      "ecosystem": "PyPI",
+      "version": "1.74.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=60"
+    },
+    {
+      "name": "starlette",
+      "ecosystem": "PyPI",
+      "version": "1.0.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=61"
+    },
+    {
+      "name": "uvicorn",
+      "ecosystem": "PyPI",
+      "version": "0.46.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=62"
+    },
+    {
+      "name": "google-auth",
+      "ecosystem": "PyPI",
+      "version": "2.50.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=63"
+    },
+    {
+      "name": "rpds-py",
+      "ecosystem": "PyPI",
+      "version": "0.30.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=64"
+    },
+    {
+      "name": "tzdata",
+      "ecosystem": "PyPI",
+      "version": "2026.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=65"
+    },
+    {
+      "name": "propcache",
+      "ecosystem": "PyPI",
+      "version": "0.4.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=66"
+    },
+    {
+      "name": "frozenlist",
+      "ecosystem": "PyPI",
+      "version": "1.8.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=67"
+    },
+    {
+      "name": "referencing",
+      "ecosystem": "PyPI",
+      "version": "0.37.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=68"
+    },
+    {
+      "name": "pillow",
+      "ecosystem": "PyPI",
+      "version": "12.2.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=69"
+    },
+    {
+      "name": "tqdm",
+      "ecosystem": "PyPI",
+      "version": "4.67.3",
+      "label": "benign",
+      "source": "popular_pypi:rank=70"
+    },
+    {
+      "name": "google-api-core",
+      "ecosystem": "PyPI",
+      "version": "2.30.3",
+      "label": "benign",
+      "source": "popular_pypi:rank=71"
+    },
+    {
+      "name": "jsonschema-specifications",
+      "ecosystem": "PyPI",
+      "version": "2025.9.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=72"
+    },
+    {
+      "name": "virtualenv",
+      "ecosystem": "PyPI",
+      "version": "21.3.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=73"
+    },
+    {
+      "name": "aiosignal",
+      "ecosystem": "PyPI",
+      "version": "1.4.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=74"
+    },
+    {
+      "name": "grpcio",
+      "ecosystem": "PyPI",
+      "version": "1.80.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=75"
+    },
+    {
+      "name": "fastapi",
+      "ecosystem": "PyPI",
+      "version": "0.136.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=76"
+    },
+    {
+      "name": "annotated-doc",
+      "ecosystem": "PyPI",
+      "version": "0.0.4",
+      "label": "benign",
+      "source": "popular_pypi:rank=77"
+    },
+    {
+      "name": "colorama",
+      "ecosystem": "PyPI",
+      "version": "0.4.6",
+      "label": "benign",
+      "source": "popular_pypi:rank=78"
+    },
+    {
+      "name": "aiohappyeyeballs",
+      "ecosystem": "PyPI",
+      "version": "2.6.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=79"
+    },
+    {
+      "name": "awscli",
+      "ecosystem": "PyPI",
+      "version": "1.45.4",
+      "label": "benign",
+      "source": "popular_pypi:rank=80"
+    },
+    {
+      "name": "greenlet",
+      "ecosystem": "PyPI",
+      "version": "3.5.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=81"
+    },
+    {
+      "name": "pyasn1-modules",
+      "ecosystem": "PyPI",
+      "version": "0.4.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=82"
+    },
+    {
+      "name": "pyarrow",
+      "ecosystem": "PyPI",
+      "version": "24.0.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=83"
+    },
+    {
+      "name": "requests-oauthlib",
+      "ecosystem": "PyPI",
+      "version": "2.0.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=84"
+    },
+    {
+      "name": "wrapt",
+      "ecosystem": "PyPI",
+      "version": "2.1.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=85"
+    },
+    {
+      "name": "opentelemetry-api",
+      "ecosystem": "PyPI",
+      "version": "1.41.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=86"
+    },
+    {
+      "name": "scipy",
+      "ecosystem": "PyPI",
+      "version": "1.17.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=87"
+    },
+    {
+      "name": "tomli",
+      "ecosystem": "PyPI",
+      "version": "2.4.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=88"
+    },
+    {
+      "name": "tenacity",
+      "ecosystem": "PyPI",
+      "version": "9.1.4",
+      "label": "benign",
+      "source": "popular_pypi:rank=89"
+    },
+    {
+      "name": "pyparsing",
+      "ecosystem": "PyPI",
+      "version": "3.3.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=90"
+    },
+    {
+      "name": "trove-classifiers",
+      "ecosystem": "PyPI",
+      "version": "2026.4.28.13",
+      "label": "benign",
+      "source": "popular_pypi:rank=91"
+    },
+    {
+      "name": "sqlalchemy",
+      "ecosystem": "PyPI",
+      "version": "2.0.49",
+      "label": "benign",
+      "source": "popular_pypi:rank=92"
+    },
+    {
+      "name": "opentelemetry-semantic-conventions",
+      "ecosystem": "PyPI",
+      "version": "0.62b1",
+      "label": "benign",
+      "source": "popular_pypi:rank=93"
+    },
+    {
+      "name": "opentelemetry-sdk",
+      "ecosystem": "PyPI",
+      "version": "1.41.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=94"
+    },
+    {
+      "name": "typer",
+      "ecosystem": "PyPI",
+      "version": "0.25.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=95"
+    },
+    {
+      "name": "beautifulsoup4",
+      "ecosystem": "PyPI",
+      "version": "4.14.3",
+      "label": "benign",
+      "source": "popular_pypi:rank=96"
+    },
+    {
+      "name": "shellingham",
+      "ecosystem": "PyPI",
+      "version": "1.5.4",
+      "label": "benign",
+      "source": "popular_pypi:rank=97"
+    },
+    {
+      "name": "websockets",
+      "ecosystem": "PyPI",
+      "version": "16.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=98"
+    },
+    {
+      "name": "oauthlib",
+      "ecosystem": "PyPI",
+      "version": "3.3.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=99"
+    },
+    {
+      "name": "soupsieve",
+      "ecosystem": "PyPI",
+      "version": "2.8.3",
+      "label": "benign",
+      "source": "popular_pypi:rank=100"
+    },
+    {
+      "name": "psutil",
+      "ecosystem": "PyPI",
+      "version": "7.2.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=101"
+    },
+    {
+      "name": "python-multipart",
+      "ecosystem": "PyPI",
+      "version": "0.0.27",
+      "label": "benign",
+      "source": "popular_pypi:rank=102"
+    },
+    {
+      "name": "lxml",
+      "ecosystem": "PyPI",
+      "version": "6.1.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=103"
+    },
+    {
+      "name": "sniffio",
+      "ecosystem": "PyPI",
+      "version": "1.3.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=104"
+    },
+    {
+      "name": "regex",
+      "ecosystem": "PyPI",
+      "version": "2026.4.4",
+      "label": "benign",
+      "source": "popular_pypi:rank=105"
+    },
+    {
+      "name": "pydantic-settings",
+      "ecosystem": "PyPI",
+      "version": "2.14.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=106"
+    },
+    {
+      "name": "rsa",
+      "ecosystem": "PyPI",
+      "version": "4.9.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=107"
+    },
+    {
+      "name": "cachetools",
+      "ecosystem": "PyPI",
+      "version": "7.1.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=108"
+    },
+    {
+      "name": "exceptiongroup",
+      "ecosystem": "PyPI",
+      "version": "1.3.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=109"
+    },
+    {
+      "name": "more-itertools",
+      "ecosystem": "PyPI",
+      "version": "11.0.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=110"
+    },
+    {
+      "name": "litellm",
+      "ecosystem": "PyPI",
+      "version": "1.83.14",
+      "label": "benign",
+      "source": "popular_pypi:rank=111"
+    },
+    {
+      "name": "requests-toolbelt",
+      "ecosystem": "PyPI",
+      "version": "1.0.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=112"
+    },
+    {
+      "name": "distlib",
+      "ecosystem": "PyPI",
+      "version": "0.4.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=113"
+    },
+    {
+      "name": "proto-plus",
+      "ecosystem": "PyPI",
+      "version": "1.27.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=114"
+    },
+    {
+      "name": "tomlkit",
+      "ecosystem": "PyPI",
+      "version": "0.14.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=115"
+    },
+    {
+      "name": "hatchling",
+      "ecosystem": "PyPI",
+      "version": "1.29.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=116"
+    },
+    {
+      "name": "grpcio-tools",
+      "ecosystem": "PyPI",
+      "version": "1.80.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=117"
+    },
+    {
+      "name": "docutils",
+      "ecosystem": "PyPI",
+      "version": "0.22.4",
+      "label": "benign",
+      "source": "popular_pypi:rank=118"
+    },
+    {
+      "name": "websocket-client",
+      "ecosystem": "PyPI",
+      "version": "1.9.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=119"
+    },
+    {
+      "name": "openai",
+      "ecosystem": "PyPI",
+      "version": "2.34.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=120"
+    },
+    {
+      "name": "openpyxl",
+      "ecosystem": "PyPI",
+      "version": "3.1.5",
+      "label": "benign",
+      "source": "popular_pypi:rank=121"
+    },
+    {
+      "name": "mypy-extensions",
+      "ecosystem": "PyPI",
+      "version": "1.1.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=122"
+    },
+    {
+      "name": "et-xmlfile",
+      "ecosystem": "PyPI",
+      "version": "2.0.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=123"
+    },
+    {
+      "name": "watchfiles",
+      "ecosystem": "PyPI",
+      "version": "1.1.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=124"
+    },
+    {
+      "name": "opentelemetry-proto",
+      "ecosystem": "PyPI",
+      "version": "1.41.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=125"
+    },
+    {
+      "name": "werkzeug",
+      "ecosystem": "PyPI",
+      "version": "3.1.8",
+      "label": "benign",
+      "source": "popular_pypi:rank=126"
+    },
+    {
+      "name": "distro",
+      "ecosystem": "PyPI",
+      "version": "1.9.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=127"
+    },
+    {
+      "name": "jiter",
+      "ecosystem": "PyPI",
+      "version": "0.14.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=128"
+    },
+    {
+      "name": "coverage",
+      "ecosystem": "PyPI",
+      "version": "7.13.5",
+      "label": "benign",
+      "source": "popular_pypi:rank=129"
+    },
+    {
+      "name": "google-cloud-storage",
+      "ecosystem": "PyPI",
+      "version": "3.10.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=130"
+    },
+    {
+      "name": "mcp",
+      "ecosystem": "PyPI",
+      "version": "1.27.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=131"
+    },
+    {
+      "name": "networkx",
+      "ecosystem": "PyPI",
+      "version": "3.6.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=132"
+    },
+    {
+      "name": "wcwidth",
+      "ecosystem": "PyPI",
+      "version": "0.7.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=133"
+    },
+    {
+      "name": "msgpack",
+      "ecosystem": "PyPI",
+      "version": "1.1.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=134"
+    },
+    {
+      "name": "dnspython",
+      "ecosystem": "PyPI",
+      "version": "2.8.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=135"
+    },
+    {
+      "name": "langchain",
+      "ecosystem": "PyPI",
+      "version": "1.2.17",
+      "label": "benign",
+      "source": "popular_pypi:rank=136"
+    },
+    {
+      "name": "huggingface-hub",
+      "ecosystem": "PyPI",
+      "version": "1.14.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=137"
+    },
+    {
+      "name": "opentelemetry-exporter-otlp-proto-http",
+      "ecosystem": "PyPI",
+      "version": "1.41.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=138"
+    },
+    {
+      "name": "decorator",
+      "ecosystem": "PyPI",
+      "version": "5.2.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=139"
+    },
+    {
+      "name": "pyopenssl",
+      "ecosystem": "PyPI",
+      "version": "26.2.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=140"
+    },
+    {
+      "name": "ptyprocess",
+      "ecosystem": "PyPI",
+      "version": "0.7.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=141"
+    },
+    {
+      "name": "sglang",
+      "ecosystem": "PyPI",
+      "version": "0.5.11",
+      "label": "benign",
+      "source": "popular_pypi:rank=142"
+    },
+    {
+      "name": "smmap",
+      "ecosystem": "PyPI",
+      "version": "5.0.3",
+      "label": "benign",
+      "source": "popular_pypi:rank=143"
+    },
+    {
+      "name": "pexpect",
+      "ecosystem": "PyPI",
+      "version": "4.9.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=144"
+    },
+    {
+      "name": "redis",
+      "ecosystem": "PyPI",
+      "version": "7.4.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=145"
+    },
+    {
+      "name": "psycopg2-binary",
+      "ecosystem": "PyPI",
+      "version": "2.9.12",
+      "label": "benign",
+      "source": "popular_pypi:rank=146"
+    },
+    {
+      "name": "gitpython",
+      "ecosystem": "PyPI",
+      "version": "3.1.50",
+      "label": "benign",
+      "source": "popular_pypi:rank=147"
+    },
+    {
+      "name": "sse-starlette",
+      "ecosystem": "PyPI",
+      "version": "3.4.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=148"
+    },
+    {
+      "name": "textual",
+      "ecosystem": "PyPI",
+      "version": "8.2.5",
+      "label": "benign",
+      "source": "popular_pypi:rank=149"
+    },
+    {
+      "name": "fonttools",
+      "ecosystem": "PyPI",
+      "version": "4.62.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=150"
+    },
+    {
+      "name": "editables",
+      "ecosystem": "PyPI",
+      "version": "0.6",
+      "label": "benign",
+      "source": "popular_pypi:rank=151"
+    },
+    {
+      "name": "pynacl",
+      "ecosystem": "PyPI",
+      "version": "1.6.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=152"
+    },
+    {
+      "name": "google-genai",
+      "ecosystem": "PyPI",
+      "version": "1.75.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=153"
+    },
+    {
+      "name": "sortedcontainers",
+      "ecosystem": "PyPI",
+      "version": "2.4.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=154"
+    },
+    {
+      "name": "matplotlib",
+      "ecosystem": "PyPI",
+      "version": "3.10.9",
+      "label": "benign",
+      "source": "popular_pypi:rank=155"
+    },
+    {
+      "name": "docker",
+      "ecosystem": "PyPI",
+      "version": "7.1.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=156"
+    },
+    {
+      "name": "python-discovery",
+      "ecosystem": "PyPI",
+      "version": "1.3.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=157"
+    },
+    {
+      "name": "tabulate",
+      "ecosystem": "PyPI",
+      "version": "0.10.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=158"
+    },
+    {
+      "name": "flask",
+      "ecosystem": "PyPI",
+      "version": "3.1.3",
+      "label": "benign",
+      "source": "popular_pypi:rank=159"
+    },
+    {
+      "name": "kiwisolver",
+      "ecosystem": "PyPI",
+      "version": "1.5.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=160"
+    },
+    {
+      "name": "async-timeout",
+      "ecosystem": "PyPI",
+      "version": "5.0.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=161"
+    },
+    {
+      "name": "scikit-learn",
+      "ecosystem": "PyPI",
+      "version": "1.8.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=162"
+    },
+    {
+      "name": "ruff",
+      "ecosystem": "PyPI",
+      "version": "0.15.12",
+      "label": "benign",
+      "source": "popular_pypi:rank=163"
+    },
+    {
+      "name": "opentelemetry-exporter-otlp-proto-common",
+      "ecosystem": "PyPI",
+      "version": "1.41.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=164"
+    },
+    {
+      "name": "keyring",
+      "ecosystem": "PyPI",
+      "version": "25.7.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=165"
+    },
+    {
+      "name": "isodate",
+      "ecosystem": "PyPI",
+      "version": "0.7.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=166"
+    },
+    {
+      "name": "gitdb",
+      "ecosystem": "PyPI",
+      "version": "4.0.12",
+      "label": "benign",
+      "source": "popular_pypi:rank=167"
+    },
+    {
+      "name": "google-cloud-core",
+      "ecosystem": "PyPI",
+      "version": "2.5.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=168"
+    },
+    {
+      "name": "opentelemetry-exporter-otlp-proto-grpc",
+      "ecosystem": "PyPI",
+      "version": "1.41.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=169"
+    },
+    {
+      "name": "prompt-toolkit",
+      "ecosystem": "PyPI",
+      "version": "3.0.52",
+      "label": "benign",
+      "source": "popular_pypi:rank=170"
+    },
+    {
+      "name": "joblib",
+      "ecosystem": "PyPI",
+      "version": "1.5.3",
+      "label": "benign",
+      "source": "popular_pypi:rank=171"
+    },
+    {
+      "name": "contourpy",
+      "ecosystem": "PyPI",
+      "version": "1.3.3",
+      "label": "benign",
+      "source": "popular_pypi:rank=172"
+    },
+    {
+      "name": "docstring-parser",
+      "ecosystem": "PyPI",
+      "version": "0.18.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=173"
+    },
+    {
+      "name": "itsdangerous",
+      "ecosystem": "PyPI",
+      "version": "2.2.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=174"
+    },
+    {
+      "name": "jaraco-classes",
+      "ecosystem": "PyPI",
+      "version": "3.4.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=175"
+    },
+    {
+      "name": "opentelemetry-instrumentation",
+      "ecosystem": "PyPI",
+      "version": "0.62b1",
+      "label": "benign",
+      "source": "popular_pypi:rank=176"
+    },
+    {
+      "name": "multiprocess",
+      "ecosystem": "PyPI",
+      "version": "0.70.19",
+      "label": "benign",
+      "source": "popular_pypi:rank=177"
+    },
+    {
+      "name": "secretstorage",
+      "ecosystem": "PyPI",
+      "version": "3.5.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=178"
+    },
+    {
+      "name": "jeepney",
+      "ecosystem": "PyPI",
+      "version": "0.9.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=179"
+    },
+    {
+      "name": "bcrypt",
+      "ecosystem": "PyPI",
+      "version": "5.0.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=180"
+    },
+    {
+      "name": "azure-identity",
+      "ecosystem": "PyPI",
+      "version": "1.25.3",
+      "label": "benign",
+      "source": "popular_pypi:rank=181"
+    },
+    {
+      "name": "pytest-cov",
+      "ecosystem": "PyPI",
+      "version": "7.1.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=182"
+    },
+    {
+      "name": "threadpoolctl",
+      "ecosystem": "PyPI",
+      "version": "3.6.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=183"
+    },
+    {
+      "name": "uvloop",
+      "ecosystem": "PyPI",
+      "version": "0.22.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=184"
+    },
+    {
+      "name": "azure-core",
+      "ecosystem": "PyPI",
+      "version": "1.40.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=185"
+    },
+    {
+      "name": "google-resumable-media",
+      "ecosystem": "PyPI",
+      "version": "2.8.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=186"
+    },
+    {
+      "name": "google-crc32c",
+      "ecosystem": "PyPI",
+      "version": "1.8.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=187"
+    },
+    {
+      "name": "chardet",
+      "ecosystem": "PyPI",
+      "version": "7.4.3",
+      "label": "benign",
+      "source": "popular_pypi:rank=188"
+    },
+    {
+      "name": "httpx-sse",
+      "ecosystem": "PyPI",
+      "version": "0.4.3",
+      "label": "benign",
+      "source": "popular_pypi:rank=189"
+    },
+    {
+      "name": "orjson",
+      "ecosystem": "PyPI",
+      "version": "3.11.9",
+      "label": "benign",
+      "source": "popular_pypi:rank=190"
+    },
+    {
+      "name": "jaraco-context",
+      "ecosystem": "PyPI",
+      "version": "6.1.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=191"
+    },
+    {
+      "name": "alembic",
+      "ecosystem": "PyPI",
+      "version": "1.18.4",
+      "label": "benign",
+      "source": "popular_pypi:rank=192"
+    },
+    {
+      "name": "dill",
+      "ecosystem": "PyPI",
+      "version": "0.4.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=193"
+    },
+    {
+      "name": "blinker",
+      "ecosystem": "PyPI",
+      "version": "1.9.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=194"
+    },
+    {
+      "name": "jaraco-functools",
+      "ecosystem": "PyPI",
+      "version": "4.4.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=195"
+    },
+    {
+      "name": "msal",
+      "ecosystem": "PyPI",
+      "version": "1.36.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=196"
+    },
+    {
+      "name": "defusedxml",
+      "ecosystem": "PyPI",
+      "version": "0.7.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=197"
+    },
+    {
+      "name": "cycler",
+      "ecosystem": "PyPI",
+      "version": "0.12.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=198"
+    },
+    {
+      "name": "deprecated",
+      "ecosystem": "PyPI",
+      "version": "1.3.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=199"
+    },
+    {
+      "name": "zstandard",
+      "ecosystem": "PyPI",
+      "version": "0.25.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=200"
+    },
+    {
+      "name": "hf-xet",
+      "ecosystem": "PyPI",
+      "version": "1.5.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=201"
+    },
+    {
+      "name": "poetry-core",
+      "ecosystem": "PyPI",
+      "version": "2.4.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=202"
+    },
+    {
+      "name": "ruamel-yaml",
+      "ecosystem": "PyPI",
+      "version": "0.19.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=203"
+    },
+    {
+      "name": "kubernetes",
+      "ecosystem": "PyPI",
+      "version": "35.0.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=204"
+    },
+    {
+      "name": "snowflake-connector-python",
+      "ecosystem": "PyPI",
+      "version": "4.4.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=205"
+    },
+    {
+      "name": "pytest-asyncio",
+      "ecosystem": "PyPI",
+      "version": "1.3.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=206"
+    },
+    {
+      "name": "email-validator",
+      "ecosystem": "PyPI",
+      "version": "2.3.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=207"
+    },
+    {
+      "name": "httptools",
+      "ecosystem": "PyPI",
+      "version": "0.7.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=208"
+    },
+    {
+      "name": "tzlocal",
+      "ecosystem": "PyPI",
+      "version": "5.3.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=209"
+    },
+    {
+      "name": "types-requests",
+      "ecosystem": "PyPI",
+      "version": "2.33.0.20260503",
+      "label": "benign",
+      "source": "popular_pypi:rank=210"
+    },
+    {
+      "name": "toml",
+      "ecosystem": "PyPI",
+      "version": "0.10.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=211"
+    },
+    {
+      "name": "nodeenv",
+      "ecosystem": "PyPI",
+      "version": "1.10.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=212"
+    },
+    {
+      "name": "ipython",
+      "ecosystem": "PyPI",
+      "version": "9.13.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=213"
+    },
+    {
+      "name": "rapidfuzz",
+      "ecosystem": "PyPI",
+      "version": "3.14.5",
+      "label": "benign",
+      "source": "popular_pypi:rank=214"
+    },
+    {
+      "name": "sympy",
+      "ecosystem": "PyPI",
+      "version": "1.14.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=215"
+    },
+    {
+      "name": "mako",
+      "ecosystem": "PyPI",
+      "version": "1.3.12",
+      "label": "benign",
+      "source": "popular_pypi:rank=216"
+    },
+    {
+      "name": "jsonpointer",
+      "ecosystem": "PyPI",
+      "version": "3.1.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=217"
+    },
+    {
+      "name": "pyproject-hooks",
+      "ecosystem": "PyPI",
+      "version": "1.2.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=218"
+    },
+    {
+      "name": "prometheus-client",
+      "ecosystem": "PyPI",
+      "version": "0.25.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=219"
+    },
+    {
+      "name": "google-api-python-client",
+      "ecosystem": "PyPI",
+      "version": "2.195.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=220"
+    },
+    {
+      "name": "tokenizers",
+      "ecosystem": "PyPI",
+      "version": "0.23.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=221"
+    },
+    {
+      "name": "uv",
+      "ecosystem": "PyPI",
+      "version": "0.11.10",
+      "label": "benign",
+      "source": "popular_pypi:rank=222"
+    },
+    {
+      "name": "asn1crypto",
+      "ecosystem": "PyPI",
+      "version": "1.5.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=223"
+    },
+    {
+      "name": "mypy",
+      "ecosystem": "PyPI",
+      "version": "1.20.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=224"
+    },
+    {
+      "name": "build",
+      "ecosystem": "PyPI",
+      "version": "1.5.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=225"
+    },
+    {
+      "name": "setuptools-scm",
+      "ecosystem": "PyPI",
+      "version": "10.0.5",
+      "label": "benign",
+      "source": "popular_pypi:rank=226"
+    },
+    {
+      "name": "tiktoken",
+      "ecosystem": "PyPI",
+      "version": "0.12.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=227"
+    },
+    {
+      "name": "google-cloud-aiplatform",
+      "ecosystem": "PyPI",
+      "version": "1.150.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=228"
+    },
+    {
+      "name": "backoff",
+      "ecosystem": "PyPI",
+      "version": "2.2.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=229"
+    },
+    {
+      "name": "pydantic-ai-slim",
+      "ecosystem": "PyPI",
+      "version": "1.90.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=230"
+    },
+    {
+      "name": "google-auth-oauthlib",
+      "ecosystem": "PyPI",
+      "version": "1.3.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=231"
+    },
+    {
+      "name": "uritemplate",
+      "ecosystem": "PyPI",
+      "version": "4.2.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=232"
+    },
+    {
+      "name": "mpmath",
+      "ecosystem": "PyPI",
+      "version": "1.4.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=233"
+    },
+    {
+      "name": "google-cloud-bigquery",
+      "ecosystem": "PyPI",
+      "version": "3.41.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=234"
+    },
+    {
+      "name": "google-auth-httplib2",
+      "ecosystem": "PyPI",
+      "version": "0.3.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=235"
+    },
+    {
+      "name": "paramiko",
+      "ecosystem": "PyPI",
+      "version": "4.0.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=236"
+    },
+    {
+      "name": "identify",
+      "ecosystem": "PyPI",
+      "version": "2.6.19",
+      "label": "benign",
+      "source": "popular_pypi:rank=237"
+    },
+    {
+      "name": "cfgv",
+      "ecosystem": "PyPI",
+      "version": "3.5.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=238"
+    },
+    {
+      "name": "traitlets",
+      "ecosystem": "PyPI",
+      "version": "5.15.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=239"
+    },
+    {
+      "name": "pre-commit",
+      "ecosystem": "PyPI",
+      "version": "4.6.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=240"
+    },
+    {
+      "name": "parso",
+      "ecosystem": "PyPI",
+      "version": "0.8.7",
+      "label": "benign",
+      "source": "popular_pypi:rank=241"
+    },
+    {
+      "name": "fastjsonschema",
+      "ecosystem": "PyPI",
+      "version": "2.21.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=242"
+    },
+    {
+      "name": "httplib2",
+      "ecosystem": "PyPI",
+      "version": "0.31.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=243"
+    },
+    {
+      "name": "transformers",
+      "ecosystem": "PyPI",
+      "version": "5.8.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=244"
+    },
+    {
+      "name": "opentelemetry-exporter-otlp",
+      "ecosystem": "PyPI",
+      "version": "1.41.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=245"
+    },
+    {
+      "name": "jedi",
+      "ecosystem": "PyPI",
+      "version": "0.20.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=246"
+    },
+    {
+      "name": "executing",
+      "ecosystem": "PyPI",
+      "version": "2.2.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=247"
+    },
+    {
+      "name": "marshmallow",
+      "ecosystem": "PyPI",
+      "version": "4.3.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=248"
+    },
+    {
+      "name": "xxhash",
+      "ecosystem": "PyPI",
+      "version": "3.7.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=249"
+    },
+    {
+      "name": "tree-sitter",
+      "ecosystem": "PyPI",
+      "version": "0.25.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=250"
+    },
+    {
+      "name": "lodash",
+      "ecosystem": "npm",
+      "version": "4.18.1",
+      "label": "benign",
+      "source": "popular_npm:rank=1"
+    },
+    {
+      "name": "react",
+      "ecosystem": "npm",
+      "version": "19.2.5",
+      "label": "benign",
+      "source": "popular_npm:rank=2"
+    },
+    {
+      "name": "react-dom",
+      "ecosystem": "npm",
+      "version": "19.2.5",
+      "label": "benign",
+      "source": "popular_npm:rank=3"
+    },
+    {
+      "name": "vue",
+      "ecosystem": "npm",
+      "version": "3.5.34",
+      "label": "benign",
+      "source": "popular_npm:rank=4"
+    },
+    {
+      "name": "axios",
+      "ecosystem": "npm",
+      "version": "1.16.0",
+      "label": "benign",
+      "source": "popular_npm:rank=5"
+    },
+    {
+      "name": "express",
+      "ecosystem": "npm",
+      "version": "5.2.1",
+      "label": "benign",
+      "source": "popular_npm:rank=6"
+    },
+    {
+      "name": "webpack",
+      "ecosystem": "npm",
+      "version": "5.106.2",
+      "label": "benign",
+      "source": "popular_npm:rank=7"
+    },
+    {
+      "name": "typescript",
+      "ecosystem": "npm",
+      "version": "6.0.3",
+      "label": "benign",
+      "source": "popular_npm:rank=8"
+    },
+    {
+      "name": "jquery",
+      "ecosystem": "npm",
+      "version": "4.0.0",
+      "label": "benign",
+      "source": "popular_npm:rank=9"
+    },
+    {
+      "name": "moment",
+      "ecosystem": "npm",
+      "version": "2.30.1",
+      "label": "benign",
+      "source": "popular_npm:rank=10"
+    },
+    {
+      "name": "d3",
+      "ecosystem": "npm",
+      "version": "7.9.0",
+      "label": "benign",
+      "source": "popular_npm:rank=11"
+    },
+    {
+      "name": "chalk",
+      "ecosystem": "npm",
+      "version": "5.6.2",
+      "label": "benign",
+      "source": "popular_npm:rank=12"
+    },
+    {
+      "name": "commander",
+      "ecosystem": "npm",
+      "version": "14.0.3",
+      "label": "benign",
+      "source": "popular_npm:rank=13"
+    },
+    {
+      "name": "debug",
+      "ecosystem": "npm",
+      "version": "4.4.3",
+      "label": "benign",
+      "source": "popular_npm:rank=14"
+    },
+    {
+      "name": "dotenv",
+      "ecosystem": "npm",
+      "version": "17.4.2",
+      "label": "benign",
+      "source": "popular_npm:rank=15"
+    },
+    {
+      "name": "yargs",
+      "ecosystem": "npm",
+      "version": "18.0.0",
+      "label": "benign",
+      "source": "popular_npm:rank=16"
+    },
+    {
+      "name": "bluebird",
+      "ecosystem": "npm",
+      "version": "3.7.2",
+      "label": "benign",
+      "source": "popular_npm:rank=17"
+    },
+    {
+      "name": "async",
+      "ecosystem": "npm",
+      "version": "3.2.6",
+      "label": "benign",
+      "source": "popular_npm:rank=18"
+    },
+    {
+      "name": "request",
+      "ecosystem": "npm",
+      "version": "2.88.2",
+      "label": "benign",
+      "source": "popular_npm:rank=19"
+    },
+    {
+      "name": "body-parser",
+      "ecosystem": "npm",
+      "version": "2.2.2",
+      "label": "benign",
+      "source": "popular_npm:rank=20"
+    },
+    {
+      "name": "mocha",
+      "ecosystem": "npm",
+      "version": "11.7.5",
+      "label": "benign",
+      "source": "popular_npm:rank=21"
+    },
+    {
+      "name": "chai",
+      "ecosystem": "npm",
+      "version": "6.2.2",
+      "label": "benign",
+      "source": "popular_npm:rank=22"
+    },
+    {
+      "name": "jest",
+      "ecosystem": "npm",
+      "version": "30.3.0",
+      "label": "benign",
+      "source": "popular_npm:rank=23"
+    },
+    {
+      "name": "eslint",
+      "ecosystem": "npm",
+      "version": "10.3.0",
+      "label": "benign",
+      "source": "popular_npm:rank=24"
+    },
+    {
+      "name": "prettier",
+      "ecosystem": "npm",
+      "version": "3.8.3",
+      "label": "benign",
+      "source": "popular_npm:rank=25"
+    },
+    {
+      "name": "@babel/core",
+      "ecosystem": "npm",
+      "version": "7.29.0",
+      "label": "benign",
+      "source": "popular_npm:rank=26"
+    },
+    {
+      "name": "@babel/preset-env",
+      "ecosystem": "npm",
+      "version": "7.29.5",
+      "label": "benign",
+      "source": "popular_npm:rank=27"
+    },
+    {
+      "name": "redux",
+      "ecosystem": "npm",
+      "version": "5.0.1",
+      "label": "benign",
+      "source": "popular_npm:rank=28"
+    },
+    {
+      "name": "react-redux",
+      "ecosystem": "npm",
+      "version": "9.2.0",
+      "label": "benign",
+      "source": "popular_npm:rank=29"
+    },
+    {
+      "name": "vue-router",
+      "ecosystem": "npm",
+      "version": "5.0.6",
+      "label": "benign",
+      "source": "popular_npm:rank=30"
+    },
+    {
+      "name": "vuex",
+      "ecosystem": "npm",
+      "version": "4.1.0",
+      "label": "benign",
+      "source": "popular_npm:rank=31"
+    },
+    {
+      "name": "next",
+      "ecosystem": "npm",
+      "version": "16.2.4",
+      "label": "benign",
+      "source": "popular_npm:rank=32"
+    },
+    {
+      "name": "gulp",
+      "ecosystem": "npm",
+      "version": "5.0.1",
+      "label": "benign",
+      "source": "popular_npm:rank=33"
+    },
+    {
+      "name": "rollup",
+      "ecosystem": "npm",
+      "version": "4.60.3",
+      "label": "benign",
+      "source": "popular_npm:rank=34"
+    },
+    {
+      "name": "parcel",
+      "ecosystem": "npm",
+      "version": "2.16.4",
+      "label": "benign",
+      "source": "popular_npm:rank=35"
+    },
+    {
+      "name": "ts-node",
+      "ecosystem": "npm",
+      "version": "10.9.2",
+      "label": "benign",
+      "source": "popular_npm:rank=36"
+    },
+    {
+      "name": "nodemon",
+      "ecosystem": "npm",
+      "version": "3.1.14",
+      "label": "benign",
+      "source": "popular_npm:rank=37"
+    },
+    {
+      "name": "pm2",
+      "ecosystem": "npm",
+      "version": "7.0.1",
+      "label": "benign",
+      "source": "popular_npm:rank=38"
+    },
+    {
+      "name": "socket.io",
+      "ecosystem": "npm",
+      "version": "4.8.3",
+      "label": "benign",
+      "source": "popular_npm:rank=39"
+    },
+    {
+      "name": "ws",
+      "ecosystem": "npm",
+      "version": "8.20.0",
+      "label": "benign",
+      "source": "popular_npm:rank=40"
+    },
+    {
+      "name": "koa",
+      "ecosystem": "npm",
+      "version": "3.2.0",
+      "label": "benign",
+      "source": "popular_npm:rank=41"
+    },
+    {
+      "name": "fastify",
+      "ecosystem": "npm",
+      "version": "5.8.5",
+      "label": "benign",
+      "source": "popular_npm:rank=42"
+    },
+    {
+      "name": "ramda",
+      "ecosystem": "npm",
+      "version": "0.32.0",
+      "label": "benign",
+      "source": "popular_npm:rank=43"
+    },
+    {
+      "name": "immutable",
+      "ecosystem": "npm",
+      "version": "5.1.5",
+      "label": "benign",
+      "source": "popular_npm:rank=44"
+    },
+    {
+      "name": "rxjs",
+      "ecosystem": "npm",
+      "version": "7.8.2",
+      "label": "benign",
+      "source": "popular_npm:rank=45"
+    },
+    {
+      "name": "three",
+      "ecosystem": "npm",
+      "version": "0.184.0",
+      "label": "benign",
+      "source": "popular_npm:rank=46"
+    },
+    {
+      "name": "uuid",
+      "ecosystem": "npm",
+      "version": "14.0.0",
+      "label": "benign",
+      "source": "popular_npm:rank=47"
+    },
+    {
+      "name": "minimist",
+      "ecosystem": "npm",
+      "version": "1.2.8",
+      "label": "benign",
+      "source": "popular_npm:rank=48"
+    },
+    {
+      "name": "glob",
+      "ecosystem": "npm",
+      "version": "13.0.6",
+      "label": "benign",
+      "source": "popular_npm:rank=49"
+    },
+    {
+      "name": "fs-extra",
+      "ecosystem": "npm",
+      "version": "11.3.4",
+      "label": "benign",
+      "source": "popular_npm:rank=50"
+    }
+  ]
+}

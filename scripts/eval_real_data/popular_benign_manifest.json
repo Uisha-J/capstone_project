@@ -1,0 +1,712 @@
+{
+  "generated_at": "2026-05-06T14:17:19.661526+00:00",
+  "source_pypi": "https://hugovk.github.io/top-pypi-packages/top-pypi-packages.json",
+  "source_npm": "https://anvaka.github.io/npmrank/online/npmrank.json",
+  "counts": {
+    "benign": 100,
+    "pypi": 50,
+    "npm": 50
+  },
+  "fixtures": [
+    {
+      "name": "boto3",
+      "ecosystem": "PyPI",
+      "version": "1.43.4",
+      "label": "benign",
+      "source": "popular_pypi:rank=1"
+    },
+    {
+      "name": "packaging",
+      "ecosystem": "PyPI",
+      "version": "26.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=2"
+    },
+    {
+      "name": "urllib3",
+      "ecosystem": "PyPI",
+      "version": "2.6.3",
+      "label": "benign",
+      "source": "popular_pypi:rank=3"
+    },
+    {
+      "name": "certifi",
+      "ecosystem": "PyPI",
+      "version": "2026.4.22",
+      "label": "benign",
+      "source": "popular_pypi:rank=4"
+    },
+    {
+      "name": "requests",
+      "ecosystem": "PyPI",
+      "version": "2.33.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=5"
+    },
+    {
+      "name": "typing-extensions",
+      "ecosystem": "PyPI",
+      "version": "4.15.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=6"
+    },
+    {
+      "name": "idna",
+      "ecosystem": "PyPI",
+      "version": "3.13",
+      "label": "benign",
+      "source": "popular_pypi:rank=7"
+    },
+    {
+      "name": "charset-normalizer",
+      "ecosystem": "PyPI",
+      "version": "3.4.7",
+      "label": "benign",
+      "source": "popular_pypi:rank=8"
+    },
+    {
+      "name": "setuptools",
+      "ecosystem": "PyPI",
+      "version": "82.0.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=9"
+    },
+    {
+      "name": "botocore",
+      "ecosystem": "PyPI",
+      "version": "1.43.4",
+      "label": "benign",
+      "source": "popular_pypi:rank=10"
+    },
+    {
+      "name": "cryptography",
+      "ecosystem": "PyPI",
+      "version": "48.0.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=11"
+    },
+    {
+      "name": "aiobotocore",
+      "ecosystem": "PyPI",
+      "version": "3.6.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=12"
+    },
+    {
+      "name": "python-dateutil",
+      "ecosystem": "PyPI",
+      "version": "2.9.0.post0",
+      "label": "benign",
+      "source": "popular_pypi:rank=13"
+    },
+    {
+      "name": "six",
+      "ecosystem": "PyPI",
+      "version": "1.17.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=14"
+    },
+    {
+      "name": "pyyaml",
+      "ecosystem": "PyPI",
+      "version": "6.0.3",
+      "label": "benign",
+      "source": "popular_pypi:rank=15"
+    },
+    {
+      "name": "cffi",
+      "ecosystem": "PyPI",
+      "version": "2.0.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=16"
+    },
+    {
+      "name": "pydantic",
+      "ecosystem": "PyPI",
+      "version": "2.13.4",
+      "label": "benign",
+      "source": "popular_pypi:rank=17"
+    },
+    {
+      "name": "pygments",
+      "ecosystem": "PyPI",
+      "version": "2.20.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=18"
+    },
+    {
+      "name": "click",
+      "ecosystem": "PyPI",
+      "version": "8.3.3",
+      "label": "benign",
+      "source": "popular_pypi:rank=19"
+    },
+    {
+      "name": "numpy",
+      "ecosystem": "PyPI",
+      "version": "2.4.4",
+      "label": "benign",
+      "source": "popular_pypi:rank=20"
+    },
+    {
+      "name": "grpcio-status",
+      "ecosystem": "PyPI",
+      "version": "1.80.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=21"
+    },
+    {
+      "name": "pycparser",
+      "ecosystem": "PyPI",
+      "version": "3.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=22"
+    },
+    {
+      "name": "pydantic-core",
+      "ecosystem": "PyPI",
+      "version": "2.46.4",
+      "label": "benign",
+      "source": "popular_pypi:rank=23"
+    },
+    {
+      "name": "pluggy",
+      "ecosystem": "PyPI",
+      "version": "1.6.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=24"
+    },
+    {
+      "name": "s3transfer",
+      "ecosystem": "PyPI",
+      "version": "0.17.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=25"
+    },
+    {
+      "name": "protobuf",
+      "ecosystem": "PyPI",
+      "version": "7.34.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=26"
+    },
+    {
+      "name": "anyio",
+      "ecosystem": "PyPI",
+      "version": "4.13.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=27"
+    },
+    {
+      "name": "attrs",
+      "ecosystem": "PyPI",
+      "version": "26.1.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=28"
+    },
+    {
+      "name": "h11",
+      "ecosystem": "PyPI",
+      "version": "0.16.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=29"
+    },
+    {
+      "name": "fsspec",
+      "ecosystem": "PyPI",
+      "version": "2026.4.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=30"
+    },
+    {
+      "name": "annotated-types",
+      "ecosystem": "PyPI",
+      "version": "0.7.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=31"
+    },
+    {
+      "name": "pytest",
+      "ecosystem": "PyPI",
+      "version": "9.0.3",
+      "label": "benign",
+      "source": "popular_pypi:rank=32"
+    },
+    {
+      "name": "pandas",
+      "ecosystem": "PyPI",
+      "version": "3.0.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=33"
+    },
+    {
+      "name": "httpx",
+      "ecosystem": "PyPI",
+      "version": "0.28.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=34"
+    },
+    {
+      "name": "iniconfig",
+      "ecosystem": "PyPI",
+      "version": "2.3.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=35"
+    },
+    {
+      "name": "httpcore",
+      "ecosystem": "PyPI",
+      "version": "1.0.9",
+      "label": "benign",
+      "source": "popular_pypi:rank=36"
+    },
+    {
+      "name": "s3fs",
+      "ecosystem": "PyPI",
+      "version": "2026.4.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=37"
+    },
+    {
+      "name": "typing-inspection",
+      "ecosystem": "PyPI",
+      "version": "0.4.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=38"
+    },
+    {
+      "name": "markupsafe",
+      "ecosystem": "PyPI",
+      "version": "3.0.3",
+      "label": "benign",
+      "source": "popular_pypi:rank=39"
+    },
+    {
+      "name": "platformdirs",
+      "ecosystem": "PyPI",
+      "version": "4.9.6",
+      "label": "benign",
+      "source": "popular_pypi:rank=40"
+    },
+    {
+      "name": "python-dotenv",
+      "ecosystem": "PyPI",
+      "version": "1.2.2",
+      "label": "benign",
+      "source": "popular_pypi:rank=41"
+    },
+    {
+      "name": "pip",
+      "ecosystem": "PyPI",
+      "version": "26.1.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=42"
+    },
+    {
+      "name": "jinja2",
+      "ecosystem": "PyPI",
+      "version": "3.1.6",
+      "label": "benign",
+      "source": "popular_pypi:rank=43"
+    },
+    {
+      "name": "pyjwt",
+      "ecosystem": "PyPI",
+      "version": "2.12.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=44"
+    },
+    {
+      "name": "jmespath",
+      "ecosystem": "PyPI",
+      "version": "1.1.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=45"
+    },
+    {
+      "name": "importlib-metadata",
+      "ecosystem": "PyPI",
+      "version": "9.0.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=46"
+    },
+    {
+      "name": "rich",
+      "ecosystem": "PyPI",
+      "version": "15.0.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=47"
+    },
+    {
+      "name": "filelock",
+      "ecosystem": "PyPI",
+      "version": "3.29.0",
+      "label": "benign",
+      "source": "popular_pypi:rank=48"
+    },
+    {
+      "name": "aiohttp",
+      "ecosystem": "PyPI",
+      "version": "3.13.5",
+      "label": "benign",
+      "source": "popular_pypi:rank=49"
+    },
+    {
+      "name": "zipp",
+      "ecosystem": "PyPI",
+      "version": "3.23.1",
+      "label": "benign",
+      "source": "popular_pypi:rank=50"
+    },
+    {
+      "name": "lodash",
+      "ecosystem": "npm",
+      "version": "4.18.1",
+      "label": "benign",
+      "source": "popular_npm:rank=1"
+    },
+    {
+      "name": "react",
+      "ecosystem": "npm",
+      "version": "19.2.5",
+      "label": "benign",
+      "source": "popular_npm:rank=2"
+    },
+    {
+      "name": "react-dom",
+      "ecosystem": "npm",
+      "version": "19.2.5",
+      "label": "benign",
+      "source": "popular_npm:rank=3"
+    },
+    {
+      "name": "vue",
+      "ecosystem": "npm",
+      "version": "3.5.34",
+      "label": "benign",
+      "source": "popular_npm:rank=4"
+    },
+    {
+      "name": "axios",
+      "ecosystem": "npm",
+      "version": "1.16.0",
+      "label": "benign",
+      "source": "popular_npm:rank=5"
+    },
+    {
+      "name": "express",
+      "ecosystem": "npm",
+      "version": "5.2.1",
+      "label": "benign",
+      "source": "popular_npm:rank=6"
+    },
+    {
+      "name": "webpack",
+      "ecosystem": "npm",
+      "version": "5.106.2",
+      "label": "benign",
+      "source": "popular_npm:rank=7"
+    },
+    {
+      "name": "typescript",
+      "ecosystem": "npm",
+      "version": "6.0.3",
+      "label": "benign",
+      "source": "popular_npm:rank=8"
+    },
+    {
+      "name": "jquery",
+      "ecosystem": "npm",
+      "version": "4.0.0",
+      "label": "benign",
+      "source": "popular_npm:rank=9"
+    },
+    {
+      "name": "moment",
+      "ecosystem": "npm",
+      "version": "2.30.1",
+      "label": "benign",
+      "source": "popular_npm:rank=10"
+    },
+    {
+      "name": "d3",
+      "ecosystem": "npm",
+      "version": "7.9.0",
+      "label": "benign",
+      "source": "popular_npm:rank=11"
+    },
+    {
+      "name": "chalk",
+      "ecosystem": "npm",
+      "version": "5.6.2",
+      "label": "benign",
+      "source": "popular_npm:rank=12"
+    },
+    {
+      "name": "commander",
+      "ecosystem": "npm",
+      "version": "14.0.3",
+      "label": "benign",
+      "source": "popular_npm:rank=13"
+    },
+    {
+      "name": "debug",
+      "ecosystem": "npm",
+      "version": "4.4.3",
+      "label": "benign",
+      "source": "popular_npm:rank=14"
+    },
+    {
+      "name": "dotenv",
+      "ecosystem": "npm",
+      "version": "17.4.2",
+      "label": "benign",
+      "source": "popular_npm:rank=15"
+    },
+    {
+      "name": "yargs",
+      "ecosystem": "npm",
+      "version": "18.0.0",
+      "label": "benign",
+      "source": "popular_npm:rank=16"
+    },
+    {
+      "name": "bluebird",
+      "ecosystem": "npm",
+      "version": "3.7.2",
+      "label": "benign",
+      "source": "popular_npm:rank=17"
+    },
+    {
+      "name": "async",
+      "ecosystem": "npm",
+      "version": "3.2.6",
+      "label": "benign",
+      "source": "popular_npm:rank=18"
+    },
+    {
+      "name": "request",
+      "ecosystem": "npm",
+      "version": "2.88.2",
+      "label": "benign",
+      "source": "popular_npm:rank=19"
+    },
+    {
+      "name": "body-parser",
+      "ecosystem": "npm",
+      "version": "2.2.2",
+      "label": "benign",
+      "source": "popular_npm:rank=20"
+    },
+    {
+      "name": "mocha",
+      "ecosystem": "npm",
+      "version": "11.7.5",
+      "label": "benign",
+      "source": "popular_npm:rank=21"
+    },
+    {
+      "name": "chai",
+      "ecosystem": "npm",
+      "version": "6.2.2",
+      "label": "benign",
+      "source": "popular_npm:rank=22"
+    },
+    {
+      "name": "jest",
+      "ecosystem": "npm",
+      "version": "30.3.0",
+      "label": "benign",
+      "source": "popular_npm:rank=23"
+    },
+    {
+      "name": "eslint",
+      "ecosystem": "npm",
+      "version": "10.3.0",
+      "label": "benign",
+      "source": "popular_npm:rank=24"
+    },
+    {
+      "name": "prettier",
+      "ecosystem": "npm",
+      "version": "3.8.3",
+      "label": "benign",
+      "source": "popular_npm:rank=25"
+    },
+    {
+      "name": "@babel/core",
+      "ecosystem": "npm",
+      "version": "7.29.0",
+      "label": "benign",
+      "source": "popular_npm:rank=26"
+    },
+    {
+      "name": "@babel/preset-env",
+      "ecosystem": "npm",
+      "version": "7.29.5",
+      "label": "benign",
+      "source": "popular_npm:rank=27"
+    },
+    {
+      "name": "redux",
+      "ecosystem": "npm",
+      "version": "5.0.1",
+      "label": "benign",
+      "source": "popular_npm:rank=28"
+    },
+    {
+      "name": "react-redux",
+      "ecosystem": "npm",
+      "version": "9.2.0",
+      "label": "benign",
+      "source": "popular_npm:rank=29"
+    },
+    {
+      "name": "vue-router",
+      "ecosystem": "npm",
+      "version": "5.0.6",
+      "label": "benign",
+      "source": "popular_npm:rank=30"
+    },
+    {
+      "name": "vuex",
+      "ecosystem": "npm",
+      "version": "4.1.0",
+      "label": "benign",
+      "source": "popular_npm:rank=31"
+    },
+    {
+      "name": "next",
+      "ecosystem": "npm",
+      "version": "16.2.4",
+      "label": "benign",
+      "source": "popular_npm:rank=32"
+    },
+    {
+      "name": "gulp",
+      "ecosystem": "npm",
+      "version": "5.0.1",
+      "label": "benign",
+      "source": "popular_npm:rank=33"
+    },
+    {
+      "name": "rollup",
+      "ecosystem": "npm",
+      "version": "4.60.3",
+      "label": "benign",
+      "source": "popular_npm:rank=34"
+    },
+    {
+      "name": "parcel",
+      "ecosystem": "npm",
+      "version": "2.16.4",
+      "label": "benign",
+      "source": "popular_npm:rank=35"
+    },
+    {
+      "name": "ts-node",
+      "ecosystem": "npm",
+      "version": "10.9.2",
+      "label": "benign",
+      "source": "popular_npm:rank=36"
+    },
+    {
+      "name": "nodemon",
+      "ecosystem": "npm",
+      "version": "3.1.14",
+      "label": "benign",
+      "source": "popular_npm:rank=37"
+    },
+    {
+      "name": "pm2",
+      "ecosystem": "npm",
+      "version": "7.0.1",
+      "label": "benign",
+      "source": "popular_npm:rank=38"
+    },
+    {
+      "name": "socket.io",
+      "ecosystem": "npm",
+      "version": "4.8.3",
+      "label": "benign",
+      "source": "popular_npm:rank=39"
+    },
+    {
+      "name": "ws",
+      "ecosystem": "npm",
+      "version": "8.20.0",
+      "label": "benign",
+      "source": "popular_npm:rank=40"
+    },
+    {
+      "name": "koa",
+      "ecosystem": "npm",
+      "version": "3.2.0",
+      "label": "benign",
+      "source": "popular_npm:rank=41"
+    },
+    {
+      "name": "fastify",
+      "ecosystem": "npm",
+      "version": "5.8.5",
+      "label": "benign",
+      "source": "popular_npm:rank=42"
+    },
+    {
+      "name": "ramda",
+      "ecosystem": "npm",
+      "version": "0.32.0",
+      "label": "benign",
+      "source": "popular_npm:rank=43"
+    },
+    {
+      "name": "immutable",
+      "ecosystem": "npm",
+      "version": "5.1.5",
+      "label": "benign",
+      "source": "popular_npm:rank=44"
+    },
+    {
+      "name": "rxjs",
+      "ecosystem": "npm",
+      "version": "7.8.2",
+      "label": "benign",
+      "source": "popular_npm:rank=45"
+    },
+    {
+      "name": "three",
+      "ecosystem": "npm",
+      "version": "0.184.0",
+      "label": "benign",
+      "source": "popular_npm:rank=46"
+    },
+    {
+      "name": "uuid",
+      "ecosystem": "npm",
+      "version": "14.0.0",
+      "label": "benign",
+      "source": "popular_npm:rank=47"
+    },
+    {
+      "name": "minimist",
+      "ecosystem": "npm",
+      "version": "1.2.8",
+      "label": "benign",
+      "source": "popular_npm:rank=48"
+    },
+    {
+      "name": "glob",
+      "ecosystem": "npm",
+      "version": "13.0.6",
+      "label": "benign",
+      "source": "popular_npm:rank=49"
+    },
+    {
+      "name": "fs-extra",
+      "ecosystem": "npm",
+      "version": "11.3.4",
+      "label": "benign",
+      "source": "popular_npm:rank=50"
+    }
+  ]
+}

@@ -1,0 +1,2675 @@
+{
+  "generated_at": "2026-05-07T00:36:09",
+  "per_fixture": {
+    "PyPI::boto3::1.43.4": {
+      "hits": [
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 44,
+      "label": "benign"
+    },
+    "PyPI::packaging::26.2": {
+      "hits": [
+        "EXM-002",
+        "EXM-003",
+        "EXM-008",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 21,
+      "label": "benign"
+    },
+    "PyPI::urllib3::2.6.3": {
+      "hits": [
+        "EXM-002"
+      ],
+      "error": null,
+      "n_files": 44,
+      "label": "benign"
+    },
+    "PyPI::certifi::2026.4.22": {
+      "hits": [],
+      "error": null,
+      "n_files": 6,
+      "label": "benign"
+    },
+    "PyPI::requests::2.33.1": {
+      "hits": [
+        "EXM-002",
+        "EXM-005",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 21,
+      "label": "benign"
+    },
+    "PyPI::typing-extensions::4.15.0": {
+      "hits": [
+        "EXM-001",
+        "EXM-005",
+        "EXM-008"
+      ],
+      "error": null,
+      "n_files": 5,
+      "label": "benign"
+    },
+    "PyPI::idna::3.13": {
+      "hits": [],
+      "error": null,
+      "n_files": 9,
+      "label": "benign"
+    },
+    "PyPI::charset-normalizer::3.4.7": {
+      "hits": [
+        "EXM-005",
+        "EXS-002"
+      ],
+      "error": null,
+      "n_files": 18,
+      "label": "benign"
+    },
+    "PyPI::setuptools::82.0.1": {
+      "hits": [
+        "DEF-006",
+        "EXM-001",
+        "EXM-002",
+        "EXM-003",
+        "EXM-005",
+        "EXM-008",
+        "EXS-001",
+        "EXS-003",
+        "SYS-001",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 146,
+      "label": "benign"
+    },
+    "PyPI::botocore::1.43.4": {
+      "hits": [
+        "DEF-003",
+        "EXF-001",
+        "EXM-002",
+        "EXM-005",
+        "SYS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 1901,
+      "label": "benign"
+    },
+    "PyPI::cryptography::48.0.0": {
+      "hits": [
+        "DEF-003",
+        "EXM-001",
+        "EXM-002",
+        "EXM-005"
+      ],
+      "error": null,
+      "n_files": 115,
+      "label": "benign"
+    },
+    "PyPI::aiobotocore::3.6.0": {
+      "hits": [
+        "DEF-003",
+        "EXF-001"
+      ],
+      "error": null,
+      "n_files": 37,
+      "label": "benign"
+    },
+    "PyPI::python-dateutil::2.9.0.post0": {
+      "hits": [
+        "EXM-002",
+        "EXM-003",
+        "EXM-005",
+        "EXS-001"
+      ],
+      "error": null,
+      "n_files": 31,
+      "label": "benign"
+    },
+    "PyPI::six::1.17.0": {
+      "hits": [
+        "EXM-001",
+        "EXM-002",
+        "EXM-005"
+      ],
+      "error": null,
+      "n_files": 5,
+      "label": "benign"
+    },
+    "PyPI::pyyaml::6.0.3": {
+      "hits": [
+        "EXM-002",
+        "EXM-005",
+        "EXS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 23,
+      "label": "benign"
+    },
+    "PyPI::cffi::2.0.0": {
+      "hits": [
+        "EXM-001",
+        "EXM-002",
+        "EXM-003",
+        "EXM-005",
+        "EXM-006",
+        "EXM-008",
+        "EXS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 91,
+      "label": "benign"
+    },
+    "PyPI::pydantic::2.13.4": {
+      "hits": [
+        "DEF-003",
+        "EXM-001"
+      ],
+      "error": null,
+      "n_files": 106,
+      "label": "benign"
+    },
+    "PyPI::pygments::2.20.0": {
+      "hits": [
+        "EXM-001",
+        "EXM-005",
+        "EXM-008",
+        "EXS-001",
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 356,
+      "label": "benign"
+    },
+    "PyPI::click::8.3.3": {
+      "hits": [
+        "EXM-002",
+        "EXM-008"
+      ],
+      "error": null,
+      "n_files": 18,
+      "label": "benign"
+    },
+    "PyPI::numpy::2.4.4": {
+      "hits": [
+        "DEF-003",
+        "DEF-006",
+        "EXF-001",
+        "EXM-001",
+        "EXM-002",
+        "EXM-003",
+        "EXM-005",
+        "EXM-006",
+        "EXM-008",
+        "EXS-001",
+        "EXS-002",
+        "NET-009",
+        "SYS-001",
+        "SYS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 1236,
+      "label": "benign"
+    },
+    "PyPI::grpcio-status::1.80.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 9,
+      "label": "benign"
+    },
+    "PyPI::pycparser::3.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 11,
+      "label": "benign"
+    },
+    "PyPI::pydantic-core::2.46.4": {
+      "hits": [],
+      "error": null,
+      "n_files": 6,
+      "label": "benign"
+    },
+    "PyPI::pluggy::1.6.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 27,
+      "label": "benign"
+    },
+    "PyPI::s3transfer::0.17.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 19,
+      "label": "benign"
+    },
+    "PyPI::protobuf::7.34.1": {
+      "hits": [
+        "DEF-003",
+        "EXM-001",
+        "EXM-005",
+        "EXS-002"
+      ],
+      "error": null,
+      "n_files": 57,
+      "label": "benign"
+    },
+    "PyPI::anyio::4.13.0": {
+      "hits": [
+        "EXM-002"
+      ],
+      "error": null,
+      "n_files": 46,
+      "label": "benign"
+    },
+    "PyPI::attrs::26.1.0": {
+      "hits": [
+        "EXM-001"
+      ],
+      "error": null,
+      "n_files": 26,
+      "label": "benign"
+    },
+    "PyPI::h11::0.16.0": {
+      "hits": [
+        "EXM-001",
+        "EXS-002"
+      ],
+      "error": null,
+      "n_files": 15,
+      "label": "benign"
+    },
+    "PyPI::fsspec::2026.4.0": {
+      "hits": [
+        "DEF-003",
+        "EXM-005",
+        "EXM-008"
+      ],
+      "error": null,
+      "n_files": 57,
+      "label": "benign"
+    },
+    "PyPI::annotated-types::0.7.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 4,
+      "label": "benign"
+    },
+    "PyPI::pytest::9.0.3": {
+      "hits": [
+        "DEF-005",
+        "DEF-006",
+        "EXM-001",
+        "EXM-002",
+        "EXM-005",
+        "EXM-006",
+        "EXM-008",
+        "EXS-001",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 219,
+      "label": "benign"
+    },
+    "PyPI::pandas::3.0.2": {
+      "hits": [
+        "EXF-001",
+        "EXM-001",
+        "EXM-002",
+        "EXM-003",
+        "EXM-005",
+        "EXM-008",
+        "EXS-001",
+        "NET-009",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 302,
+      "label": "benign"
+    },
+    "PyPI::httpx::0.28.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 24,
+      "label": "benign"
+    },
+    "PyPI::iniconfig::2.3.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 10,
+      "label": "benign"
+    },
+    "PyPI::httpcore::1.0.9": {
+      "hits": [
+        "EXM-002"
+      ],
+      "error": null,
+      "n_files": 32,
+      "label": "benign"
+    },
+    "PyPI::s3fs::2026.4.0": {
+      "hits": [
+        "EXM-002",
+        "EXM-008"
+      ],
+      "error": null,
+      "n_files": 9,
+      "label": "benign"
+    },
+    "PyPI::typing-inspection::0.4.2": {
+      "hits": [
+        "EXM-001"
+      ],
+      "error": null,
+      "n_files": 6,
+      "label": "benign"
+    },
+    "PyPI::markupsafe::3.0.3": {
+      "hits": [
+        "EXS-002"
+      ],
+      "error": null,
+      "n_files": 5,
+      "label": "benign"
+    },
+    "PyPI::platformdirs::4.9.6": {
+      "hits": [
+        "EXM-002",
+        "EXS-001"
+      ],
+      "error": null,
+      "n_files": 11,
+      "label": "benign"
+    },
+    "PyPI::python-dotenv::1.2.2": {
+      "hits": [
+        "DEF-003",
+        "EXM-002",
+        "EXM-005"
+      ],
+      "error": null,
+      "n_files": 15,
+      "label": "benign"
+    },
+    "PyPI::pip::26.1.1": {
+      "hits": [
+        "DEF-006",
+        "EXM-002",
+        "EXM-003",
+        "EXM-005",
+        "EXM-006",
+        "EXM-008",
+        "EXS-001",
+        "NET-009",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 153,
+      "label": "benign"
+    },
+    "PyPI::jinja2::3.1.6": {
+      "hits": [
+        "EXM-001",
+        "EXM-005"
+      ],
+      "error": null,
+      "n_files": 27,
+      "label": "benign"
+    },
+    "PyPI::pyjwt::2.12.1": {
+      "hits": [
+        "DEF-003",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 18,
+      "label": "benign"
+    },
+    "PyPI::jmespath::1.1.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 11,
+      "label": "benign"
+    },
+    "PyPI::importlib-metadata::9.0.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 23,
+      "label": "benign"
+    },
+    "PyPI::rich::15.0.0": {
+      "hits": [
+        "EXM-002",
+        "EXM-003",
+        "EXM-005",
+        "EXS-001",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 101,
+      "label": "benign"
+    },
+    "PyPI::filelock::3.29.0": {
+      "hits": [
+        "EXM-002",
+        "EXM-003",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 16,
+      "label": "benign"
+    },
+    "PyPI::aiohttp::3.13.5": {
+      "hits": [
+        "DEF-003",
+        "EXM-001",
+        "EXM-008",
+        "EXS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 63,
+      "label": "benign"
+    },
+    "PyPI::zipp::3.23.1": {
+      "hits": [
+        "EXM-005"
+      ],
+      "error": null,
+      "n_files": 17,
+      "label": "benign"
+    },
+    "PyPI::pathspec::1.1.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 91,
+      "label": "benign"
+    },
+    "PyPI::wheel::0.47.0": {
+      "hits": [
+        "DEF-003",
+        "EXM-005"
+      ],
+      "error": null,
+      "n_files": 17,
+      "label": "benign"
+    },
+    "PyPI::jsonschema::4.26.0": {
+      "hits": [
+        "EXM-008"
+      ],
+      "error": null,
+      "n_files": 137,
+      "label": "benign"
+    },
+    "PyPI::markdown-it-py::4.0.0": {
+      "hits": [
+        "DEF-003",
+        "EXM-006"
+      ],
+      "error": null,
+      "n_files": 74,
+      "label": "benign"
+    },
+    "PyPI::pytz::2026.2": {
+      "hits": [
+        "EXS-001"
+      ],
+      "error": null,
+      "n_files": 8,
+      "label": "benign"
+    },
+    "PyPI::pyasn1::0.6.3": {
+      "hits": [],
+      "error": null,
+      "n_files": 34,
+      "label": "benign"
+    },
+    "PyPI::multidict::6.7.1": {
+      "hits": [
+        "EXM-002",
+        "EXS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 8,
+      "label": "benign"
+    },
+    "PyPI::yarl::1.23.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 21,
+      "label": "benign"
+    },
+    "PyPI::mdurl::0.1.2": {
+      "hits": [],
+      "error": null,
+      "n_files": 7,
+      "label": "benign"
+    },
+    "PyPI::googleapis-common-protos::1.74.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 71,
+      "label": "benign"
+    },
+    "PyPI::starlette::1.0.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 36,
+      "label": "benign"
+    },
+    "PyPI::uvicorn::0.46.0": {
+      "hits": [
+        "EXF-001",
+        "EXM-002",
+        "EXM-005",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 41,
+      "label": "benign"
+    },
+    "PyPI::google-auth::2.50.0": {
+      "hits": [
+        "DEF-003",
+        "EXM-001",
+        "EXM-003",
+        "EXM-008",
+        "EXS-002",
+        "NET-009"
+      ],
+      "error": null,
+      "n_files": 80,
+      "label": "benign"
+    },
+    "PyPI::rpds-py::0.30.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 5,
+      "label": "benign"
+    },
+    "PyPI::tzdata::2026.2": {
+      "hits": [],
+      "error": null,
+      "n_files": 27,
+      "label": "benign"
+    },
+    "PyPI::propcache::0.4.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 16,
+      "label": "benign"
+    },
+    "PyPI::frozenlist::1.8.0": {
+      "hits": [
+        "EXS-001"
+      ],
+      "error": null,
+      "n_files": 12,
+      "label": "benign"
+    },
+    "PyPI::referencing::0.37.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 16,
+      "label": "benign"
+    },
+    "PyPI::pillow::12.2.0": {
+      "hits": [
+        "DEF-003",
+        "DEF-006",
+        "EXF-001",
+        "EXM-002",
+        "EXM-005",
+        "EXM-007",
+        "EXM-008",
+        "EXS-002",
+        "SYS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 296,
+      "label": "benign"
+    },
+    "PyPI::tqdm::4.67.3": {
+      "hits": [
+        "EXF-004",
+        "EXM-001"
+      ],
+      "error": null,
+      "n_files": 37,
+      "label": "benign"
+    },
+    "PyPI::google-api-core::2.30.3": {
+      "hits": [],
+      "error": null,
+      "n_files": 66,
+      "label": "benign"
+    },
+    "PyPI::jsonschema-specifications::2025.9.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 12,
+      "label": "benign"
+    },
+    "PyPI::virtualenv::21.3.1": {
+      "hits": [
+        "EXM-002",
+        "EXM-003",
+        "EXM-008",
+        "EXS-001",
+        "NET-009",
+        "SYS-001"
+      ],
+      "error": null,
+      "n_files": 99,
+      "label": "benign"
+    },
+    "PyPI::aiosignal::1.4.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 7,
+      "label": "benign"
+    },
+    "PyPI::grpcio::1.80.0": {
+      "hits": [
+        "EXM-002",
+        "EXM-008",
+        "EXS-002"
+      ],
+      "error": null,
+      "n_files": 72,
+      "label": "benign"
+    },
+    "PyPI::fastapi::0.136.1": {
+      "hits": [
+        "DEF-003",
+        "EXM-005",
+        "EXM-008",
+        "NET-010"
+      ],
+      "error": null,
+      "n_files": 529,
+      "label": "benign"
+    },
+    "PyPI::annotated-doc::0.0.4": {
+      "hits": [],
+      "error": null,
+      "n_files": 3,
+      "label": "benign"
+    },
+    "PyPI::colorama::0.4.6": {
+      "hits": [
+        "EXM-002",
+        "EXM-003"
+      ],
+      "error": null,
+      "n_files": 7,
+      "label": "benign"
+    },
+    "PyPI::aiohappyeyeballs::2.6.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 6,
+      "label": "benign"
+    },
+    "PyPI::awscli::1.45.4": {
+      "hits": [
+        "DEF-003",
+        "EXM-002",
+        "EXM-003",
+        "EXM-005",
+        "EXM-008",
+        "EXS-001",
+        "NET-009",
+        "SYS-002",
+        "SYS-005",
+        "SYS-009"
+      ],
+      "error": null,
+      "n_files": 224,
+      "label": "benign"
+    },
+    "PyPI::greenlet::3.5.0": {
+      "hits": [
+        "EXM-002",
+        "EXS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 8,
+      "label": "benign"
+    },
+    "PyPI::pyasn1-modules::0.4.2": {
+      "hits": [
+        "DEF-003"
+      ],
+      "error": null,
+      "n_files": 149,
+      "label": "benign"
+    },
+    "PyPI::pyarrow::24.0.0": {
+      "hits": [
+        "EXF-001",
+        "EXM-002",
+        "EXM-005",
+        "EXM-008",
+        "EXS-001"
+      ],
+      "error": null,
+      "n_files": 46,
+      "label": "benign"
+    },
+    "PyPI::requests-oauthlib::2.0.0": {
+      "hits": [
+        "EXM-008",
+        "EXS-002"
+      ],
+      "error": null,
+      "n_files": 17,
+      "label": "benign"
+    },
+    "PyPI::wrapt::2.1.2": {
+      "hits": [
+        "EXM-001",
+        "EXM-005",
+        "EXS-002"
+      ],
+      "error": null,
+      "n_files": 13,
+      "label": "benign"
+    },
+    "PyPI::opentelemetry-api::1.41.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 32,
+      "label": "benign"
+    },
+    "PyPI::scipy::1.17.1": {
+      "hits": [
+        "DEF-005",
+        "EXF-001",
+        "EXM-001",
+        "EXM-002",
+        "EXM-003",
+        "EXM-005",
+        "EXM-006",
+        "EXM-008",
+        "EXS-001",
+        "SYS-001",
+        "SYS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 757,
+      "label": "benign"
+    },
+    "PyPI::tomli::2.4.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 5,
+      "label": "benign"
+    },
+    "PyPI::tenacity::9.1.4": {
+      "hits": [],
+      "error": null,
+      "n_files": 64,
+      "label": "benign"
+    },
+    "PyPI::pyparsing::3.3.2": {
+      "hits": [],
+      "error": null,
+      "n_files": 22,
+      "label": "benign"
+    },
+    "PyPI::trove-classifiers::2026.4.28.13": {
+      "hits": [],
+      "error": null,
+      "n_files": 6,
+      "label": "benign"
+    },
+    "PyPI::sqlalchemy::2.0.49": {
+      "hits": [
+        "DEF-003",
+        "EXM-001",
+        "EXM-005",
+        "EXM-008",
+        "EXS-001",
+        "EXS-002",
+        "SYS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 266,
+      "label": "benign"
+    },
+    "PyPI::opentelemetry-semantic-conventions::0.62b1": {
+      "hits": [
+        "DEF-005",
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 125,
+      "label": "benign"
+    },
+    "PyPI::opentelemetry-sdk::1.41.1": {
+      "hits": [
+        "EXS-001",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 72,
+      "label": "benign"
+    },
+    "PyPI::typer::0.25.1": {
+      "hits": [
+        "EXM-002",
+        "EXM-008",
+        "SYS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 326,
+      "label": "benign"
+    },
+    "PyPI::beautifulsoup4::4.14.3": {
+      "hits": [],
+      "error": null,
+      "n_files": 22,
+      "label": "benign"
+    },
+    "PyPI::shellingham::1.5.4": {
+      "hits": [
+        "EXM-003",
+        "EXM-005",
+        "EXS-001",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 10,
+      "label": "benign"
+    },
+    "PyPI::websockets::16.0": {
+      "hits": [
+        "DEF-003",
+        "EXM-001",
+        "EXM-002",
+        "EXM-005",
+        "EXM-006",
+        "EXM-008",
+        "EXS-002"
+      ],
+      "error": null,
+      "n_files": 51,
+      "label": "benign"
+    },
+    "PyPI::oauthlib::3.3.1": {
+      "hits": [
+        "EXS-001"
+      ],
+      "error": null,
+      "n_files": 77,
+      "label": "benign"
+    },
+    "PyPI::soupsieve::2.8.3": {
+      "hits": [],
+      "error": null,
+      "n_files": 10,
+      "label": "benign"
+    },
+    "PyPI::psutil::7.2.2": {
+      "hits": [
+        "EXF-001",
+        "EXM-003",
+        "EXM-006",
+        "EXM-008",
+        "EXS-001",
+        "EXS-002",
+        "NET-009",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 53,
+      "label": "benign"
+    },
+    "PyPI::python-multipart::0.0.27": {
+      "hits": [
+        "DEF-003"
+      ],
+      "error": null,
+      "n_files": 9,
+      "label": "benign"
+    },
+    "PyPI::lxml::6.1.0": {
+      "hits": [
+        "EXM-001",
+        "EXM-002",
+        "EXM-005",
+        "EXM-008",
+        "EXS-002",
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 41,
+      "label": "benign"
+    },
+    "PyPI::sniffio::1.3.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 9,
+      "label": "benign"
+    },
+    "PyPI::regex::2026.4.4": {
+      "hits": [],
+      "error": null,
+      "n_files": 7,
+      "label": "benign"
+    },
+    "PyPI::pydantic-settings::2.14.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 26,
+      "label": "benign"
+    },
+    "PyPI::rsa::4.9.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 15,
+      "label": "benign"
+    },
+    "PyPI::cachetools::7.1.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 8,
+      "label": "benign"
+    },
+    "PyPI::exceptiongroup::1.3.1": {
+      "hits": [
+        "EXS-001"
+      ],
+      "error": null,
+      "n_files": 7,
+      "label": "benign"
+    },
+    "PyPI::more-itertools::11.0.2": {
+      "hits": [
+        "EXM-005",
+        "EXM-006"
+      ],
+      "error": null,
+      "n_files": 8,
+      "label": "benign"
+    },
+    "PyPI::litellm::1.83.14": {
+      "hits": [
+        "DEF-003",
+        "DEF-005",
+        "EXF-001",
+        "EXF-004",
+        "EXM-001",
+        "EXM-002",
+        "EXM-005",
+        "EXM-006",
+        "EXM-008",
+        "EXS-001",
+        "NET-007",
+        "NET-009",
+        "NET-010",
+        "SYS-002",
+        "SYS-004",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 2111,
+      "label": "benign"
+    },
+    "PyPI::requests-toolbelt::1.0.0": {
+      "hits": [
+        "EXM-002",
+        "EXM-008",
+        "EXS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 36,
+      "label": "benign"
+    },
+    "PyPI::distlib::0.4.0": {
+      "hits": [
+        "EXF-001",
+        "EXM-002",
+        "EXM-005",
+        "EXM-008",
+        "NET-009",
+        "SYS-003",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 16,
+      "label": "benign"
+    },
+    "PyPI::proto-plus::1.27.2": {
+      "hits": [
+        "DEF-003"
+      ],
+      "error": null,
+      "n_files": 29,
+      "label": "benign"
+    },
+    "PyPI::tomlkit::0.14.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 14,
+      "label": "benign"
+    },
+    "PyPI::hatchling::1.29.0": {
+      "hits": [
+        "EXM-001",
+        "EXM-002",
+        "EXM-008",
+        "EXS-001"
+      ],
+      "error": null,
+      "n_files": 68,
+      "label": "benign"
+    },
+    "PyPI::grpcio-tools::1.80.0": {
+      "hits": [
+        "EXM-001",
+        "EXM-002",
+        "EXM-005",
+        "EXM-008",
+        "EXS-002"
+      ],
+      "error": null,
+      "n_files": 13,
+      "label": "benign"
+    },
+    "PyPI::docutils::0.22.4": {
+      "hits": [
+        "EXF-001",
+        "EXM-001",
+        "EXM-002",
+        "EXM-005",
+        "EXM-008",
+        "EXS-001"
+      ],
+      "error": null,
+      "n_files": 149,
+      "label": "benign"
+    },
+    "PyPI::websocket-client::1.9.0": {
+      "hits": [
+        "EXF-001"
+      ],
+      "error": null,
+      "n_files": 17,
+      "label": "benign"
+    },
+    "PyPI::openai::2.34.0": {
+      "hits": [
+        "DEF-003",
+        "DEF-005",
+        "EXM-002",
+        "EXM-005",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 1235,
+      "label": "benign"
+    },
+    "PyPI::openpyxl::3.1.5": {
+      "hits": [
+        "EXS-001"
+      ],
+      "error": null,
+      "n_files": 192,
+      "label": "benign"
+    },
+    "PyPI::mypy-extensions::1.1.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 3,
+      "label": "benign"
+    },
+    "PyPI::et-xmlfile::2.0.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 5,
+      "label": "benign"
+    },
+    "PyPI::watchfiles::1.1.1": {
+      "hits": [
+        "EXM-002",
+        "EXM-008",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 10,
+      "label": "benign"
+    },
+    "PyPI::opentelemetry-proto::1.41.1": {
+      "hits": [
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 30,
+      "label": "benign"
+    },
+    "PyPI::werkzeug::3.1.8": {
+      "hits": [
+        "DEF-003",
+        "EXF-001",
+        "EXM-001",
+        "EXM-002",
+        "EXM-005",
+        "EXM-008",
+        "EXS-001",
+        "SYS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 54,
+      "label": "benign"
+    },
+    "PyPI::distro::1.9.0": {
+      "hits": [
+        "DEF-006"
+      ],
+      "error": null,
+      "n_files": 6,
+      "label": "benign"
+    },
+    "PyPI::jiter::0.14.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 21,
+      "label": "benign"
+    },
+    "PyPI::coverage::7.13.5": {
+      "hits": [
+        "DEF-003",
+        "DEF-005",
+        "EXM-001",
+        "EXM-002",
+        "EXM-005",
+        "EXM-006",
+        "EXS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 73,
+      "label": "benign"
+    },
+    "PyPI::google-cloud-storage::3.10.1": {
+      "hits": [
+        "DEF-003",
+        "EXM-001",
+        "EXS-002"
+      ],
+      "error": null,
+      "n_files": 71,
+      "label": "benign"
+    },
+    "PyPI::mcp::1.27.0": {
+      "hits": [
+        "DEF-003",
+        "EXM-002",
+        "EXM-005",
+        "EXM-008",
+        "EXS-001"
+      ],
+      "error": null,
+      "n_files": 113,
+      "label": "benign"
+    },
+    "PyPI::networkx::3.6.1": {
+      "hits": [
+        "EXM-001",
+        "EXM-005"
+      ],
+      "error": null,
+      "n_files": 290,
+      "label": "benign"
+    },
+    "PyPI::wcwidth::0.7.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 29,
+      "label": "benign"
+    },
+    "PyPI::msgpack::1.1.2": {
+      "hits": [
+        "EXM-002",
+        "EXS-001",
+        "EXS-002"
+      ],
+      "error": null,
+      "n_files": 7,
+      "label": "benign"
+    },
+    "PyPI::dnspython::2.8.0": {
+      "hits": [
+        "DEF-003",
+        "EXM-002",
+        "EXM-003",
+        "EXM-006",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 152,
+      "label": "benign"
+    },
+    "PyPI::langchain::1.2.17": {
+      "hits": [
+        "EXM-002",
+        "EXM-005",
+        "EXM-008",
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 34,
+      "label": "benign"
+    },
+    "PyPI::huggingface-hub::1.14.0": {
+      "hits": [
+        "DEF-003",
+        "EXM-002",
+        "EXM-005",
+        "EXM-006",
+        "EXM-007",
+        "EXM-008",
+        "EXS-001",
+        "NET-007"
+      ],
+      "error": null,
+      "n_files": 177,
+      "label": "benign"
+    },
+    "PyPI::opentelemetry-exporter-otlp-proto-http::1.41.1": {
+      "hits": [
+        "EXS-001"
+      ],
+      "error": null,
+      "n_files": 8,
+      "label": "benign"
+    },
+    "PyPI::decorator::5.2.1": {
+      "hits": [
+        "EXM-001"
+      ],
+      "error": null,
+      "n_files": 4,
+      "label": "benign"
+    },
+    "PyPI::pyopenssl::26.2.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 11,
+      "label": "benign"
+    },
+    "PyPI::ptyprocess::0.7.0": {
+      "hits": [
+        "EXM-002"
+      ],
+      "error": null,
+      "n_files": 7,
+      "label": "benign"
+    },
+    "PyPI::sglang::0.5.11": {
+      "hits": [
+        "DEF-003",
+        "DEF-005",
+        "DEF-006",
+        "EXF-001",
+        "EXM-001",
+        "EXM-002",
+        "EXM-003",
+        "EXM-005",
+        "EXM-006",
+        "EXM-008",
+        "EXS-001",
+        "NET-009",
+        "SYS-002",
+        "SYS-005",
+        "SYS-009"
+      ],
+      "error": null,
+      "n_files": 2161,
+      "label": "benign"
+    },
+    "PyPI::smmap::5.0.3": {
+      "hits": [
+        "EXM-002"
+      ],
+      "error": null,
+      "n_files": 6,
+      "label": "benign"
+    },
+    "PyPI::pexpect::4.9.0": {
+      "hits": [
+        "EXM-002",
+        "EXM-008"
+      ],
+      "error": null,
+      "n_files": 20,
+      "label": "benign"
+    },
+    "PyPI::redis::7.4.0": {
+      "hits": [
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 113,
+      "label": "benign"
+    },
+    "PyPI::psycopg2-binary::2.9.12": {
+      "hits": [
+        "EXM-008",
+        "EXS-001",
+        "EXS-002"
+      ],
+      "error": null,
+      "n_files": 17,
+      "label": "benign"
+    },
+    "PyPI::gitpython::3.1.50": {
+      "hits": [
+        "DEF-005",
+        "EXM-002",
+        "EXM-005",
+        "EXM-008",
+        "EXS-001",
+        "EXS-003",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 40,
+      "label": "benign"
+    },
+    "PyPI::sse-starlette::3.4.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 6,
+      "label": "benign"
+    },
+    "PyPI::textual::8.2.5": {
+      "hits": [
+        "DEF-005",
+        "EXM-001",
+        "EXM-003",
+        "EXM-005"
+      ],
+      "error": null,
+      "n_files": 237,
+      "label": "benign"
+    },
+    "PyPI::fonttools::4.62.1": {
+      "hits": [
+        "DEF-003",
+        "EXM-001",
+        "EXM-002",
+        "EXM-005",
+        "EXM-006",
+        "EXM-008",
+        "EXS-001",
+        "EXS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 541,
+      "label": "benign"
+    },
+    "PyPI::editables::0.6": {
+      "hits": [],
+      "error": null,
+      "n_files": 3,
+      "label": "benign"
+    },
+    "PyPI::pynacl::1.6.2": {
+      "hits": [
+        "DEF-003",
+        "EXM-002",
+        "EXS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 39,
+      "label": "benign"
+    },
+    "PyPI::google-genai::1.75.0": {
+      "hits": [
+        "DEF-003",
+        "DEF-005",
+        "EXM-005",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 184,
+      "label": "benign"
+    },
+    "PyPI::sortedcontainers::2.4.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 6,
+      "label": "benign"
+    },
+    "PyPI::matplotlib::3.10.9": {
+      "hits": [
+        "DEF-006",
+        "EXF-001",
+        "EXM-001",
+        "EXM-002",
+        "EXM-005",
+        "EXM-006",
+        "EXM-008",
+        "EXS-001"
+      ],
+      "error": null,
+      "n_files": 293,
+      "label": "benign"
+    },
+    "PyPI::docker::7.1.0": {
+      "hits": [
+        "DEF-003",
+        "EXM-008",
+        "NET-009"
+      ],
+      "error": null,
+      "n_files": 68,
+      "label": "benign"
+    },
+    "PyPI::python-discovery::1.3.0": {
+      "hits": [
+        "EXM-002",
+        "EXM-005"
+      ],
+      "error": null,
+      "n_files": 16,
+      "label": "benign"
+    },
+    "PyPI::tabulate::0.10.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 6,
+      "label": "benign"
+    },
+    "PyPI::flask::3.1.3": {
+      "hits": [
+        "EXM-001",
+        "EXM-005"
+      ],
+      "error": null,
+      "n_files": 25,
+      "label": "benign"
+    },
+    "PyPI::kiwisolver::1.5.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 9,
+      "label": "benign"
+    },
+    "PyPI::async-timeout::5.0.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 4,
+      "label": "benign"
+    },
+    "PyPI::scikit-learn::1.8.0": {
+      "hits": [
+        "DEF-003",
+        "EXM-001",
+        "EXM-005",
+        "EXS-001"
+      ],
+      "error": null,
+      "n_files": 325,
+      "label": "benign"
+    },
+    "PyPI::ruff::0.15.12": {
+      "hits": [
+        "DEF-006",
+        "EXM-001",
+        "EXM-002",
+        "EXM-008"
+      ],
+      "error": null,
+      "n_files": 580,
+      "label": "benign"
+    },
+    "PyPI::opentelemetry-exporter-otlp-proto-common::1.41.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 10,
+      "label": "benign"
+    },
+    "PyPI::keyring::25.7.0": {
+      "hits": [
+        "EXM-002",
+        "EXM-003",
+        "EXM-005",
+        "EXS-001",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 40,
+      "label": "benign"
+    },
+    "PyPI::isodate::0.7.2": {
+      "hits": [],
+      "error": null,
+      "n_files": 15,
+      "label": "benign"
+    },
+    "PyPI::gitdb::4.0.12": {
+      "hits": [
+        "EXM-002"
+      ],
+      "error": null,
+      "n_files": 20,
+      "label": "benign"
+    },
+    "PyPI::google-cloud-core::2.5.1": {
+      "hits": [
+        "EXM-001",
+        "EXS-001",
+        "EXS-002"
+      ],
+      "error": null,
+      "n_files": 11,
+      "label": "benign"
+    },
+    "PyPI::opentelemetry-exporter-otlp-proto-grpc::1.41.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 7,
+      "label": "benign"
+    },
+    "PyPI::prompt-toolkit::3.0.52": {
+      "hits": [
+        "EXM-002",
+        "EXM-006",
+        "EXM-007",
+        "EXM-008",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 147,
+      "label": "benign"
+    },
+    "PyPI::joblib::1.5.3": {
+      "hits": [
+        "EXM-002",
+        "EXM-005",
+        "EXM-008"
+      ],
+      "error": null,
+      "n_files": 49,
+      "label": "benign"
+    },
+    "PyPI::contourpy::1.3.3": {
+      "hits": [
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 42,
+      "label": "benign"
+    },
+    "PyPI::docstring-parser::0.18.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 12,
+      "label": "benign"
+    },
+    "PyPI::itsdangerous::2.2.0": {
+      "hits": [
+        "DEF-003"
+      ],
+      "error": null,
+      "n_files": 10,
+      "label": "benign"
+    },
+    "PyPI::jaraco-classes::3.4.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 13,
+      "label": "benign"
+    },
+    "PyPI::opentelemetry-instrumentation::0.62b1": {
+      "hits": [],
+      "error": null,
+      "n_files": 15,
+      "label": "benign"
+    },
+    "PyPI::multiprocess::0.70.19": {
+      "hits": [
+        "DEF-003",
+        "EXM-001",
+        "EXM-002",
+        "EXM-005",
+        "EXS-002"
+      ],
+      "error": null,
+      "n_files": 272,
+      "label": "benign"
+    },
+    "PyPI::secretstorage::3.5.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 9,
+      "label": "benign"
+    },
+    "PyPI::jeepney::0.9.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 16,
+      "label": "benign"
+    },
+    "PyPI::bcrypt::5.0.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 5,
+      "label": "benign"
+    },
+    "PyPI::azure-identity::1.25.3": {
+      "hits": [
+        "DEF-003",
+        "EXM-005",
+        "EXM-008",
+        "EXS-001",
+        "NET-009",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 88,
+      "label": "benign"
+    },
+    "PyPI::pytest-cov::7.1.0": {
+      "hits": [
+        "EXM-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 11,
+      "label": "benign"
+    },
+    "PyPI::threadpoolctl::3.6.0": {
+      "hits": [
+        "EXM-001",
+        "EXM-002",
+        "EXM-003",
+        "EXM-005"
+      ],
+      "error": null,
+      "n_files": 2,
+      "label": "benign"
+    },
+    "PyPI::uvloop::0.22.1": {
+      "hits": [
+        "EXM-002",
+        "EXM-008",
+        "EXS-002"
+      ],
+      "error": null,
+      "n_files": 9,
+      "label": "benign"
+    },
+    "PyPI::azure-core::1.40.0": {
+      "hits": [
+        "DEF-003",
+        "EXM-005",
+        "EXS-001"
+      ],
+      "error": null,
+      "n_files": 77,
+      "label": "benign"
+    },
+    "PyPI::google-resumable-media::2.8.2": {
+      "hits": [
+        "EXM-005"
+      ],
+      "error": null,
+      "n_files": 19,
+      "label": "benign"
+    },
+    "PyPI::google-crc32c::1.8.0": {
+      "hits": [
+        "EXM-002",
+        "EXS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 8,
+      "label": "benign"
+    },
+    "PyPI::chardet::7.4.3": {
+      "hits": [
+        "EXM-008",
+        "EXS-001",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 46,
+      "label": "benign"
+    },
+    "PyPI::httpx-sse::0.4.3": {
+      "hits": [],
+      "error": null,
+      "n_files": 9,
+      "label": "benign"
+    },
+    "PyPI::orjson::3.11.9": {
+      "hits": [
+        "EXM-008"
+      ],
+      "error": null,
+      "n_files": 122,
+      "label": "benign"
+    },
+    "PyPI::jaraco-context::6.1.2": {
+      "hits": [
+        "EXF-001",
+        "EXM-002",
+        "EXS-001",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 11,
+      "label": "benign"
+    },
+    "PyPI::alembic::1.18.4": {
+      "hits": [
+        "EXM-001",
+        "EXM-008"
+      ],
+      "error": null,
+      "n_files": 83,
+      "label": "benign"
+    },
+    "PyPI::dill::0.4.1": {
+      "hits": [
+        "DEF-005",
+        "DEF-006",
+        "EXM-001",
+        "EXM-003",
+        "EXM-005",
+        "EXM-008"
+      ],
+      "error": null,
+      "n_files": 22,
+      "label": "benign"
+    },
+    "PyPI::blinker::1.9.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 5,
+      "label": "benign"
+    },
+    "PyPI::jaraco-functools::4.4.0": {
+      "hits": [
+        "EXM-001",
+        "EXS-001",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 12,
+      "label": "benign"
+    },
+    "PyPI::msal::1.36.0": {
+      "hits": [
+        "DEF-003",
+        "EXM-002",
+        "EXM-008",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 26,
+      "label": "benign"
+    },
+    "PyPI::defusedxml::0.7.1": {
+      "hits": [
+        "EXM-005",
+        "EXM-008",
+        "EXS-002"
+      ],
+      "error": null,
+      "n_files": 20,
+      "label": "benign"
+    },
+    "PyPI::cycler::0.12.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 3,
+      "label": "benign"
+    },
+    "PyPI::deprecated::1.3.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 11,
+      "label": "benign"
+    },
+    "PyPI::zstandard::0.25.0": {
+      "hits": [
+        "EXM-002",
+        "EXM-008",
+        "EXS-001",
+        "EXS-002"
+      ],
+      "error": null,
+      "n_files": 8,
+      "label": "benign"
+    },
+    "PyPI::hf-xet::1.5.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 9,
+      "label": "benign"
+    },
+    "PyPI::poetry-core::2.4.0": {
+      "hits": [
+        "DEF-006",
+        "EXM-008",
+        "EXS-001"
+      ],
+      "error": null,
+      "n_files": 82,
+      "label": "benign"
+    },
+    "PyPI::ruamel-yaml::0.19.1": {
+      "hits": [
+        "EXM-005",
+        "EXM-006",
+        "EXM-008",
+        "EXS-002"
+      ],
+      "error": null,
+      "n_files": 36,
+      "label": "benign"
+    },
+    "PyPI::kubernetes::35.0.0": {
+      "hits": [
+        "DEF-003",
+        "EXF-001",
+        "EXM-002",
+        "EXM-008",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 830,
+      "label": "benign"
+    },
+    "PyPI::snowflake-connector-python::4.4.0": {
+      "hits": [
+        "DEF-003",
+        "EXF-001",
+        "EXM-001",
+        "EXM-002",
+        "EXM-003",
+        "EXM-005",
+        "EXM-008",
+        "EXS-002",
+        "SYS-005",
+        "SYS-009"
+      ],
+      "error": null,
+      "n_files": 133,
+      "label": "benign"
+    },
+    "PyPI::pytest-asyncio::1.3.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 7,
+      "label": "benign"
+    },
+    "PyPI::email-validator::2.3.0": {
+      "hits": [
+        "EXF-005"
+      ],
+      "error": null,
+      "n_files": 12,
+      "label": "benign"
+    },
+    "PyPI::httptools::0.7.1": {
+      "hits": [
+        "EXM-002"
+      ],
+      "error": null,
+      "n_files": 8,
+      "label": "benign"
+    },
+    "PyPI::tzlocal::5.3.1": {
+      "hits": [
+        "EXM-002"
+      ],
+      "error": null,
+      "n_files": 8,
+      "label": "benign"
+    },
+    "PyPI::types-requests::2.33.0.20260503": {
+      "hits": [],
+      "error": null,
+      "n_files": 3,
+      "label": "benign"
+    },
+    "PyPI::toml::0.10.2": {
+      "hits": [],
+      "error": null,
+      "n_files": 9,
+      "label": "benign"
+    },
+    "PyPI::nodeenv::1.10.0": {
+      "hits": [
+        "DEF-006",
+        "EXM-008",
+        "SYS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 5,
+      "label": "benign"
+    },
+    "PyPI::ipython::9.13.0": {
+      "hits": [
+        "DEF-005",
+        "DEF-006",
+        "EXM-001",
+        "EXM-002",
+        "EXM-003",
+        "EXM-005",
+        "EXM-006",
+        "EXM-008",
+        "EXS-001",
+        "SYS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 179,
+      "label": "benign"
+    },
+    "PyPI::rapidfuzz::3.14.5": {
+      "hits": [],
+      "error": "extract_err: download failed: archive too large (>52428800 bytes)",
+      "n_files": 0,
+      "label": "benign"
+    },
+    "PyPI::sympy::1.14.0": {
+      "hits": [
+        "DEF-005",
+        "EXM-001",
+        "EXM-002",
+        "EXM-005",
+        "EXM-006",
+        "EXM-008",
+        "EXS-001",
+        "EXS-002",
+        "NET-009",
+        "SYS-001",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 858,
+      "label": "benign"
+    },
+    "PyPI::mako::1.3.12": {
+      "hits": [
+        "DEF-006",
+        "EXM-001",
+        "EXM-005"
+      ],
+      "error": null,
+      "n_files": 37,
+      "label": "benign"
+    },
+    "PyPI::jsonpointer::3.1.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 4,
+      "label": "benign"
+    },
+    "PyPI::pyproject-hooks::1.2.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 7,
+      "label": "benign"
+    },
+    "PyPI::prometheus-client::0.25.0": {
+      "hits": [
+        "EXM-001",
+        "EXM-002"
+      ],
+      "error": null,
+      "n_files": 32,
+      "label": "benign"
+    },
+    "PyPI::google-api-python-client::2.195.0": {
+      "hits": [
+        "EXM-001",
+        "EXM-005",
+        "EXS-002"
+      ],
+      "error": null,
+      "n_files": 576,
+      "label": "benign"
+    },
+    "PyPI::tokenizers::0.23.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 27,
+      "label": "benign"
+    },
+    "PyPI::uv::0.11.10": {
+      "hits": [
+        "EXM-002",
+        "EXM-003",
+        "EXM-005",
+        "EXM-008",
+        "SYS-001",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 82,
+      "label": "benign"
+    },
+    "PyPI::asn1crypto::1.5.1": {
+      "hits": [
+        "DEF-003",
+        "EXM-002"
+      ],
+      "error": null,
+      "n_files": 25,
+      "label": "benign"
+    },
+    "PyPI::mypy::1.20.2": {
+      "hits": [
+        "DEF-003",
+        "DEF-006",
+        "EXM-002",
+        "EXM-003",
+        "EXM-005",
+        "EXM-008",
+        "EXS-001",
+        "EXS-002",
+        "EXS-003",
+        "NET-008"
+      ],
+      "error": null,
+      "n_files": 337,
+      "label": "benign"
+    },
+    "PyPI::build::1.5.0": {
+      "hits": [
+        "EXM-002",
+        "EXM-008",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 15,
+      "label": "benign"
+    },
+    "PyPI::setuptools-scm::10.0.5": {
+      "hits": [
+        "EXM-001",
+        "EXM-005",
+        "EXM-008",
+        "EXS-002",
+        "EXS-003"
+      ],
+      "error": null,
+      "n_files": 37,
+      "label": "benign"
+    },
+    "PyPI::tiktoken::0.12.0": {
+      "hits": [
+        "DEF-003",
+        "EXM-005"
+      ],
+      "error": null,
+      "n_files": 14,
+      "label": "benign"
+    },
+    "PyPI::google-cloud-aiplatform::1.150.0": {
+      "hits": [
+        "DEF-003",
+        "EXM-001",
+        "EXM-005",
+        "EXM-008",
+        "EXS-001",
+        "EXS-002",
+        "NET-009",
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 1586,
+      "label": "benign"
+    },
+    "PyPI::backoff::2.2.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 11,
+      "label": "benign"
+    },
+    "PyPI::pydantic-ai-slim::1.90.0": {
+      "hits": [
+        "DEF-003",
+        "EXS-001",
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 230,
+      "label": "benign"
+    },
+    "PyPI::google-auth-oauthlib::1.3.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 8,
+      "label": "benign"
+    },
+    "PyPI::uritemplate::4.2.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 8,
+      "label": "benign"
+    },
+    "PyPI::mpmath::1.4.1": {
+      "hits": [
+        "EXM-001",
+        "EXM-006",
+        "NET-009"
+      ],
+      "error": null,
+      "n_files": 60,
+      "label": "benign"
+    },
+    "PyPI::google-cloud-bigquery::3.41.0": {
+      "hits": [
+        "DEF-005",
+        "EXM-006"
+      ],
+      "error": null,
+      "n_files": 55,
+      "label": "benign"
+    },
+    "PyPI::google-auth-httplib2::0.3.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 3,
+      "label": "benign"
+    },
+    "PyPI::paramiko::4.0.0": {
+      "hits": [
+        "EXF-001",
+        "EXM-002",
+        "EXM-003",
+        "EXM-008",
+        "SYS-003",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 47,
+      "label": "benign"
+    },
+    "PyPI::identify::2.6.19": {
+      "hits": [
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 7,
+      "label": "benign"
+    },
+    "PyPI::cfgv::3.5.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 3,
+      "label": "benign"
+    },
+    "PyPI::traitlets::5.15.0": {
+      "hits": [
+        "EXM-001",
+        "EXM-005",
+        "EXS-001"
+      ],
+      "error": null,
+      "n_files": 24,
+      "label": "benign"
+    },
+    "PyPI::pre-commit::4.6.0": {
+      "hits": [
+        "EXF-001",
+        "EXM-002",
+        "EXM-008",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 73,
+      "label": "benign"
+    },
+    "PyPI::parso::0.8.7": {
+      "hits": [
+        "DEF-005",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 26,
+      "label": "benign"
+    },
+    "PyPI::fastjsonschema::2.21.2": {
+      "hits": [
+        "DEF-006",
+        "EXM-001",
+        "EXS-001"
+      ],
+      "error": null,
+      "n_files": 12,
+      "label": "benign"
+    },
+    "PyPI::httplib2::0.31.2": {
+      "hits": [
+        "DEF-006",
+        "EXF-001",
+        "EXS-001"
+      ],
+      "error": null,
+      "n_files": 8,
+      "label": "benign"
+    },
+    "PyPI::transformers::5.8.0": {
+      "hits": [
+        "DEF-003",
+        "EXF-001",
+        "EXM-001",
+        "EXM-002",
+        "EXM-003",
+        "EXM-005",
+        "EXM-008",
+        "EXS-001",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 2350,
+      "label": "benign"
+    },
+    "PyPI::opentelemetry-exporter-otlp::1.41.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 2,
+      "label": "benign"
+    },
+    "PyPI::jedi::0.20.0": {
+      "hits": [
+        "EXM-002",
+        "EXM-005",
+        "EXM-008",
+        "EXS-001",
+        "SYS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 90,
+      "label": "benign"
+    },
+    "PyPI::executing::2.2.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 11,
+      "label": "benign"
+    },
+    "PyPI::marshmallow::4.3.0": {
+      "hits": [
+        "DEF-005"
+      ],
+      "error": null,
+      "n_files": 16,
+      "label": "benign"
+    },
+    "PyPI::xxhash::3.7.0": {
+      "hits": [
+        "EXM-001",
+        "EXS-002"
+      ],
+      "error": null,
+      "n_files": 5,
+      "label": "benign"
+    },
+    "PyPI::tree-sitter::0.25.2": {
+      "hits": [],
+      "error": null,
+      "n_files": 4,
+      "label": "benign"
+    },
+    "npm::lodash::4.18.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 1048,
+      "label": "benign"
+    },
+    "npm::react::19.2.5": {
+      "hits": [
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 25,
+      "label": "benign"
+    },
+    "npm::react-dom::19.2.5": {
+      "hits": [
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 37,
+      "label": "benign"
+    },
+    "npm::vue::3.5.34": {
+      "hits": [
+        "DEF-005"
+      ],
+      "error": null,
+      "n_files": 30,
+      "label": "benign"
+    },
+    "npm::axios::1.16.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 72,
+      "label": "benign"
+    },
+    "npm::express::5.2.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 8,
+      "label": "benign"
+    },
+    "npm::webpack::5.106.2": {
+      "hits": [
+        "DEF-005",
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 708,
+      "label": "benign"
+    },
+    "npm::typescript::6.0.3": {
+      "hits": [],
+      "error": null,
+      "n_files": 129,
+      "label": "benign"
+    },
+    "npm::jquery::4.0.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 155,
+      "label": "benign"
+    },
+    "npm::moment::2.30.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 532,
+      "label": "benign"
+    },
+    "npm::d3::7.9.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 3,
+      "label": "benign"
+    },
+    "npm::chalk::5.6.2": {
+      "hits": [],
+      "error": null,
+      "n_files": 4,
+      "label": "benign"
+    },
+    "npm::commander::14.0.3": {
+      "hits": [],
+      "error": null,
+      "n_files": 11,
+      "label": "benign"
+    },
+    "npm::debug::4.4.3": {
+      "hits": [],
+      "error": null,
+      "n_files": 5,
+      "label": "benign"
+    },
+    "npm::dotenv::17.4.2": {
+      "hits": [],
+      "error": null,
+      "n_files": 7,
+      "label": "benign"
+    },
+    "npm::yargs::18.0.0": {
+      "hits": [
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 56,
+      "label": "benign"
+    },
+    "npm::bluebird::3.7.2": {
+      "hits": [],
+      "error": null,
+      "n_files": 42,
+      "label": "benign"
+    },
+    "npm::async::3.2.6": {
+      "hits": [],
+      "error": null,
+      "n_files": 134,
+      "label": "benign"
+    },
+    "npm::request::2.88.2": {
+      "hits": [
+        "NET-009"
+      ],
+      "error": null,
+      "n_files": 14,
+      "label": "benign"
+    },
+    "npm::body-parser::2.2.2": {
+      "hits": [],
+      "error": null,
+      "n_files": 8,
+      "label": "benign"
+    },
+    "npm::mocha::11.7.5": {
+      "hits": [
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 63,
+      "label": "benign"
+    },
+    "npm::chai::6.2.2": {
+      "hits": [],
+      "error": null,
+      "n_files": 5,
+      "label": "benign"
+    },
+    "npm::jest::30.3.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 5,
+      "label": "benign"
+    },
+    "npm::eslint::10.3.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 417,
+      "label": "benign"
+    },
+    "npm::prettier::3.8.3": {
+      "hits": [],
+      "error": null,
+      "n_files": 48,
+      "label": "benign"
+    },
+    "npm::@babel/core::7.29.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 61,
+      "label": "benign"
+    },
+    "npm::@babel/preset-env::7.29.5": {
+      "hits": [],
+      "error": null,
+      "n_files": 27,
+      "label": "benign"
+    },
+    "npm::redux::5.0.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 23,
+      "label": "benign"
+    },
+    "npm::react-redux::9.2.0": {
+      "hits": [
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 39,
+      "label": "benign"
+    },
+    "npm::vue-router::5.0.6": {
+      "hits": [],
+      "error": null,
+      "n_files": 47,
+      "label": "benign"
+    },
+    "npm::vuex::4.1.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 12,
+      "label": "benign"
+    },
+    "npm::next::16.2.4": {
+      "hits": [
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 4794,
+      "label": "benign"
+    },
+    "npm::gulp::5.0.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 4,
+      "label": "benign"
+    },
+    "npm::rollup::4.60.3": {
+      "hits": [],
+      "error": null,
+      "n_files": 22,
+      "label": "benign"
+    },
+    "npm::parcel::2.16.4": {
+      "hits": [
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 6,
+      "label": "benign"
+    },
+    "npm::ts-node::10.9.2": {
+      "hits": [],
+      "error": null,
+      "n_files": 85,
+      "label": "benign"
+    },
+    "npm::nodemon::3.1.14": {
+      "hits": [
+        "DEF-006"
+      ],
+      "error": null,
+      "n_files": 31,
+      "label": "benign"
+    },
+    "npm::pm2::7.0.1": {
+      "hits": [
+        "DEF-005",
+        "EXM-006",
+        "NET-007",
+        "SYS-002",
+        "SYS-003"
+      ],
+      "error": null,
+      "n_files": 184,
+      "label": "benign"
+    },
+    "npm::socket.io::4.8.3": {
+      "hits": [],
+      "error": null,
+      "n_files": 24,
+      "label": "benign"
+    },
+    "npm::ws::8.20.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 17,
+      "label": "benign"
+    },
+    "npm::koa::3.2.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 9,
+      "label": "benign"
+    },
+    "npm::fastify::5.8.5": {
+      "hits": [],
+      "error": null,
+      "n_files": 57,
+      "label": "benign"
+    },
+    "npm::ramda::0.32.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 742,
+      "label": "benign"
+    },
+    "npm::immutable::5.1.5": {
+      "hits": [],
+      "error": null,
+      "n_files": 5,
+      "label": "benign"
+    },
+    "npm::rxjs::7.8.2": {
+      "hits": [],
+      "error": null,
+      "n_files": 1270,
+      "label": "benign"
+    },
+    "npm::three::0.184.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 730,
+      "label": "benign"
+    },
+    "npm::uuid::14.0.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 67,
+      "label": "benign"
+    },
+    "npm::minimist::1.2.8": {
+      "hits": [],
+      "error": null,
+      "n_files": 2,
+      "label": "benign"
+    },
+    "npm::glob::13.0.6": {
+      "hits": [],
+      "error": null,
+      "n_files": 33,
+      "label": "benign"
+    },
+    "npm::fs-extra::11.3.4": {
+      "hits": [],
+      "error": null,
+      "n_files": 30,
+      "label": "benign"
+    }
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "label": "fix1plus4",
+  "llm_mode": "stub",
+  "generated_at": "2026-05-07T00:19:29",
+  "elapsed_total_s": 257.5,
+  "results": [
+    {
+      "name": "requests",
+      "ecosystem": "PyPI",
+      "verdict": "HIGH_RISK",
+      "evidence_count": 36,
+      "elapsed_s": 20.43,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "flask",
+      "ecosystem": "PyPI",
+      "verdict": "HIGH_RISK",
+      "evidence_count": 38,
+      "elapsed_s": 21.64,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "django",
+      "ecosystem": "PyPI",
+      "verdict": "HIGH_RISK",
+      "evidence_count": 370,
+      "elapsed_s": 33.35,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "numpy",
+      "ecosystem": "PyPI",
+      "verdict": "HIGH_RISK",
+      "evidence_count": 1461,
+      "elapsed_s": 47.85,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "pandas",
+      "ecosystem": "PyPI",
+      "verdict": "HIGH_RISK",
+      "evidence_count": 380,
+      "elapsed_s": 33.29,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "boto3",
+      "ecosystem": "PyPI",
+      "verdict": "CLEAN  (noisy: 25 weak evidence)",
+      "evidence_count": 25,
+      "elapsed_s": 14.94,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "lodash",
+      "ecosystem": "npm",
+      "verdict": "SUSPICIOUS",
+      "evidence_count": 939,
+      "elapsed_s": 31.5,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "react",
+      "ecosystem": "npm",
+      "verdict": "HIGH_RISK",
+      "evidence_count": 39,
+      "elapsed_s": 20.05,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "webpack",
+      "ecosystem": "npm",
+      "verdict": "HIGH_RISK",
+      "evidence_count": 679,
+      "elapsed_s": 34.41,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    }
+  ]
+}

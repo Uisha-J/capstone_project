@@ -38,6 +38,7 @@ src/pkgsentinel/benchmarks/*.jsonl
 # Real-data eval — 외부 데이터셋 원본 / 다운받은 archive (gitignore)
 # fixtures.json, manifest, results 는 재현 가능성을 위해 커밋한다
 scripts/eval_real_data/cache/
+scripts/eval_real_data/cache_lite/
 scripts/eval_real_data/dataset_repo/
 scripts/eval_real_data/dataset_files.txt
 

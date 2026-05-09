@@ -1,0 +1,98 @@
+{
+  "label": "final2",
+  "llm_mode": "stub",
+  "generated_at": "2026-05-09T04:55:12",
+  "elapsed_total_s": 291.3,
+  "results": [
+    {
+      "name": "requests",
+      "ecosystem": "PyPI",
+      "verdict": "HIGH_RISK",
+      "evidence_count": 36,
+      "elapsed_s": 22.88,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "flask",
+      "ecosystem": "PyPI",
+      "verdict": "CLEAN  (noisy: 38 weak evidence)",
+      "evidence_count": 38,
+      "elapsed_s": 23.38,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "django",
+      "ecosystem": "PyPI",
+      "verdict": "CLEAN  (noisy: 369 weak evidence)",
+      "evidence_count": 369,
+      "elapsed_s": 40.46,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "numpy",
+      "ecosystem": "PyPI",
+      "verdict": "CLEAN  (noisy: 1023 weak evidence)",
+      "evidence_count": 1023,
+      "elapsed_s": 42.38,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "pandas",
+      "ecosystem": "PyPI",
+      "verdict": "HIGH_RISK",
+      "evidence_count": 380,
+      "elapsed_s": 41.47,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "boto3",
+      "ecosystem": "PyPI",
+      "verdict": "CLEAN  (noisy: 25 weak evidence)",
+      "evidence_count": 25,
+      "elapsed_s": 18.3,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "lodash",
+      "ecosystem": "npm",
+      "verdict": "SUSPICIOUS",
+      "evidence_count": 939,
+      "elapsed_s": 37.19,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "react",
+      "ecosystem": "npm",
+      "verdict": "HIGH_RISK",
+      "evidence_count": 39,
+      "elapsed_s": 23.79,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "webpack",
+      "ecosystem": "npm",
+      "verdict": "HIGH_RISK",
+      "evidence_count": 677,
+      "elapsed_s": 41.4,
+      "stage_ok": 19,
+      "stage_fail": 0,
+      "exit_code": 0
+    }
+  ]
+}

@@ -1,0 +1,824 @@
+{
+  "generated_at": "2026-05-06T23:20:04",
+  "per_fixture": {
+    "PyPI::boto3::1.43.4": {
+      "hits": [
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 44,
+      "label": "benign"
+    },
+    "PyPI::packaging::26.2": {
+      "hits": [
+        "EXM-002",
+        "EXM-003",
+        "EXM-008",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 21,
+      "label": "benign"
+    },
+    "PyPI::urllib3::2.6.3": {
+      "hits": [
+        "EXM-002"
+      ],
+      "error": null,
+      "n_files": 44,
+      "label": "benign"
+    },
+    "PyPI::certifi::2026.4.22": {
+      "hits": [],
+      "error": null,
+      "n_files": 6,
+      "label": "benign"
+    },
+    "PyPI::requests::2.33.1": {
+      "hits": [
+        "EXM-002",
+        "EXM-005",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 21,
+      "label": "benign"
+    },
+    "PyPI::typing-extensions::4.15.0": {
+      "hits": [
+        "EXM-001",
+        "EXM-005",
+        "EXM-008"
+      ],
+      "error": null,
+      "n_files": 5,
+      "label": "benign"
+    },
+    "PyPI::idna::3.13": {
+      "hits": [],
+      "error": null,
+      "n_files": 9,
+      "label": "benign"
+    },
+    "PyPI::charset-normalizer::3.4.7": {
+      "hits": [
+        "EXM-005",
+        "EXS-002"
+      ],
+      "error": null,
+      "n_files": 18,
+      "label": "benign"
+    },
+    "PyPI::setuptools::82.0.1": {
+      "hits": [
+        "DEF-003",
+        "DEF-006",
+        "EXF-001",
+        "EXM-001",
+        "EXM-002",
+        "EXM-003",
+        "EXM-005",
+        "EXM-006",
+        "EXM-008",
+        "EXS-001",
+        "EXS-003",
+        "SYS-001",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 232,
+      "label": "benign"
+    },
+    "PyPI::botocore::1.43.4": {
+      "hits": [
+        "DEF-003",
+        "EXF-001",
+        "EXM-001",
+        "EXM-002",
+        "EXM-005",
+        "SYS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 1908,
+      "label": "benign"
+    },
+    "PyPI::cryptography::48.0.0": {
+      "hits": [
+        "DEF-003",
+        "EXM-001",
+        "EXM-002",
+        "EXM-005"
+      ],
+      "error": null,
+      "n_files": 115,
+      "label": "benign"
+    },
+    "PyPI::aiobotocore::3.6.0": {
+      "hits": [
+        "DEF-003",
+        "EXF-001"
+      ],
+      "error": null,
+      "n_files": 37,
+      "label": "benign"
+    },
+    "PyPI::python-dateutil::2.9.0.post0": {
+      "hits": [
+        "EXM-002",
+        "EXM-003",
+        "EXM-005",
+        "EXS-001"
+      ],
+      "error": null,
+      "n_files": 31,
+      "label": "benign"
+    },
+    "PyPI::six::1.17.0": {
+      "hits": [
+        "EXM-001",
+        "EXM-002",
+        "EXM-005"
+      ],
+      "error": null,
+      "n_files": 5,
+      "label": "benign"
+    },
+    "PyPI::pyyaml::6.0.3": {
+      "hits": [
+        "EXM-002",
+        "EXM-005",
+        "EXS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 23,
+      "label": "benign"
+    },
+    "PyPI::cffi::2.0.0": {
+      "hits": [
+        "EXM-001",
+        "EXM-002",
+        "EXM-003",
+        "EXM-005",
+        "EXM-006",
+        "EXM-008",
+        "EXS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 91,
+      "label": "benign"
+    },
+    "PyPI::pydantic::2.13.4": {
+      "hits": [
+        "DEF-003",
+        "EXM-001"
+      ],
+      "error": null,
+      "n_files": 106,
+      "label": "benign"
+    },
+    "PyPI::pygments::2.20.0": {
+      "hits": [
+        "EXM-001",
+        "EXM-005",
+        "EXM-008",
+        "EXS-001",
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 356,
+      "label": "benign"
+    },
+    "PyPI::click::8.3.3": {
+      "hits": [
+        "EXM-002",
+        "EXM-008"
+      ],
+      "error": null,
+      "n_files": 18,
+      "label": "benign"
+    },
+    "PyPI::numpy::2.4.4": {
+      "hits": [
+        "DEF-003",
+        "DEF-006",
+        "EXF-001",
+        "EXM-001",
+        "EXM-002",
+        "EXM-003",
+        "EXM-005",
+        "EXM-006",
+        "EXM-008",
+        "EXS-001",
+        "EXS-002",
+        "NET-009",
+        "SYS-001",
+        "SYS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 1236,
+      "label": "benign"
+    },
+    "PyPI::grpcio-status::1.80.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 9,
+      "label": "benign"
+    },
+    "PyPI::pycparser::3.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 11,
+      "label": "benign"
+    },
+    "PyPI::pydantic-core::2.46.4": {
+      "hits": [],
+      "error": null,
+      "n_files": 6,
+      "label": "benign"
+    },
+    "PyPI::pluggy::1.6.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 27,
+      "label": "benign"
+    },
+    "PyPI::s3transfer::0.17.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 19,
+      "label": "benign"
+    },
+    "PyPI::protobuf::7.34.1": {
+      "hits": [
+        "DEF-003",
+        "EXM-001",
+        "EXM-005",
+        "EXS-002"
+      ],
+      "error": null,
+      "n_files": 57,
+      "label": "benign"
+    },
+    "PyPI::anyio::4.13.0": {
+      "hits": [
+        "EXM-002"
+      ],
+      "error": null,
+      "n_files": 46,
+      "label": "benign"
+    },
+    "PyPI::attrs::26.1.0": {
+      "hits": [
+        "EXM-001"
+      ],
+      "error": null,
+      "n_files": 26,
+      "label": "benign"
+    },
+    "PyPI::h11::0.16.0": {
+      "hits": [
+        "EXM-001",
+        "EXS-002"
+      ],
+      "error": null,
+      "n_files": 15,
+      "label": "benign"
+    },
+    "PyPI::fsspec::2026.4.0": {
+      "hits": [
+        "DEF-003",
+        "EXM-005",
+        "EXM-008"
+      ],
+      "error": null,
+      "n_files": 57,
+      "label": "benign"
+    },
+    "PyPI::annotated-types::0.7.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 4,
+      "label": "benign"
+    },
+    "PyPI::pytest::9.0.3": {
+      "hits": [
+        "DEF-005",
+        "DEF-006",
+        "EXM-001",
+        "EXM-002",
+        "EXM-005",
+        "EXM-006",
+        "EXM-008",
+        "EXS-001",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 219,
+      "label": "benign"
+    },
+    "PyPI::pandas::3.0.2": {
+      "hits": [
+        "EXF-001",
+        "EXM-001",
+        "EXM-002",
+        "EXM-003",
+        "EXM-005",
+        "EXM-008",
+        "EXS-001",
+        "NET-009",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 302,
+      "label": "benign"
+    },
+    "PyPI::httpx::0.28.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 24,
+      "label": "benign"
+    },
+    "PyPI::iniconfig::2.3.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 10,
+      "label": "benign"
+    },
+    "PyPI::httpcore::1.0.9": {
+      "hits": [
+        "EXM-002"
+      ],
+      "error": null,
+      "n_files": 32,
+      "label": "benign"
+    },
+    "PyPI::s3fs::2026.4.0": {
+      "hits": [
+        "EXM-002",
+        "EXM-008"
+      ],
+      "error": null,
+      "n_files": 9,
+      "label": "benign"
+    },
+    "PyPI::typing-inspection::0.4.2": {
+      "hits": [
+        "EXM-001"
+      ],
+      "error": null,
+      "n_files": 6,
+      "label": "benign"
+    },
+    "PyPI::markupsafe::3.0.3": {
+      "hits": [
+        "EXS-002"
+      ],
+      "error": null,
+      "n_files": 5,
+      "label": "benign"
+    },
+    "PyPI::platformdirs::4.9.6": {
+      "hits": [
+        "EXM-002",
+        "EXS-001"
+      ],
+      "error": null,
+      "n_files": 11,
+      "label": "benign"
+    },
+    "PyPI::python-dotenv::1.2.2": {
+      "hits": [
+        "DEF-003",
+        "EXM-002",
+        "EXM-005"
+      ],
+      "error": null,
+      "n_files": 15,
+      "label": "benign"
+    },
+    "PyPI::pip::26.1.1": {
+      "hits": [
+        "DEF-006",
+        "EXF-001",
+        "EXM-001",
+        "EXM-002",
+        "EXM-003",
+        "EXM-005",
+        "EXM-006",
+        "EXM-008",
+        "EXS-001",
+        "NET-009",
+        "SYS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 398,
+      "label": "benign"
+    },
+    "PyPI::jinja2::3.1.6": {
+      "hits": [
+        "EXM-001",
+        "EXM-005"
+      ],
+      "error": null,
+      "n_files": 27,
+      "label": "benign"
+    },
+    "PyPI::pyjwt::2.12.1": {
+      "hits": [
+        "DEF-003",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 18,
+      "label": "benign"
+    },
+    "PyPI::jmespath::1.1.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 11,
+      "label": "benign"
+    },
+    "PyPI::importlib-metadata::9.0.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 23,
+      "label": "benign"
+    },
+    "PyPI::rich::15.0.0": {
+      "hits": [
+        "EXM-002",
+        "EXM-003",
+        "EXM-005",
+        "EXS-001",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 101,
+      "label": "benign"
+    },
+    "PyPI::filelock::3.29.0": {
+      "hits": [
+        "EXM-002",
+        "EXM-003",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 16,
+      "label": "benign"
+    },
+    "PyPI::aiohttp::3.13.5": {
+      "hits": [
+        "DEF-003",
+        "EXM-001",
+        "EXM-008",
+        "EXS-002",
+        "SYS-005"
+      ],
+      "error": null,
+      "n_files": 77,
+      "label": "benign"
+    },
+    "PyPI::zipp::3.23.1": {
+      "hits": [
+        "EXM-005"
+      ],
+      "error": null,
+      "n_files": 17,
+      "label": "benign"
+    },
+    "npm::lodash::4.18.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 1048,
+      "label": "benign"
+    },
+    "npm::react::19.2.5": {
+      "hits": [
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 25,
+      "label": "benign"
+    },
+    "npm::react-dom::19.2.5": {
+      "hits": [
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 37,
+      "label": "benign"
+    },
+    "npm::vue::3.5.34": {
+      "hits": [
+        "DEF-005"
+      ],
+      "error": null,
+      "n_files": 30,
+      "label": "benign"
+    },
+    "npm::axios::1.16.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 72,
+      "label": "benign"
+    },
+    "npm::express::5.2.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 8,
+      "label": "benign"
+    },
+    "npm::webpack::5.106.2": {
+      "hits": [
+        "DEF-005",
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 708,
+      "label": "benign"
+    },
+    "npm::typescript::6.0.3": {
+      "hits": [],
+      "error": null,
+      "n_files": 129,
+      "label": "benign"
+    },
+    "npm::jquery::4.0.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 155,
+      "label": "benign"
+    },
+    "npm::moment::2.30.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 532,
+      "label": "benign"
+    },
+    "npm::d3::7.9.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 3,
+      "label": "benign"
+    },
+    "npm::chalk::5.6.2": {
+      "hits": [],
+      "error": null,
+      "n_files": 10,
+      "label": "benign"
+    },
+    "npm::commander::14.0.3": {
+      "hits": [],
+      "error": null,
+      "n_files": 11,
+      "label": "benign"
+    },
+    "npm::debug::4.4.3": {
+      "hits": [],
+      "error": null,
+      "n_files": 5,
+      "label": "benign"
+    },
+    "npm::dotenv::17.4.2": {
+      "hits": [],
+      "error": null,
+      "n_files": 7,
+      "label": "benign"
+    },
+    "npm::yargs::18.0.0": {
+      "hits": [
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 56,
+      "label": "benign"
+    },
+    "npm::bluebird::3.7.2": {
+      "hits": [],
+      "error": null,
+      "n_files": 42,
+      "label": "benign"
+    },
+    "npm::async::3.2.6": {
+      "hits": [],
+      "error": null,
+      "n_files": 134,
+      "label": "benign"
+    },
+    "npm::request::2.88.2": {
+      "hits": [
+        "NET-009"
+      ],
+      "error": null,
+      "n_files": 14,
+      "label": "benign"
+    },
+    "npm::body-parser::2.2.2": {
+      "hits": [],
+      "error": null,
+      "n_files": 8,
+      "label": "benign"
+    },
+    "npm::mocha::11.7.5": {
+      "hits": [
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 63,
+      "label": "benign"
+    },
+    "npm::chai::6.2.2": {
+      "hits": [],
+      "error": null,
+      "n_files": 5,
+      "label": "benign"
+    },
+    "npm::jest::30.3.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 5,
+      "label": "benign"
+    },
+    "npm::eslint::10.3.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 417,
+      "label": "benign"
+    },
+    "npm::prettier::3.8.3": {
+      "hits": [],
+      "error": null,
+      "n_files": 48,
+      "label": "benign"
+    },
+    "npm::@babel/core::7.29.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 62,
+      "label": "benign"
+    },
+    "npm::@babel/preset-env::7.29.5": {
+      "hits": [],
+      "error": null,
+      "n_files": 27,
+      "label": "benign"
+    },
+    "npm::redux::5.0.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 23,
+      "label": "benign"
+    },
+    "npm::react-redux::9.2.0": {
+      "hits": [
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 39,
+      "label": "benign"
+    },
+    "npm::vue-router::5.0.6": {
+      "hits": [],
+      "error": null,
+      "n_files": 47,
+      "label": "benign"
+    },
+    "npm::vuex::4.1.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 12,
+      "label": "benign"
+    },
+    "npm::next::16.2.4": {
+      "hits": [
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 4902,
+      "label": "benign"
+    },
+    "npm::gulp::5.0.1": {
+      "hits": [],
+      "error": null,
+      "n_files": 4,
+      "label": "benign"
+    },
+    "npm::rollup::4.60.3": {
+      "hits": [],
+      "error": null,
+      "n_files": 22,
+      "label": "benign"
+    },
+    "npm::parcel::2.16.4": {
+      "hits": [
+        "SYS-002"
+      ],
+      "error": null,
+      "n_files": 6,
+      "label": "benign"
+    },
+    "npm::ts-node::10.9.2": {
+      "hits": [],
+      "error": null,
+      "n_files": 85,
+      "label": "benign"
+    },
+    "npm::nodemon::3.1.14": {
+      "hits": [
+        "DEF-006"
+      ],
+      "error": null,
+      "n_files": 31,
+      "label": "benign"
+    },
+    "npm::pm2::7.0.1": {
+      "hits": [
+        "DEF-005",
+        "EXM-006",
+        "NET-007",
+        "SYS-002",
+        "SYS-003"
+      ],
+      "error": null,
+      "n_files": 184,
+      "label": "benign"
+    },
+    "npm::socket.io::4.8.3": {
+      "hits": [],
+      "error": null,
+      "n_files": 24,
+      "label": "benign"
+    },
+    "npm::ws::8.20.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 17,
+      "label": "benign"
+    },
+    "npm::koa::3.2.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 9,
+      "label": "benign"
+    },
+    "npm::fastify::5.8.5": {
+      "hits": [],
+      "error": null,
+      "n_files": 57,
+      "label": "benign"
+    },
+    "npm::ramda::0.32.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 742,
+      "label": "benign"
+    },
+    "npm::immutable::5.1.5": {
+      "hits": [],
+      "error": null,
+      "n_files": 5,
+      "label": "benign"
+    },
+    "npm::rxjs::7.8.2": {
+      "hits": [],
+      "error": null,
+      "n_files": 1270,
+      "label": "benign"
+    },
+    "npm::three::0.184.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 730,
+      "label": "benign"
+    },
+    "npm::uuid::14.0.0": {
+      "hits": [],
+      "error": null,
+      "n_files": 67,
+      "label": "benign"
+    },
+    "npm::minimist::1.2.8": {
+      "hits": [],
+      "error": null,
+      "n_files": 2,
+      "label": "benign"
+    },
+    "npm::glob::13.0.6": {
+      "hits": [],
+      "error": null,
+      "n_files": 33,
+      "label": "benign"
+    },
+    "npm::fs-extra::11.3.4": {
+      "hits": [],
+      "error": null,
+      "n_files": 30,
+      "label": "benign"
+    }
+  }
+}
