@@ -16,6 +16,7 @@
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 from ..schema import AttackDimension
@@ -32,24 +33,26 @@ class Category:
     disallowed_apis: set[str] = field(default_factory=set)
 
 
+# 우선순위 순 (앞에 있는 더 구체적인 카테고리가 먼저 매칭).
+# 2026-05-06 reorder: date_utility / formatter / math_utility 를 parser 보다
+# 앞에 두어 "moment" / "chalk" 가 의도된 카테고리로 분류되도록.
 CATEGORIES: list[Category] = [
     Category(
-        name="parser",
-        description="JSON/YAML/CSV/XML 등 데이터 파서",
-        keywords=["json", "yaml", "csv", "xml", "toml", "parser", "parse"],
-        allowed_dimensions={AttackDimension.INFORMATION_READING},
+        name="date_utility",
+        description="날짜/시간 유틸리티",
+        keywords=["date", "moment", "dayjs", "luxon", "timezone"],
+        allowed_dimensions=set(),
         disallowed_apis={
-            "requests.post", "requests.get",
-            "subprocess.run", "subprocess.Popen", "os.system",
-            "child_process.exec", "child_process.spawn",
-            "http.request", "https.request", "fetch",
+            "requests.post", "subprocess.run",
+            "http.request", "fetch",
             "eval", "exec",
+            "os.environ.get",
         },
     ),
     Category(
         name="formatter",
         description="로그/문자열 포매터, 색상 라이브러리 등",
-        keywords=["format", "color", "log", "chalk", "ansi", "style"],
+        keywords=["chalk", "ansi"],  # 매우 좁은 키워드만 (color/log/style 은 너무 광범위)
         allowed_dimensions=set(),  # 네트워크/실행 모두 이상
         disallowed_apis={
             "requests.post", "requests.get",
@@ -61,25 +64,30 @@ CATEGORIES: list[Category] = [
         },
     ),
     Category(
-        name="date_utility",
-        description="날짜/시간 유틸리티",
-        keywords=["date", "time", "moment", "dayjs", "luxon", "timezone"],
-        allowed_dimensions=set(),
-        disallowed_apis={
-            "requests.post", "subprocess.run",
-            "http.request", "fetch",
-            "eval", "exec",
-            "os.environ.get",
-        },
-    ),
-    Category(
         name="math_utility",
         description="수학/통계 유틸리티",
-        keywords=["math", "stat", "random", "number", "calc"],
+        # "stat" / "math" 단독 키워드는 너무 광범위 → 좁은 키워드만.
+        # "math" 는 word-boundary 로도 mathjs/math.js 같은 작은 lib 만 매칭.
+        keywords=["mathjs", "decimal.js"],
         allowed_dimensions=set(),
         disallowed_apis={
             "requests.post", "subprocess.run", "os.environ.get",
             "http.request", "fetch", "eval", "exec",
+        },
+    ),
+    Category(
+        name="parser",
+        description="JSON/YAML/CSV/XML 등 데이터 파서",
+        # "json"/"yaml" 단독 키워드는 web framework 등에서도 등장 → 좁게.
+        keywords=["json parser", "yaml parser", "csv parser", "xml parser",
+                  "toml parser", "json5"],
+        allowed_dimensions={AttackDimension.INFORMATION_READING},
+        disallowed_apis={
+            "requests.post", "requests.get",
+            "subprocess.run", "subprocess.Popen", "os.system",
+            "child_process.exec", "child_process.spawn",
+            "http.request", "https.request", "fetch",
+            "eval", "exec",
         },
     ),
 ]
@@ -87,12 +95,42 @@ CATEGORIES: list[Category] = [
 
 # ─────────────── 카테고리 추정 ───────────────
 
+# 카테고리 추정에 disqualifying 키워드 — 있으면 좁은 카테고리로 분류 안 함.
+# 합법 multi-purpose 도구 (numpy / pandas / scipy / jupyter 등) 가 narrow
+# category 로 잘못 분류되어 anomaly_baseline FP 폭증하는 것 방지.
+# 2026-05-06 추가: pandas 가 "statistics" 의 substring 매칭 "stat" 으로
+# math_utility 로 분류되어 13건 anomaly 발생 — 이걸 차단.
+#
+# "library" 같은 일반 단어는 의도적으로 제외 (거의 모든 패키지 설명에 등장).
+_BROAD_PURPOSE_HINTS = {
+    "data analysis", "data structures", "dataframe",
+    "scientific computing", "numerical computing",
+    "machine learning", "deep learning",
+    "web framework", "application framework",
+    "ide", "notebook", "interactive shell",
+    "build system",
+}
+
+
 def guess_category(package_name: str, description: str = "") -> Category | None:
-    """패키지 이름/설명에서 카테고리 추정."""
+    """패키지 이름/설명에서 카테고리 추정.
+
+    매칭 정책:
+      1. **word-boundary** 매칭 사용 (substring 매칭 X)
+         "stat" 는 "statistics" 와 매칭하지 않음 — 별도 단어일 때만.
+      2. broad-purpose 힌트가 description 에 있으면 narrow category 분류 거부.
+         (numpy/pandas/scipy 같은 multi-purpose 도구의 misclassification 방지)
+    """
     text = (package_name + " " + description).lower()
+
+    # broad-purpose 힌트 — 있으면 분류 안 함
+    if any(hint in text for hint in _BROAD_PURPOSE_HINTS):
+        return None
+
     for cat in CATEGORIES:
         for kw in cat.keywords:
-            if kw in text:
+            # word-boundary 매칭. 키워드를 escape 해서 정규식 특수문자 안전.
+            if re.search(r"\b" + re.escape(kw) + r"\b", text):
                 return cat
     return None
 

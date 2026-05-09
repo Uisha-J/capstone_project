@@ -26,11 +26,15 @@ PYTHON_APIS: dict[str, AttackDimension] = {
     "getpass.getuser": AttackDimension.INFORMATION_READING,
     "socket.gethostname": AttackDimension.INFORMATION_READING,
     "socket.gethostbyname": AttackDimension.INFORMATION_READING,
-    "pathlib.Path.home": AttackDimension.INFORMATION_READING,
-    "os.path.expanduser": AttackDimension.INFORMATION_READING,
     # 'open', 'io.open' 제외 — 정상 코드에서 너무 빈번 (FP 유발)
     # 파일 읽기 자체는 INFORMATION_READING 이지만, 판정 근거로는 약함
     # 민감 경로 결합(~/.ssh, /etc/passwd 등)은 string_analysis 모듈에서 다룸
+    #
+    # 2026-05-06 추가 제외: 'os.path.expanduser', 'pathlib.Path.home'
+    #   동일 사유 — 경로 확장 유틸리티는 read_csv("~/file") 같은 합법 사용 다수.
+    #   pandas/io/common.py 가 expanduser → urlopen 시퀀스로 SP-001 (Credential
+    #   exfiltration) 잘못 매칭. expanduser 자체는 자격증명 신호가 아님.
+    #   실제 자격증명 경로 (~/.ssh/, ~/.aws/) 는 string_analysis 모듈에서 잡음.
 
     # ─── Encoding / Obfuscation ───
     "base64.b64decode": AttackDimension.ENCODING,
