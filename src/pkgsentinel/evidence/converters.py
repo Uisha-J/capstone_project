@@ -35,6 +35,8 @@ STANDALONE_WEAK_INDICATORS = {
     "EXF-001",   # 6% FP — telemetry/error reporter 흔함
     "SYS-001",   # 2% FP — 일부 cross-platform 도구의 PATH 조작
     "NET-009",   # 4% FP — verify=False 가 사내 cert 환경에서 정당
+    # 2026-05-06 추가 (fastapi LLM 모드 v2 잔존 FP 분석):
+    "NET-010",   # 5% FP — 'http://' URL 은 테스트/예제/문서 코드에 광범위
 }
 
 

@@ -90,6 +90,11 @@ EXCLUDE_DIR_SEGMENTS = {
     # 2026-05-06 추가: 벤더된 3rd party 코드 — 분석 대상 아님
     # (django/.../static/admin/js/vendor/xregexp 같은 케이스에서 DEF-005 FP 발생)
     "vendor", "vendored", "third_party", "thirdparty", "_vendor",
+    # 2026-05-06 추가 (fastapi LLM 모드 v2 잔존 FP 분석):
+    # fastapi/docs_src/ + fastapi/scripts/playwright/ 가 분석 대상 들어가
+    # 7건 NET-010 + 1건 T1140 FP 발생.
+    "docs_src", "documentation",                  # docs 변형
+    "playwright", "cypress", "e2e",               # E2E 테스트 도구
 }
 
 # 정확 매칭 외에, segment 가 이 prefix 들 중 하나로 시작하면 제외.
@@ -97,6 +102,10 @@ EXCLUDE_DIR_SEGMENTS = {
 EXCLUDE_DIR_PREFIXES = (
     "vendored-",   # vendored-meson, vendored-numpy 등
     "_vendor_",    # 일부 빌드 도구의 vendoring 패턴
+    # 2026-05-06 추가: docs/example/test 의 변형
+    "docs_",       # docs_src, docs_internal 등
+    "doc-",        # doc-build, doc-examples 등
+    "example_",    # example_app, example_data 등
 )
 
 
