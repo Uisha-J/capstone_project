@@ -31,35 +31,20 @@ from . import _dotenv as _aislopsq_dotenv
 _aislopsq_dotenv.load()
 
 from ._pipeline_state import PipelineContext, PipelineOptions
+from ._stage_runner import stage as _stage_run  # 새 스테이지 컨텍스트 매니저
 from .db.integrity import IntegrityMode
 from .evidence.converters import (
     anomaly_to_evidence as _anomaly_to_evidence,
-)
-from .evidence.converters import (
     binary_to_evidence as _binary_to_evidence,
-)
-from .evidence.converters import (
     dependency_to_evidence as _dependency_to_evidence,
-)
-from .evidence.converters import (
     indicator_hit_to_evidence as _indicator_hit_to_evidence,
-)
-from .evidence.converters import (
     sandbox_to_evidence as _sandbox_to_evidence,
-)
-from .evidence.converters import (
     sequence_match_to_evidence as _sequence_match_to_evidence,
-)
-from .evidence.converters import (
     sstr_to_evidence as _sstr_to_evidence,
 )
 from .evidence.snippets import (
     find_file_seq as _find_file_seq,
-)
-from .evidence.snippets import (
     match_confidence as _match_confidence,
-)
-from .evidence.snippets import (
     snippet_for as _snippet_for,
 )
 from .reporting.serialize import report_to_serializable as _report_to_serializable
@@ -75,23 +60,15 @@ from .schema import (
     empty_report,
 )
 from .stages.indicator_matcher import match_all as match_47_indicators
-from .stages.sequence_patterns import (
-    mine as mine_sequences,
-)
+from .stages.sequence_patterns import mine as mine_sequences
 from .stages.stage0_registry import check
 from .stages.stage0_threat_filter import (
     ThreatFilterReport,
-)
-from .stages.stage0_threat_filter import (
     run as threat_filter_run,
-)
-from .stages.stage0_threat_filter import (
     to_evidence as threat_filter_to_evidence,
 )
 from .stages.stage0b_attack_history import (
     check_attack_history,
-)
-from .stages.stage0b_attack_history import (
     to_evidence as attack_history_to_evidence,
 )
 from .stages.stage1b_full_source import extract_all, to_entry_files
@@ -107,33 +84,21 @@ from .stages.stage5_multi_agent import (
 )
 from .stages.stage_agentic import (
     StageAgenticResult,
-)
-from .stages.stage_agentic import (
     run as agentic_run,
 )
 from .stages.stage_scorecard import (
     ScorecardReport,
-)
-from .stages.stage_scorecard import (
     extract_risk_signals as scorecard_risk_signals,
-)
-from .stages.stage_scorecard import (
     fetch_for_package as scorecard_fetch_for_package,
 )
 from .stages.stage_slsa import (
     SLSAReport,
-)
-from .stages.stage_slsa import (
     evaluate as slsa_evaluate,
 )
-from .stages.stage_ssdf import (
-    evaluate as ssdf_evaluate,
-)
+from .stages.stage_ssdf import evaluate as ssdf_evaluate
 from .stages.string_analysis import analyze_strings
 from .stages.taint_slicer import (
     analyze_python as taint_analyze_python,
-)
-from .stages.taint_slicer import (
     slice_for_llm as taint_slice_for_llm,
 )
 from .verdict_rules import decide_verdict
@@ -270,62 +235,41 @@ def run_pipeline(
             ))
 
     # ========== Stage 0B: 공격 이력 ==========
-    try:
+    with _stage_run(ctx, "stage_0b_attack_history") as st:
         hist = check_attack_history(package, ecosystem)
-        ctx.stage_results.append(StageResult(
-            stage="stage_0b_attack_history",
-            success=hist.error is None,
-            error=hist.error,
-            payload={
-                "exact_matches": len(hist.exact_matches),
-                "typosquat_candidates": len(hist.typosquat_candidates),
-            },
-        ))
+        if hist.error:
+            st.fail(hist.error)
+        st.payload = {
+            "exact_matches": len(hist.exact_matches),
+            "typosquat_candidates": len(hist.typosquat_candidates),
+        }
         if hist.any_hit:
             ctx.evidence.extend(attack_history_to_evidence(hist))
-    except Exception as e:
-        ctx.stage_results.append(StageResult(
-            stage="stage_0b_attack_history", success=False, error=str(e),
-        ))
 
     # ========== Stage 0C: OpenSSF Scorecard ==========
     # 판정에 직접 영향 X (참고 메타). 실패해도 파이프라인 계속.
     scorecard_report: ScorecardReport | None = None
-    try:
+    with _stage_run(ctx, "stage_0c_scorecard") as st:
         scorecard_report = scorecard_fetch_for_package(reg.raw_metadata, ecosystem)
-        ctx.stage_results.append(StageResult(
-            stage="stage_0c_scorecard",
-            success=scorecard_report.available,
-            error=scorecard_report.error,
-            payload={
-                "repo": scorecard_report.repo,
-                "score": scorecard_report.overall_score,
-                "checks": len(scorecard_report.checks),
-            },
-        ))
-    except Exception as e:
-        ctx.stage_results.append(StageResult(
-            stage="stage_0c_scorecard", success=False, error=str(e),
-        ))
+        if not scorecard_report.available:
+            st.fail(scorecard_report.error or "scorecard unavailable")
+        st.payload = {
+            "repo": scorecard_report.repo,
+            "score": scorecard_report.overall_score,
+            "checks": len(scorecard_report.checks),
+        }
 
     # ========== Stage 0D: SLSA 프로비넌스 추정 ==========
     slsa_report: SLSAReport | None = None
-    try:
+    with _stage_run(ctx, "stage_0d_slsa") as st:
         slsa_report = slsa_evaluate(reg.raw_metadata, ecosystem)
-        ctx.stage_results.append(StageResult(
-            stage="stage_0d_slsa",
-            success=slsa_report.error is None,
-            error=slsa_report.error,
-            payload={
-                "level": slsa_report.level.value,
-                "has_provenance": slsa_report.has_provenance,
-                "has_signature": slsa_report.has_signature,
-            },
-        ))
-    except Exception as e:
-        ctx.stage_results.append(StageResult(
-            stage="stage_0d_slsa", success=False, error=str(e),
-        ))
+        if slsa_report.error:
+            st.fail(slsa_report.error)
+        st.payload = {
+            "level": slsa_report.level.value,
+            "has_provenance": slsa_report.has_provenance,
+            "has_signature": slsa_report.has_signature,
+        }
 
     target_version = version or reg.latest_version or ""
     archive_url = reg.archive_urls.get(target_version, "")
@@ -551,7 +495,7 @@ def run_pipeline(
         return report
 
     # ========== Stage 2B: 문자열 상수 풀 ==========
-    try:
+    with _stage_run(ctx, "stage_2b_string_analysis") as st:
         total_strs = 0
         for sf in ctx.ext.source_files:
             if sf.language not in ("python", "javascript"):
@@ -560,34 +504,19 @@ def run_pipeline(
             if strs:
                 total_strs += len(strs)
                 ctx.evidence.extend(_sstr_to_evidence(sf.path, strs))
-        ctx.stage_results.append(StageResult(
-            stage="stage_2b_string_analysis",
-            success=True,
-            payload={"suspicious_strings": total_strs},
-        ))
-    except Exception as e:
-        ctx.stage_results.append(StageResult(
-            stage="stage_2b_string_analysis", success=False, error=str(e),
-        ))
+        st.payload = {"suspicious_strings": total_strs}
 
     # ========== Stage 3B: 버전 ctx.diff ==========
     ctx.diff = None
-    try:
+    with _stage_run(ctx, "stage_3b_version_diff") as st:
         ctx.diff = analyze_full_diff(reg, ctx.ext, ctx.behavior)
-        ctx.stage_results.append(StageResult(
-            stage="stage_3b_version_diff",
-            success=ctx.diff.error is None,
-            error=ctx.diff.error,
-            payload={
-                "compared": ctx.diff.compared_versions,
-                "changed_files": len(ctx.diff.file_diffs),
-                "severity": ctx.diff.overall_severity.value,
-            },
-        ))
-    except Exception as e:
-        ctx.stage_results.append(StageResult(
-            stage="stage_3b_version_diff", success=False, error=str(e),
-        ))
+        if ctx.diff.error:
+            st.fail(ctx.diff.error)
+        st.payload = {
+            "compared": ctx.diff.compared_versions,
+            "changed_files": len(ctx.diff.file_diffs),
+            "severity": ctx.diff.overall_severity.value,
+        }
 
     # ========== Stage 4: TTP 매칭 ==========
     try:
@@ -609,10 +538,10 @@ def run_pipeline(
         return report
 
     # ========== Stage 4B: 이상 탐지 ==========
-    try:
+    ctx.description = ""
+    author = ""
+    with _stage_run(ctx, "stage_4b_anomaly_detection") as st:
         from .knowledge.anomaly_baseline import detect_anomalies
-        ctx.description = ""
-        author = ""
         if reg.raw_metadata:
             info = reg.raw_metadata.get("info", {}) or {}
             ctx.description = info.get("summary", "") or info.get("ctx.description", "")[:200]
@@ -620,17 +549,7 @@ def run_pipeline(
         findings = detect_anomalies(package, ctx.description, ctx.behavior.files)
         for f in findings:
             ctx.evidence.append(_anomaly_to_evidence(f))
-        ctx.stage_results.append(StageResult(
-            stage="stage_4b_anomaly_detection",
-            success=True,
-            payload={"anomalies": len(findings)},
-        ))
-    except Exception as e:
-        ctx.stage_results.append(StageResult(
-            stage="stage_4b_anomaly_detection", success=False, error=str(e),
-        ))
-        ctx.description = ""
-        author = ""
+        st.payload = {"anomalies": len(findings)}
 
     # ========== Stage 4C: 47-Indicator 매처 (논문 2025) ==========
     try:
@@ -677,31 +596,23 @@ def run_pipeline(
         ))
 
     # ========== Stage 4E: Sequential Pattern Mining ==========
-    try:
+    with _stage_run(ctx, "stage_4e_sequence_mining") as st:
         seq_rpt = mine_sequences(ctx.behavior)
         for m in seq_rpt.matches:
             ctx.evidence.append(_sequence_match_to_evidence(m))
-        ctx.stage_results.append(StageResult(
-            stage="stage_4e_sequence_mining",
-            success=seq_rpt.error is None,
-            error=seq_rpt.error,
-            payload={
-                "patterns_matched": len(seq_rpt.matches),
-                "patterns": sorted({m.pattern.code for m in seq_rpt.matches}),
-            },
-        ))
-    except Exception as e:
-        ctx.stage_results.append(StageResult(
-            stage="stage_4e_sequence_mining", success=False,
-            error=f"{e}\n{traceback.format_exc()}",
-        ))
+        if seq_rpt.error:
+            st.fail(seq_rpt.error)
+        st.payload = {
+            "patterns_matched": len(seq_rpt.matches),
+            "patterns": sorted({m.pattern.code for m in seq_rpt.matches}),
+        }
 
     # ========== Stage 4D: Taint Slicing (논문 2025) ==========
     # source(env/file/secret) -> sink(http/exec) 흐름만 추출해
     # Stage 5 LLM 프롬프트 토큰을 줄임.
     taint_slice_by_path: dict[str, str] = {}
     taint_total_flows = 0
-    try:
+    with _stage_run(ctx, "stage_4d_taint_slicing") as st:
         for sf in ctx.ext.source_files:
             if sf.language != "python":
                 continue  # JS 는 차후 (tree-sitter 기반)
@@ -709,19 +620,10 @@ def run_pipeline(
             if rpt.flows:
                 taint_total_flows += len(rpt.flows)
                 taint_slice_by_path[sf.path] = taint_slice_for_llm(sf.content, rpt.flows)
-        ctx.stage_results.append(StageResult(
-            stage="stage_4d_taint_slicing",
-            success=True,
-            payload={
-                "files_with_flows": len(taint_slice_by_path),
-                "total_flows": taint_total_flows,
-            },
-        ))
-    except Exception as e:
-        ctx.stage_results.append(StageResult(
-            stage="stage_4d_taint_slicing", success=False,
-            error=f"{e}\n{traceback.format_exc()}",
-        ))
+        st.payload = {
+            "files_with_flows": len(taint_slice_by_path),
+            "total_flows": taint_total_flows,
+        }
 
     # ========== Stage 5: LLM 이중 검증 (단일 또는 다중 에이전트) ==========
     multi_agent_consensus_per_file: dict[str, ConsensusReport] = {}
@@ -917,7 +819,7 @@ def run_pipeline(
 
     # ========== Stage 7: 바이너리 ==========
     if ctx.ext.binary_files:
-        try:
+        with _stage_run(ctx, "stage_7_binary") as st:
             import urllib.request
 
             from .stages.stage_binary import extract_and_analyze
@@ -935,46 +837,24 @@ def run_pipeline(
                 if bf.has_findings:
                     ctx.evidence.append(_binary_to_evidence(bf))
                     hit_count += 1
-            ctx.stage_results.append(StageResult(
-                stage="stage_7_binary",
-                success=True,
-                payload={
-                    "binaries": len(bin_findings),
-                    "hits": hit_count,
-                },
-            ))
-        except Exception as e:
-            ctx.stage_results.append(StageResult(
-                stage="stage_7_binary", success=False, error=str(e),
-            ))
+            st.payload = {"binaries": len(bin_findings), "hits": hit_count}
     else:
-        ctx.stage_results.append(StageResult(
-            stage="stage_7_binary",
-            success=True,
-            payload={"binaries": 0, "skipped": "no binary files"},
-        ))
+        with _stage_run(ctx, "stage_7_binary") as st:
+            st.payload = {"binaries": 0, "skipped": "no binary files"}
 
     # ========== Stage 8: 샌드박스 (옵션) ==========
     if ctx.options.enable_sandbox:
-        try:
+        with _stage_run(ctx, "stage_8_sandbox") as st:
             from .stages.stage_sandbox import get_default_sandbox
             sb = get_default_sandbox()
             obs = sb.run(package, ecosystem, target_version)
             if obs.has_findings:
                 ctx.evidence.append(_sandbox_to_evidence(obs))
-            ctx.stage_results.append(StageResult(
-                stage="stage_8_sandbox",
-                success=True,
-                payload={
-                    "mode": obs.mode,
-                    "duration_s": obs.duration_s,
-                    "has_findings": obs.has_findings,
-                },
-            ))
-        except Exception as e:
-            ctx.stage_results.append(StageResult(
-                stage="stage_8_sandbox", success=False, error=str(e),
-            ))
+            st.payload = {
+                "mode": obs.mode,
+                "duration_s": obs.duration_s,
+                "has_findings": obs.has_findings,
+            }
 
     # ========== Stage 9: Verdict + 리포트 ==========
     verdict = decide_verdict(ctx.evidence, ctx.stage_results, registry_found=True)
