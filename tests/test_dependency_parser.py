@@ -142,6 +142,111 @@ lint = ["ruff"]
     print(f"  OK dev={dev_names}")
 
 
+def test_pep_735_include_group_basic():
+    """include-group 으로 다른 group 참조 → expand."""
+    print("\n== PEP 735 include-group: dev includes test ==")
+    src = '''
+[project]
+name = "x"
+version = "0.1"
+dependencies = []
+
+[dependency-groups]
+test = ["pytest>=7", "hypothesis"]
+dev = ["ruff", {include-group = "test"}, "mypy"]
+'''
+    sources = [_sf("x-0.1/pyproject.toml", src)]
+    de = extract_python_deps(sources)
+    dev_names = sorted({d.name for d in de.dev_deps
+                        if "group:dev" in d.source_file})
+    # dev 는 test 포함 → pytest, hypothesis, ruff, mypy
+    for n in ("pytest", "hypothesis", "ruff", "mypy"):
+        assert n in dev_names, f"missing {n} in {dev_names}"
+    print(f"  OK dev expansion: {dev_names}")
+
+
+def test_pep_735_include_group_chain():
+    """test → dev → all 체인 expansion."""
+    print("\n== PEP 735 chain: all includes dev which includes test ==")
+    src = '''
+[project]
+name = "x"
+version = "0.1"
+
+[dependency-groups]
+test = ["pytest"]
+dev = [{include-group = "test"}, "ruff"]
+all = [{include-group = "dev"}, "tox"]
+'''
+    sources = [_sf("x-0.1/pyproject.toml", src)]
+    de = extract_python_deps(sources)
+    all_group_names = sorted({d.name for d in de.dev_deps
+                              if "group:all" in d.source_file})
+    for n in ("pytest", "ruff", "tox"):
+        assert n in all_group_names, f"missing {n} in {all_group_names}"
+    print(f"  OK chain expansion: {all_group_names}")
+
+
+def test_pep_735_cycle_safe():
+    """a → b → a 사이클 → 무한 재귀 안 함."""
+    print("\n== PEP 735 cycle: a→b→a ==")
+    src = '''
+[project]
+name = "x"
+version = "0.1"
+
+[dependency-groups]
+a = ["pkg-a", {include-group = "b"}]
+b = ["pkg-b", {include-group = "a"}]
+'''
+    sources = [_sf("x-0.1/pyproject.toml", src)]
+    # 무한 재귀 발생 시 RecursionError 또는 hang — 그냥 정상 종료해야
+    de = extract_python_deps(sources)
+    a_names = {d.name for d in de.dev_deps if "group:a" in d.source_file}
+    # 사이클 발생 후 a 는 pkg-a + (b 가 a 참조해서 self-ref → skip) = pkg-a + pkg-b
+    # 정확한 결과는 구현 따라 다름 — 핵심은 crash 안 함 + pkg-a 는 포함
+    assert "pkg-a" in a_names
+    print(f"  OK no crash, a={a_names}")
+
+
+def test_pep_735_self_reference():
+    """{include-group = "<self>"} → 자기 참조 무시."""
+    print("\n== PEP 735 self-reference ignored ==")
+    src = '''
+[project]
+name = "x"
+version = "0.1"
+
+[dependency-groups]
+me = ["pkg-x", {include-group = "me"}, "pkg-y"]
+'''
+    sources = [_sf("x-0.1/pyproject.toml", src)]
+    de = extract_python_deps(sources)
+    me_names = sorted({d.name for d in de.dev_deps
+                       if "group:me" in d.source_file})
+    assert me_names == ["pkg-x", "pkg-y"]
+    print(f"  OK {me_names}")
+
+
+def test_pep_735_missing_reference():
+    """존재하지 않는 group 참조 → empty expansion 으로 graceful."""
+    print("\n== PEP 735 missing reference ==")
+    src = '''
+[project]
+name = "x"
+version = "0.1"
+
+[dependency-groups]
+dev = ["ruff", {include-group = "nonexistent"}]
+'''
+    sources = [_sf("x-0.1/pyproject.toml", src)]
+    de = extract_python_deps(sources)
+    dev_names = {d.name for d in de.dev_deps}
+    assert "ruff" in dev_names
+    # nonexistent 는 expand 못 함 → skip
+    print(f"  OK dev={dev_names}")
+
+
 def test_e2e_boto3_pattern():
     """extract_python_deps 의 end-to-end — setup.py 만 있는 boto3-like 패키지."""
     print("\n== E2E: boto3-like setup.py 만 ==")
@@ -167,6 +272,11 @@ def main():
         test_setup_py_invalid_syntax,
         test_pep_735_dependency_groups,
         test_pep_735_with_optional_dependencies_both,
+        test_pep_735_include_group_basic,
+        test_pep_735_include_group_chain,
+        test_pep_735_cycle_safe,
+        test_pep_735_self_reference,
+        test_pep_735_missing_reference,
         test_e2e_boto3_pattern,
     ]
     failed = 0

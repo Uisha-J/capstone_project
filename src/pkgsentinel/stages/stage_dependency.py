@@ -131,6 +131,56 @@ def _ast_extract_str_list(node, bindings: dict | None = None) -> list[str] | Non
     return None
 
 
+def _expand_pep735_groups(
+    groups: dict, max_depth: int = 10,
+) -> dict[str, list[str]]:
+    """PEP 735 dependency-groups 의 include-group 참조 재귀 해석.
+
+    입력 (toml 의 dict):
+      {
+        "test": ["pytest", "hypothesis"],
+        "dev":  ["ruff", {"include-group": "test"}, "mypy"],
+        "all":  [{"include-group": "test"}, {"include-group": "dev"}],
+      }
+
+    반환:
+      {
+        "test": ["pytest", "hypothesis"],
+        "dev":  ["ruff", "pytest", "hypothesis", "mypy"],
+        "all":  ["pytest", "hypothesis", "ruff", "mypy"],  # 중복 제거
+      }
+
+    사이클 (a → b → a) 감지 — 사이클 발생 시 해당 include 만 무시하고 진행.
+    max_depth 초과 시도 마찬가지로 안전한 fallback.
+    """
+    def _resolve(name: str, stack: tuple[str, ...]) -> list[str]:
+        if name in stack:
+            return []  # cycle
+        if len(stack) >= max_depth:
+            return []
+        items = groups.get(name)
+        if not isinstance(items, list):
+            return []
+        out: list[str] = []
+        seen: set[str] = set()
+        for it in items:
+            if isinstance(it, str):
+                if it not in seen:
+                    out.append(it)
+                    seen.add(it)
+            elif isinstance(it, dict):
+                ref = it.get("include-group")
+                if isinstance(ref, str):
+                    for sub in _resolve(ref, stack + (name,)):
+                        if sub not in seen:
+                            out.append(sub)
+                            seen.add(sub)
+                # 다른 dict 키 (PEP 735 spec 외) 는 무시
+        return out
+
+    return {name: _resolve(name, ()) for name in groups}
+
+
 def _parse_python_requires(content: str) -> list[tuple[str, str]]:
     """install_requires 리스트에서 (name, version_spec) 추출."""
     result: list[tuple[str, str]] = []
@@ -184,21 +234,20 @@ def extract_python_deps(source_files: list[FullSourceFile]) -> DependencyExtract
                         result.dev_deps.append(Dependency(name=name, version_spec=spec, source_file=sf.path))
 
         # PEP 735 dependency-groups (table-level — top-level, NOT under [project])
-        # 형태: [dependency-groups] / dev = ["pytest", "ruff"] / docs = ["sphinx"]
-        # 각 group 의 list 아이템은 string (PEP 508) 또는 dict (include-group 등).
-        # 본 파서는 PEP 508 문자열만 추출 — include-group reference 는 다음 회차로 이월.
+        # 형태: [dependency-groups] / dev = ["pytest", "ruff", {include-group = "test"}]
+        # - 문자열 아이템: PEP 508 requirement
+        # - dict 아이템: {"include-group": "<other-group-name>"} — 재귀 expand
+        # 사이클 감지로 무한 재귀 방지.
         dep_groups = data.get("dependency-groups", {}) or {}
-        for group_name, items in dep_groups.items():
-            if not isinstance(items, list):
-                continue
-            for it in items:
-                if isinstance(it, str):
-                    for name, spec in _parse_python_requires(it):
+        if dep_groups:
+            expanded = _expand_pep735_groups(dep_groups)
+            for group_name, items in expanded.items():
+                for req_str in items:
+                    for name, spec in _parse_python_requires(req_str):
                         result.dev_deps.append(Dependency(
                             name=name, version_spec=spec,
                             source_file=f"{sf.path}::group:{group_name}",
                         ))
-                # dict (include-group) 는 의도적 미처리
 
     # 2) setup.py — AST 기반 (정규식이 놓치는 indirect 형태 처리).
     #   직접 형태:  setup(..., install_requires=["a>=1.0", "b"], ...)

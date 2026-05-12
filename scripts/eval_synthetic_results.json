@@ -15,7 +15,7 @@
         "taint_flows": 1,
         "llm_stub": "suspicious"
       },
-      "elapsed_s": 4.73,
+      "elapsed_s": 4.74,
       "note": "SP-001 + EXF-001"
     },
     {
@@ -1113,7 +1113,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.02,
+      "elapsed_s": 0.01,
       "note": "실제: pytorch nightly torchtriton incident"
     },
     {
@@ -1149,7 +1149,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.02,
+      "elapsed_s": 0.01,
       "note": "실제: shai-hulud worm"
     },
     {
@@ -2171,5 +2171,5 @@
     "f1": 1.0,
     "accuracy": 1.0
   },
-  "elapsed_total_s": 5.51
+  "elapsed_total_s": 5.45
 }
