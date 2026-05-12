@@ -1,0 +1,242 @@
+{
+  "mode": "stub",
+  "max_packages": 5,
+  "targets": [
+    {
+      "name": "requests",
+      "ecosystem": "PyPI",
+      "version": "2.34.0",
+      "n_deps": 5,
+      "verdicts": {
+        "HIGH_RISK": 2,
+        "CLEAN": 3
+      },
+      "elapsed_s": 22.94,
+      "results": [
+        {
+          "name": "charset_normalizer",
+          "version_spec": ">=2",
+          "resolved": "3.4.7",
+          "verdict": "HIGH_RISK",
+          "evidence_count": 14
+        },
+        {
+          "name": "idna",
+          "version_spec": ">=2.5",
+          "resolved": "3.14",
+          "verdict": "CLEAN",
+          "evidence_count": 18
+        },
+        {
+          "name": "urllib3",
+          "version_spec": ">=1.26",
+          "resolved": "2.7.0",
+          "verdict": "CLEAN",
+          "evidence_count": 44
+        },
+        {
+          "name": "certifi",
+          "version_spec": ">=2023.5.7",
+          "resolved": "2026.4.22",
+          "verdict": "CLEAN",
+          "evidence_count": 4
+        },
+        {
+          "name": "PySocks",
+          "version_spec": ">=1.5.6",
+          "resolved": "1.7.1",
+          "verdict": "HIGH_RISK",
+          "evidence_count": 8
+        }
+      ]
+    },
+    {
+      "name": "flask",
+      "ecosystem": "PyPI",
+      "version": "3.1.3",
+      "n_deps": 5,
+      "verdicts": {
+        "CLEAN": 4,
+        "HIGH_RISK": 1
+      },
+      "elapsed_s": 6.1,
+      "results": [
+        {
+          "name": "blinker",
+          "version_spec": ">=1.9.0",
+          "resolved": "1.9.0",
+          "verdict": "CLEAN",
+          "evidence_count": 0
+        },
+        {
+          "name": "click",
+          "version_spec": ">=8.1.3",
+          "resolved": "8.3.3",
+          "verdict": "HIGH_RISK",
+          "evidence_count": 23
+        },
+        {
+          "name": "importlib-metadata",
+          "version_spec": ">=3.6.0",
+          "resolved": "9.0.0",
+          "verdict": "CLEAN",
+          "evidence_count": 9
+        },
+        {
+          "name": "itsdangerous",
+          "version_spec": ">=2.2.0",
+          "resolved": "2.2.0",
+          "verdict": "CLEAN",
+          "evidence_count": 1
+        },
+        {
+          "name": "jinja2",
+          "version_spec": ">=3.1.2",
+          "resolved": "3.1.6",
+          "verdict": "CLEAN",
+          "evidence_count": 22
+        }
+      ]
+    },
+    {
+      "name": "boto3",
+      "ecosystem": "PyPI",
+      "version": "1.43.6",
+      "n_deps": 3,
+      "verdicts": {
+        "HIGH_RISK": 1,
+        "CLEAN": 2
+      },
+      "elapsed_s": 11.48,
+      "results": [
+        {
+          "name": "botocore",
+          "version_spec": ">=1.43.6",
+          "resolved": "1.43.6",
+          "verdict": "HIGH_RISK",
+          "evidence_count": 49
+        },
+        {
+          "name": "jmespath",
+          "version_spec": ">=0.7.1",
+          "resolved": "1.1.0",
+          "verdict": "CLEAN",
+          "evidence_count": 1
+        },
+        {
+          "name": "s3transfer",
+          "version_spec": ">=0.17.0",
+          "resolved": "0.17.0",
+          "verdict": "CLEAN",
+          "evidence_count": 5
+        }
+      ]
+    },
+    {
+      "name": "django",
+      "ecosystem": "PyPI",
+      "version": "6.0.5",
+      "n_deps": 5,
+      "verdicts": {
+        "CLEAN": 4,
+        "HIGH_RISK": 1
+      },
+      "elapsed_s": 5.29,
+      "results": [
+        {
+          "name": "asgiref",
+          "version_spec": ">=3.9.1",
+          "resolved": "3.11.1",
+          "verdict": "CLEAN",
+          "evidence_count": 2
+        },
+        {
+          "name": "sqlparse",
+          "version_spec": ">=0.5.0",
+          "resolved": "0.5.5",
+          "verdict": "CLEAN",
+          "evidence_count": 2
+        },
+        {
+          "name": "tzdata",
+          "version_spec": "",
+          "resolved": "2026.2",
+          "verdict": "CLEAN",
+          "evidence_count": 0
+        },
+        {
+          "name": "argon2-cffi",
+          "version_spec": ">=23.1.0",
+          "resolved": "25.1.0",
+          "verdict": "HIGH_RISK",
+          "evidence_count": 7
+        },
+        {
+          "name": "bcrypt",
+          "version_spec": ">=4.1.1",
+          "resolved": "5.0.0",
+          "verdict": "CLEAN",
+          "evidence_count": 3
+        }
+      ]
+    },
+    {
+      "name": "axios",
+      "ecosystem": "npm",
+      "version": "1.16.0",
+      "n_deps": 5,
+      "verdicts": {
+        "HIGH_RISK": 2,
+        "CLEAN": 3
+      },
+      "elapsed_s": 14.41,
+      "results": [
+        {
+          "name": "follow-redirects",
+          "version_spec": "^1.16.0",
+          "resolved": "1.16.0",
+          "verdict": "HIGH_RISK",
+          "evidence_count": 8
+        },
+        {
+          "name": "form-data",
+          "version_spec": "^4.0.5",
+          "resolved": "4.0.5",
+          "verdict": "HIGH_RISK",
+          "evidence_count": 5
+        },
+        {
+          "name": "proxy-from-env",
+          "version_spec": "^2.1.0",
+          "resolved": "2.1.0",
+          "verdict": "CLEAN",
+          "evidence_count": 0
+        },
+        {
+          "name": "@babel/core",
+          "version_spec": "^7.29.0",
+          "resolved": "7.29.0",
+          "verdict": "CLEAN",
+          "evidence_count": 44
+        },
+        {
+          "name": "@babel/preset-env",
+          "version_spec": "^7.29.2",
+          "resolved": "7.29.5",
+          "verdict": "CLEAN",
+          "evidence_count": 23
+        }
+      ]
+    },
+    {
+      "name": "lodash",
+      "ecosystem": "npm",
+      "version": "4.18.1",
+      "n_deps": 0,
+      "verdicts": {},
+      "elapsed_s": 0.0,
+      "results": []
+    }
+  ],
+  "elapsed_total_s": 63.37
+}

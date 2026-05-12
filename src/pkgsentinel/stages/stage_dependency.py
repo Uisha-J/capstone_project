@@ -695,6 +695,7 @@ def analyze_dependencies(
     max_packages: int = 30,
     attack_history_only: bool = True,
     resolve_ranges: bool = True,
+    dep_llm_mode: str = "stub",
 ) -> list[DependencyAnalysisResult]:
     """
     의존성 재귀 분석 — BFS 워크리스트, 사이클 감지, 패키지 수 cap.
@@ -722,7 +723,9 @@ def analyze_dependencies(
         from ..pipeline import run_pipeline
         for dep in (extraction.direct_deps + extraction.dev_deps)[:max_packages]:
             try:
-                sub_report = run_pipeline(dep.name, ecosystem, llm_mode="stub")
+                sub_report = run_pipeline(
+                    dep.name, ecosystem, llm_mode=dep_llm_mode,
+                )
                 results.append(DependencyAnalysisResult(
                     name=dep.name, version_spec=dep.version_spec,
                     resolved_version=sub_report.version,
