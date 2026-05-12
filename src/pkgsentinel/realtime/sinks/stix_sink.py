@@ -258,31 +258,21 @@ class STIXSink:
                 f.write(body)
             result["file"] = path
 
-        # 2) TAXII 2.1 push
+        # 2) TAXII 2.1 push — TaxiiSink 에 위임 (envelope wrap + 적합한 헤더).
         if self.taxii_url:
-            try:
-                req = urllib.request.Request(
-                    self.taxii_url,
-                    data=body, method="POST",
-                    headers={
-                        "Content-Type": "application/taxii+json;version=2.1",
-                        "Accept": "application/taxii+json;version=2.1",
-                        "User-Agent": "ai-slopsq/2.0",
-                    },
-                )
-                if self.taxii_user and self.taxii_pass:
-                    import base64
-                    cred = base64.b64encode(
-                        f"{self.taxii_user}:{self.taxii_pass}".encode()
-                    ).decode()
-                    req.add_header("Authorization", f"Basic {cred}")
-                with urllib.request.urlopen(req, timeout=self.timeout) as resp:
-                    result["taxii_status"] = resp.status
-            except urllib.error.HTTPError as e:
-                result["taxii_status"] = e.code
-                result["taxii_error"] = e.read()[:200].decode("utf-8", "replace")
-            except Exception as e:
-                result["taxii_error"] = str(e)
+            from .taxii_sink import TaxiiSink
+            tx = TaxiiSink(
+                collection_objects_url=self.taxii_url,
+                basic_user=self.taxii_user,
+                basic_pass=self.taxii_pass,
+                timeout=self.timeout,
+            )
+            tx_result = tx.post_bundle(bundle)
+            result["taxii_status"] = tx_result.get("status_code")
+            if not tx_result["ok"] and tx_result.get("error"):
+                result["taxii_error"] = tx_result["error"]
+            if tx_result.get("status"):
+                result["taxii_response"] = tx_result["status"]
 
         return result
 
