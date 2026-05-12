@@ -175,13 +175,30 @@ def extract_python_deps(source_files: list[FullSourceFile]) -> DependencyExtract
                 for name, spec in _parse_python_requires(dep):
                     result.direct_deps.append(Dependency(name=name, version_spec=spec, source_file=sf.path))
 
-        # optional-dependencies → dev
+        # optional-dependencies → dev (PEP 621)
         opt = project.get("optional-dependencies", {}) or {}
         for group_deps in opt.values():
             for dep in (group_deps or []):
                 if isinstance(dep, str):
                     for name, spec in _parse_python_requires(dep):
                         result.dev_deps.append(Dependency(name=name, version_spec=spec, source_file=sf.path))
+
+        # PEP 735 dependency-groups (table-level — top-level, NOT under [project])
+        # 형태: [dependency-groups] / dev = ["pytest", "ruff"] / docs = ["sphinx"]
+        # 각 group 의 list 아이템은 string (PEP 508) 또는 dict (include-group 등).
+        # 본 파서는 PEP 508 문자열만 추출 — include-group reference 는 다음 회차로 이월.
+        dep_groups = data.get("dependency-groups", {}) or {}
+        for group_name, items in dep_groups.items():
+            if not isinstance(items, list):
+                continue
+            for it in items:
+                if isinstance(it, str):
+                    for name, spec in _parse_python_requires(it):
+                        result.dev_deps.append(Dependency(
+                            name=name, version_spec=spec,
+                            source_file=f"{sf.path}::group:{group_name}",
+                        ))
+                # dict (include-group) 는 의도적 미처리
 
     # 2) setup.py — AST 기반 (정규식이 놓치는 indirect 형태 처리).
     #   직접 형태:  setup(..., install_requires=["a>=1.0", "b"], ...)

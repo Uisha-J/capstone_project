@@ -91,6 +91,57 @@ def test_setup_py_invalid_syntax():
     print("  OK fallback empty")
 
 
+def test_pep_735_dependency_groups():
+    """PEP 735 [dependency-groups] 블록 추출 — dev_deps 에 적재."""
+    print("\n== PEP 735 [dependency-groups] ==")
+    src = '''
+[project]
+name = "x"
+version = "0.1"
+dependencies = ["requests"]
+
+[dependency-groups]
+dev = ["pytest>=7", "ruff"]
+docs = ["sphinx>=5"]
+'''
+    sources = [_sf("x-0.1/pyproject.toml", src)]
+    de = extract_python_deps(sources)
+    direct_names = [d.name for d in de.direct_deps]
+    dev_names = [d.name for d in de.dev_deps]
+    assert "requests" in direct_names
+    # PEP 735 group 의 deps → dev_deps
+    for n in ("pytest", "ruff", "sphinx"):
+        assert n in dev_names, f"missing {n} in dev={dev_names}"
+    # source_file 에 group 이름 노출
+    for d in de.dev_deps:
+        if d.name == "pytest":
+            assert "group:dev" in d.source_file
+        if d.name == "sphinx":
+            assert "group:docs" in d.source_file
+    print(f"  OK direct={direct_names} dev={dev_names}")
+
+
+def test_pep_735_with_optional_dependencies_both():
+    """PEP 621 optional-dependencies 와 PEP 735 dependency-groups 동시 존재."""
+    print("\n== PEP 621 opt + PEP 735 group 공존 ==")
+    src = '''
+[project]
+name = "x"
+version = "0.1"
+dependencies = []
+optional-dependencies.test = ["pytest"]
+
+[dependency-groups]
+lint = ["ruff"]
+'''
+    sources = [_sf("x-0.1/pyproject.toml", src)]
+    de = extract_python_deps(sources)
+    dev_names = [d.name for d in de.dev_deps]
+    assert "pytest" in dev_names
+    assert "ruff" in dev_names
+    print(f"  OK dev={dev_names}")
+
+
 def test_e2e_boto3_pattern():
     """extract_python_deps 의 end-to-end — setup.py 만 있는 boto3-like 패키지."""
     print("\n== E2E: boto3-like setup.py 만 ==")
@@ -114,6 +165,8 @@ def main():
         test_setup_py_concat_list,
         test_setup_py_no_install_requires,
         test_setup_py_invalid_syntax,
+        test_pep_735_dependency_groups,
+        test_pep_735_with_optional_dependencies_both,
         test_e2e_boto3_pattern,
     ]
     failed = 0
