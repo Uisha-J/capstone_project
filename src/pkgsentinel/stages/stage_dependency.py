@@ -285,21 +285,24 @@ def _extract_pinned_version(spec: str | None) -> str | None:
 
 # ─────────────── range spec resolution ───────────────
 
+# 캐시: latest 만 ({name, eco} → str|None), all_versions ({name, eco} → list[str]|None)
 _REGISTRY_LATEST_CACHE: dict[tuple[str, str], str | None] = {}
+_REGISTRY_VERSIONS_CACHE: dict[tuple[str, str], list[str] | None] = {}
 
 
-def _fetch_latest_version(name: str, ecosystem) -> str | None:
-    """레지스트리에서 최신 버전 한 개만 가져오기.
+def _fetch_registry_versions(
+    name: str, ecosystem,
+) -> tuple[str | None, list[str]]:
+    """레지스트리에서 (latest, all_versions) 한번에 조회.
 
-    npm:   https://registry.npmjs.org/<name>  → dist-tags.latest
-    PyPI:  https://pypi.org/pypi/<name>/json  → info.version
-
-    네트워크 실패는 None — caller 가 보수적으로 fallback.
+    npm:   GET /<name>  → dist-tags.latest + list(versions.keys())
+    PyPI:  GET /pypi/<name>/json  → info.version + list(releases.keys())
     """
     from ..schema import Ecosystem
     key = (name.lower(), ecosystem.value)
-    if key in _REGISTRY_LATEST_CACHE:
-        return _REGISTRY_LATEST_CACHE[key]
+
+    if key in _REGISTRY_VERSIONS_CACHE:
+        return _REGISTRY_LATEST_CACHE.get(key), _REGISTRY_VERSIONS_CACHE[key] or []
 
     import json as _json
     import urllib.error
@@ -311,7 +314,8 @@ def _fetch_latest_version(name: str, ecosystem) -> str | None:
         url = f"https://pypi.org/pypi/{name}/json"
     else:
         _REGISTRY_LATEST_CACHE[key] = None
-        return None
+        _REGISTRY_VERSIONS_CACHE[key] = []
+        return None, []
 
     try:
         req = urllib.request.Request(
@@ -319,20 +323,168 @@ def _fetch_latest_version(name: str, ecosystem) -> str | None:
         )
         with urllib.request.urlopen(req, timeout=8) as resp:
             data = _json.loads(resp.read().decode("utf-8"))
-    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError):
-        _REGISTRY_LATEST_CACHE[key] = None
-        return None
     except Exception:
         _REGISTRY_LATEST_CACHE[key] = None
-        return None
+        _REGISTRY_VERSIONS_CACHE[key] = []
+        return None, []
 
     if ecosystem == Ecosystem.NPM:
         latest = (data.get("dist-tags") or {}).get("latest")
+        versions = list((data.get("versions") or {}).keys())
     else:  # PyPI
         latest = (data.get("info") or {}).get("version")
+        versions = list((data.get("releases") or {}).keys())
 
     _REGISTRY_LATEST_CACHE[key] = latest
+    _REGISTRY_VERSIONS_CACHE[key] = versions
+    return latest, versions
+
+
+def _fetch_latest_version(name: str, ecosystem) -> str | None:
+    """레지스트리에서 최신 버전 한 개만. 캐시 일관성용 _fetch_registry_versions 호출."""
+    latest, _ = _fetch_registry_versions(name, ecosystem)
     return latest
+
+
+# ── PEP 440 (PyPI) 매칭 ──
+
+def _pypi_max_satisfying(spec: str, versions: list[str]) -> str | None:
+    """PyPI 사양 spec 을 만족하는 가장 큰 버전 반환. 불가능 시 None."""
+    try:
+        from packaging.specifiers import SpecifierSet
+        from packaging.version import InvalidVersion, Version
+    except ImportError:
+        return None
+    spec = spec.strip()
+    if not spec:
+        return None
+    # `2.4.0` (no operator) — 1) 단일 fixed 로 처리. spec 에 operator 없으면 == 추가
+    if spec[0] not in "<>=!~":
+        spec = "==" + spec
+    try:
+        sset = SpecifierSet(spec, prereleases=False)
+    except Exception:
+        return None
+    candidates: list[Version] = []
+    for v_str in versions:
+        try:
+            v = Version(v_str)
+        except InvalidVersion:
+            continue
+        if v in sset:
+            candidates.append(v)
+    if not candidates:
+        return None
+    return str(max(candidates))
+
+
+# ── npm semver 매칭 (소규모 in-house 파서) ──
+
+_SEMVER_RE = re.compile(
+    r"^(\d+)\.(\d+)\.(\d+)(?:[-+].*)?$",
+)
+
+
+def _parse_semver(v: str) -> tuple[int, int, int] | None:
+    m = _SEMVER_RE.match(v.strip())
+    if not m:
+        return None
+    return int(m.group(1)), int(m.group(2)), int(m.group(3))
+
+
+def _semver_satisfies(version: str, spec: str) -> bool | None:
+    """단순 npm spec 충족 검사. 지원:
+      "*", "x", ""        — 모두 통과
+      "1.2.3"             — equal
+      "^1.2.3"            — >=1.2.3 <2.0.0 (X>0) / >=0.1.2 <0.2.0 (X==0,Y>0)
+      "~1.2.3"            — >=1.2.3 <1.3.0
+      ">=1.2.3" "<2.0.0"  "<=", ">"
+      "1.2.x" / "1.x"     — 마지막 x 는 any
+      "A || B"            — 합집합
+    실패 시 None.
+    """
+    v = _parse_semver(version)
+    if v is None:
+        return None
+    spec = (spec or "").strip()
+    if spec in ("", "*", "x", "X", "latest"):
+        return True
+    if "||" in spec:
+        for part in spec.split("||"):
+            r = _semver_satisfies(version, part.strip())
+            if r is True:
+                return True
+        return False
+    # ^X.Y.Z
+    if spec.startswith("^"):
+        b = _parse_semver(spec[1:])
+        if not b:
+            return None
+        if b[0] > 0:
+            return v >= b and v[0] == b[0]
+        if b[1] > 0:
+            return v >= b and v[0] == 0 and v[1] == b[1]
+        return v >= b and v[0] == 0 and v[1] == 0
+    # ~X.Y.Z
+    if spec.startswith("~"):
+        b = _parse_semver(spec[1:])
+        if not b:
+            return None
+        return v >= b and v[0] == b[0] and v[1] == b[1]
+    # >= > <= <
+    for op in (">=", "<=", ">", "<", "="):
+        if spec.startswith(op):
+            b = _parse_semver(spec[len(op):])
+            if not b:
+                return None
+            return {
+                ">=": v >= b, ">": v > b, "<=": v <= b, "<": v < b, "=": v == b,
+            }[op]
+    # X.Y.x / X.x
+    if ".x" in spec.lower():
+        parts = spec.lower().split(".")
+        # 마지막 x 의 위치 비교
+        try:
+            if len(parts) >= 2 and parts[-1] == "x" and parts[-2].isdigit():
+                if len(parts) == 3 and parts[0].isdigit():
+                    return v[0] == int(parts[0]) and v[1] == int(parts[1])
+                if len(parts) == 2 and parts[0].isdigit():
+                    return v[0] == int(parts[0])
+        except ValueError:
+            return None
+    # 단일 fixed
+    b = _parse_semver(spec)
+    if b is not None:
+        return v == b
+    return None
+
+
+def _npm_max_satisfying(spec: str, versions: list[str]) -> str | None:
+    """semver spec 만족 최대 버전. 충족 불가 시 None."""
+    candidates: list[tuple[tuple[int, int, int], str]] = []
+    for v_str in versions:
+        ok = _semver_satisfies(v_str, spec)
+        if ok is True:
+            parsed = _parse_semver(v_str)
+            if parsed:
+                # prerelease (suffix) 가 있는 경우는 후순위 — 단순화
+                candidates.append((parsed, v_str))
+    if not candidates:
+        return None
+    candidates.sort(key=lambda t: t[0])
+    return candidates[-1][1]
+
+
+def _max_satisfying(spec: str | None, versions: list[str], ecosystem) -> str | None:
+    """range spec 의 max-satisfying 을 골라 반환. 실패 시 None."""
+    from ..schema import Ecosystem
+    if not spec or not versions:
+        return None
+    if ecosystem == Ecosystem.PYPI:
+        return _pypi_max_satisfying(spec, versions)
+    if ecosystem == Ecosystem.NPM:
+        return _npm_max_satisfying(spec, versions)
+    return None
 
 
 def _resolve_dep_version(
@@ -345,18 +497,30 @@ def _resolve_dep_version(
     """version_spec 을 concrete 버전으로 해석.
 
     1) pinned spec ("1.2.3" / "==1.2.3") → 그대로
-    2) fetch_registry=True 면 registry latest 조회
-    3) 둘 다 실패 → None (caller 가 name-only 매칭)
+    2) fetch_registry=True 면 registry 의 *전체 versions 중 spec 만족 최대* 선택
+       - 만족하는 게 없으면 latest 로 fallback (잘못된 매칭보다는 보수적 정확)
+       - registry 호출 실패 → None (caller 가 name-only)
+    3) 둘 다 실패 → None
 
-    Note: latest 가 spec 범위 (`^5.1.1` 등) 를 만족하지 않을 수 있으나, 인기 패키지
-    대부분 사용자 latest 채택 → 실용 정확도 높음. 본 단순화는 의도적.
+    이전 단순화 (registry latest 무조건) 가 spec 범위 위반을 무시하던 버그 해소.
     """
     pinned = _extract_pinned_version(spec)
     if pinned:
         return pinned
     if not fetch_registry:
         return None
-    return _fetch_latest_version(name, ecosystem)
+
+    latest, versions = _fetch_registry_versions(name, ecosystem)
+    if not versions:
+        return latest  # 버전 목록 조회 실패 시 latest 만이라도
+
+    # 1차: spec 만족 최대
+    if spec:
+        sat = _max_satisfying(spec, versions, ecosystem)
+        if sat:
+            return sat
+    # 2차: spec 만족 없으면 latest (보수적; latest 가 spec 안의 안전 버전일 수도)
+    return latest
 
 
 @dataclass

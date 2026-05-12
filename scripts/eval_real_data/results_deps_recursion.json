@@ -12,8 +12,8 @@
       "info": 0,
       "clean": 3,
       "skip": 0,
-      "dep_time_s": 5.49,
-      "total_time_s": 5.64
+      "dep_time_s": 4.6,
+      "total_time_s": 4.76
     },
     {
       "name": "flask",
@@ -27,8 +27,8 @@
       "info": 0,
       "clean": 5,
       "skip": 0,
-      "dep_time_s": 3.37,
-      "total_time_s": 3.57
+      "dep_time_s": 1.47,
+      "total_time_s": 1.67
     },
     {
       "name": "pandas",
@@ -42,8 +42,8 @@
       "info": 0,
       "clean": 18,
       "skip": 0,
-      "dep_time_s": 9.7,
-      "total_time_s": 10.74
+      "dep_time_s": 5.46,
+      "total_time_s": 6.33
     },
     {
       "name": "boto3",
@@ -57,8 +57,8 @@
       "info": 0,
       "clean": 1,
       "skip": 0,
-      "dep_time_s": 1.27,
-      "total_time_s": 1.84
+      "dep_time_s": 0.84,
+      "total_time_s": 1.22
     },
     {
       "name": "react",
@@ -73,7 +73,7 @@
       "clean": 0,
       "skip": 0,
       "dep_time_s": 0.0,
-      "total_time_s": 0.73
+      "total_time_s": 0.75
     },
     {
       "name": "lodash",
@@ -88,7 +88,7 @@
       "clean": 0,
       "skip": 0,
       "dep_time_s": 0.0,
-      "total_time_s": 0.24
+      "total_time_s": 0.23
     },
     {
       "name": "webpack",
@@ -102,8 +102,8 @@
       "info": 1,
       "clean": 24,
       "skip": 0,
-      "dep_time_s": 74.38,
-      "total_time_s": 75.14
+      "dep_time_s": 77.08,
+      "total_time_s": 78.07
     },
     {
       "name": "axios",
@@ -117,8 +117,8 @@
       "info": 1,
       "clean": 18,
       "skip": 0,
-      "dep_time_s": 64.3,
-      "total_time_s": 64.57
+      "dep_time_s": 67.64,
+      "total_time_s": 67.93
     },
     {
       "name": "typescript",
@@ -127,13 +127,13 @@
       "direct_deps": 0,
       "dev_deps": 42,
       "deps_analyzed": 30,
-      "mal": 0,
+      "mal": 1,
       "sus": 10,
-      "info": 1,
+      "info": 0,
       "clean": 19,
       "skip": 0,
-      "dep_time_s": 55.09,
-      "total_time_s": 57.11
+      "dep_time_s": 57.55,
+      "total_time_s": 59.6
     },
     {
       "name": "django",
@@ -147,13 +147,13 @@
       "info": 0,
       "clean": 4,
       "skip": 0,
-      "dep_time_s": 1.13,
-      "total_time_s": 3.84
+      "dep_time_s": 0.55,
+      "total_time_s": 2.67
     }
   ],
   "summary": {
     "n_ok": 10,
     "n_total": 10,
-    "elapsed_total_s": 223.42
+    "elapsed_total_s": 223.21
   }
 }
