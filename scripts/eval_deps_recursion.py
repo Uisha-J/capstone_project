@@ -75,7 +75,7 @@ def main():
             t_dep = time.time()
             dep_results = analyze_dependencies(
                 de, eco,
-                max_depth=1, max_packages=30,
+                max_depth=2, max_packages=80,
                 attack_history_only=True,
             )
             elapsed_dep = time.time() - t_dep
@@ -89,7 +89,9 @@ def main():
                   f"CLEAN={n_clean}  SKIP={n_skip}")
             for r in dep_results:
                 if r.verdict in ("MALICIOUS", "SUSPICIOUS", "INFO"):
-                    print(f"      ! {r.name} ({r.verdict}): {r.reason[:80]}")
+                    path_s = " <- ".join(reversed(r.path)) if r.path else "(direct)"
+                    print(f"      ! d{r.depth} {r.name} ({r.verdict}) "
+                          f"via [{path_s}]: {r.reason[:60]}")
 
             rows.append({
                 "name": name, "ecosystem": eco.value,

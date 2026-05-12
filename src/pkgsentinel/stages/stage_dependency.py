@@ -346,6 +346,67 @@ def _fetch_latest_version(name: str, ecosystem) -> str | None:
     return latest
 
 
+# 캐시: (name, eco, version) → [(child_name, child_spec), ...]
+_REGISTRY_DEPS_CACHE: dict[tuple[str, str, str], list[tuple[str, str]]] = {}
+
+
+def _fetch_dep_dependencies(
+    name: str, version: str, ecosystem,
+) -> list[tuple[str, str]]:
+    """레지스트리에서 *해당 버전의* 의존성 목록을 가져온다.
+
+    PyPI:  /pypi/<name>/<version>/json → info.requires_dist (PEP 508 list)
+    npm:   /<name> → versions[<version>].dependencies (dict)
+
+    환경 마커 (`; python_version>='3.10'`) 와 extras 는 제거. 실패 시 [].
+    """
+    from ..schema import Ecosystem
+    key = (name.lower(), ecosystem.value, version)
+    if key in _REGISTRY_DEPS_CACHE:
+        return _REGISTRY_DEPS_CACHE[key]
+
+    import json as _json
+    import urllib.request
+
+    children: list[tuple[str, str]] = []
+    try:
+        if ecosystem == Ecosystem.PYPI:
+            url = f"https://pypi.org/pypi/{name}/{version}/json"
+            req = urllib.request.Request(
+                url, headers={"User-Agent": "pkgsentinel-deps/1.0"},
+            )
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                data = _json.loads(resp.read().decode("utf-8"))
+            reqs = ((data.get("info") or {}).get("requires_dist") or [])
+            for req_line in reqs:
+                if not isinstance(req_line, str):
+                    continue
+                # 환경 마커 제거 (";" 이후)
+                core = req_line.split(";", 1)[0].strip()
+                if not core:
+                    continue
+                # 첫 매칭: 이름 + spec
+                for cname, cspec in _parse_python_requires(core):
+                    children.append((cname, cspec))
+        elif ecosystem == Ecosystem.NPM:
+            url = f"https://registry.npmjs.org/{name}"
+            req = urllib.request.Request(
+                url, headers={"User-Agent": "pkgsentinel-deps/1.0"},
+            )
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                data = _json.loads(resp.read().decode("utf-8"))
+            ver_block = (data.get("versions") or {}).get(version) or {}
+            deps = (ver_block.get("dependencies") or {})
+            for cname, cspec in deps.items():
+                children.append((cname, str(cspec)))
+    except Exception:
+        # 네트워크/파싱 실패 시 빈 리스트 — caller 가 dep 의 dep 없는 leaf 로 취급
+        pass
+
+    _REGISTRY_DEPS_CACHE[key] = children
+    return children
+
+
 # ── PEP 440 (PyPI) 매칭 ──
 
 def _pypi_max_satisfying(spec: str, versions: list[str]) -> str | None:
@@ -529,9 +590,85 @@ class DependencyAnalysisResult:
     name: str
     version_spec: str
     resolved_version: str | None
-    verdict: str                # "MALICIOUS", "HIGH_RISK", "SUSPICIOUS", "CLEAN", "CANNOT_ANALYZE", "SKIPPED"
+    verdict: str                # "MALICIOUS", "HIGH_RISK", "SUSPICIOUS", "INFO", "CLEAN", "CANNOT_ANALYZE", "SKIPPED"
     reason: str
     evidence_count: int = 0
+    depth: int = 1              # 1=직접 dep, 2=dep-of-dep, ...
+    # parent chain — ["webpack", "eslint-scope", ...]. 깊이 1 면 빈 리스트.
+    path: list[str] = field(default_factory=list)
+
+
+def _analyze_one_dep_history(
+    dep_name: str,
+    dep_spec: str,
+    ecosystem,
+    depth: int,
+    path: list[str],
+    *,
+    resolve_ranges: bool,
+):
+    """단일 dep 의 attack_history 매칭 + DependencyAnalysisResult 생성.
+
+    추가로 (resolved_version, hist) 도 반환 — 재귀 caller 가 dep-of-dep
+    수집에 활용.
+    """
+    from .stage0b_attack_history import check_attack_history
+
+    resolved_version = _resolve_dep_version(
+        dep_name, dep_spec, ecosystem, fetch_registry=resolve_ranges,
+    )
+    hist = check_attack_history(dep_name, ecosystem, version=resolved_version)
+
+    if hist.error:
+        return DependencyAnalysisResult(
+            name=dep_name, version_spec=dep_spec,
+            resolved_version=None,
+            verdict="SKIPPED",
+            reason=f"attack index unavailable: {hist.error}",
+            depth=depth, path=list(path),
+        ), resolved_version, hist
+
+    if hist.exact_matches:
+        pat = hist.exact_matches[0].pattern
+        r = DependencyAnalysisResult(
+            name=dep_name, version_spec=dep_spec,
+            resolved_version=resolved_version,
+            verdict="MALICIOUS",
+            reason=(
+                f"dependency name is on the malicious list "
+                f"({pat.advisory_id}): {pat.summary[:100]}"
+            ),
+            evidence_count=1, depth=depth, path=list(path),
+        )
+    elif hist.historical_name_matches:
+        top = hist.historical_name_matches[0]
+        r = DependencyAnalysisResult(
+            name=dep_name, version_spec=dep_spec,
+            resolved_version=resolved_version,
+            verdict="INFO",
+            reason=top.reason,
+            evidence_count=len(hist.historical_name_matches),
+            depth=depth, path=list(path),
+        )
+    elif hist.typosquat_candidates:
+        top = hist.typosquat_candidates[0]
+        r = DependencyAnalysisResult(
+            name=dep_name, version_spec=dep_spec,
+            resolved_version=resolved_version,
+            verdict="SUSPICIOUS",
+            reason=top.reason,
+            evidence_count=len(hist.typosquat_candidates),
+            depth=depth, path=list(path),
+        )
+    else:
+        r = DependencyAnalysisResult(
+            name=dep_name, version_spec=dep_spec,
+            resolved_version=resolved_version,
+            verdict="CLEAN",
+            reason="no attack history match",
+            depth=depth, path=list(path),
+        )
+    return r, resolved_version, hist
 
 
 def analyze_dependencies(
@@ -543,107 +680,104 @@ def analyze_dependencies(
     resolve_ranges: bool = True,
 ) -> list[DependencyAnalysisResult]:
     """
-    의존성 재귀 분석.
+    의존성 재귀 분석 — BFS 워크리스트, 사이클 감지, 패키지 수 cap.
 
     attack_history_only=True (기본):
-        의존성에 대해서는 지식 DB 공격 이력만 빠르게 조회 (성능).
+        의존성에 대해서는 지식 DB 공격 이력만 빠르게 조회.
+        max_depth >= 2 면 *dep 의 dep* 까지 동일 매처로 재귀.
+        event-stream → flatmap-stream 류 supply-chain 침해는 깊이 2가 정확히
+        그 사건 형태.
+
     attack_history_only=False:
-        각 의존성을 완전한 파이프라인으로 분석 (느림, 깊이 1 권장).
+        직접 deps 만 완전한 파이프라인 재귀 (단일 holm); 깊이 2+ 미지원
+        (비용 폭증 방지). 직접 deps 만 분석.
 
     resolve_ranges=True (기본):
-        version_spec 이 range (`^5.1.1` 등) 면 registry latest 로 해석해
-        version-aware 매칭에 활용. 비활성화 시 pinned 만 추출.
+        version_spec 이 range (`^5.1.1` 등) 면 PEP 440 / semver max-satisfying
+        으로 해석. registry 호출 발생.
+
+    cycle 감지: (name.lower(), ecosystem.value) 단위 visited 집합.
+    max_packages: BFS 전체 dep 수 cap. 깊이 ≥ 2 에서 폭발 방지.
     """
-    from .stage0b_attack_history import check_attack_history
-
-    results: list[DependencyAnalysisResult] = []
-    all_deps = extraction.direct_deps + extraction.dev_deps
-
-    for dep in all_deps[:max_packages]:
-        try:
-            if attack_history_only:
-                # dep.version_spec 이 pinned 면 직접, range 면 registry latest 로 해석.
-                # 둘 다 실패 시 None → name-only 매칭 (보수적).
-                resolved_version = _resolve_dep_version(
-                    dep.name, dep.version_spec, ecosystem,
-                    fetch_registry=resolve_ranges,
-                )
-                hist = check_attack_history(
-                    dep.name, ecosystem, version=resolved_version,
-                )
-                if hist.error:
-                    results.append(DependencyAnalysisResult(
-                        name=dep.name,
-                        version_spec=dep.version_spec,
-                        resolved_version=None,
-                        verdict="SKIPPED",
-                        reason=f"attack index unavailable: {hist.error}",
-                    ))
-                    continue
-
-                if hist.exact_matches:
-                    pat = hist.exact_matches[0].pattern
-                    results.append(DependencyAnalysisResult(
-                        name=dep.name,
-                        version_spec=dep.version_spec,
-                        resolved_version=resolved_version,
-                        verdict="MALICIOUS",
-                        reason=(
-                            f"dependency name is on the malicious list "
-                            f"({pat.advisory_id}): {pat.summary[:100]}"
-                        ),
-                        evidence_count=1,
-                    ))
-                elif hist.historical_name_matches:
-                    # 이름은 advisory 에 있지만 *조회 버전이 affected_versions
-                    # 에 없음* — chalk@5.6.2 가 chalk@5.6.1 advisory 에 매칭되는
-                    # 류. INFO 로 분류 (CLEAN 과 SUSPICIOUS 사이).
-                    top = hist.historical_name_matches[0]
-                    results.append(DependencyAnalysisResult(
-                        name=dep.name,
-                        version_spec=dep.version_spec,
-                        resolved_version=resolved_version,
-                        verdict="INFO",
-                        reason=top.reason,
-                        evidence_count=len(hist.historical_name_matches),
-                    ))
-                elif hist.typosquat_candidates:
-                    top = hist.typosquat_candidates[0]
-                    results.append(DependencyAnalysisResult(
-                        name=dep.name,
-                        version_spec=dep.version_spec,
-                        resolved_version=resolved_version,
-                        verdict="SUSPICIOUS",
-                        reason=top.reason,
-                        evidence_count=len(hist.typosquat_candidates),
-                    ))
-                else:
-                    results.append(DependencyAnalysisResult(
-                        name=dep.name,
-                        version_spec=dep.version_spec,
-                        resolved_version=resolved_version,
-                        verdict="CLEAN",
-                        reason="no attack history match",
-                    ))
-            else:
-                # 완전한 파이프라인 재귀 (Phase 후반에 옵션으로)
-                from ..pipeline import run_pipeline
+    # ───── 비 history 모드는 기존 단순화 유지 (재귀 없음, 직접 deps 만) ─────
+    if not attack_history_only:
+        results: list[DependencyAnalysisResult] = []
+        from ..pipeline import run_pipeline
+        for dep in (extraction.direct_deps + extraction.dev_deps)[:max_packages]:
+            try:
                 sub_report = run_pipeline(dep.name, ecosystem, llm_mode="stub")
                 results.append(DependencyAnalysisResult(
-                    name=dep.name,
-                    version_spec=dep.version_spec,
+                    name=dep.name, version_spec=dep.version_spec,
                     resolved_version=sub_report.version,
                     verdict=sub_report.verdict.value,
                     reason=f"{len(sub_report.evidence)} evidence item(s)",
                     evidence_count=len(sub_report.evidence),
+                    depth=1,
                 ))
+            except Exception as e:
+                results.append(DependencyAnalysisResult(
+                    name=dep.name, version_spec=dep.version_spec,
+                    resolved_version=None, verdict="SKIPPED",
+                    reason=f"error: {e}", depth=1,
+                ))
+        return results
+
+    # ───── attack_history_only=True 의 BFS 재귀 ─────
+    results: list[DependencyAnalysisResult] = []
+    # visited: 동일 (name, eco) 한 번만 — 사이클/중복 방지
+    visited: set[tuple[str, str]] = set()
+    # worklist: (Dependency, current_depth, parent_path)
+    worklist: list[tuple[Dependency, int, list[str]]] = [
+        (d, 1, []) for d in (extraction.direct_deps + extraction.dev_deps)
+    ]
+
+    while worklist and len(results) < max_packages:
+        dep, depth, parent_path = worklist.pop(0)
+        key = (dep.name.lower(), ecosystem.value)
+        if key in visited:
+            continue
+        visited.add(key)
+
+        try:
+            r, resolved_version, hist = _analyze_one_dep_history(
+                dep.name, dep.version_spec, ecosystem,
+                depth=depth, path=parent_path,
+                resolve_ranges=resolve_ranges,
+            )
         except Exception as e:
             results.append(DependencyAnalysisResult(
-                name=dep.name,
-                version_spec=dep.version_spec,
-                resolved_version=None,
-                verdict="SKIPPED",
+                name=dep.name, version_spec=dep.version_spec,
+                resolved_version=None, verdict="SKIPPED",
                 reason=f"error: {e}",
+                depth=depth, path=list(parent_path),
+            ))
+            continue
+
+        results.append(r)
+
+        # 깊이 한도에 도달했거나 resolved_version 이 없으면 자식 확장 X
+        if depth >= max_depth or resolved_version is None:
+            continue
+
+        # dep 의 dep 가져와서 worklist enqueue (사이클은 visited 가 막음)
+        next_path = parent_path + [dep.name]
+        try:
+            children = _fetch_dep_dependencies(
+                dep.name, resolved_version, ecosystem,
+            )
+        except Exception:
+            children = []
+        for child_name, child_spec in children:
+            ck = (child_name.lower(), ecosystem.value)
+            if ck in visited:
+                continue
+            worklist.append((
+                Dependency(
+                    name=child_name, version_spec=child_spec,
+                    source_file=f"<transitive:{r.name}@{resolved_version}>",
+                ),
+                depth + 1,
+                next_path,
             ))
 
     return results
