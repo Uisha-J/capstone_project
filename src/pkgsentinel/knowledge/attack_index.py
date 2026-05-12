@@ -177,17 +177,35 @@ def _levenshtein(a: str, b: str) -> int:
 def get_index() -> AttackPatternIndex:
     cache_dir = Path(__file__).parent / "cache"
     all_patterns: list[AttackPattern] = []
+    seen_ids: set[str] = set()
 
-    for fn in ("osv_pypi.json", "osv_npm.json"):
+    # 1) OSV (PyPI / npm) — 광범위, 자동수집된 advisory
+    # 2) OSSF malicious-packages — 큐레이션된, 라벨 정확도 높음
+    # 두 채널 모두 OSV 포맷이라 같은 AttackPattern. advisory_id 로 dedup.
+    cache_files = [
+        "osv_pypi.json",
+        "osv_npm.json",
+        "ossf_malicious_pypi.json",
+        "ossf_malicious_npm.json",
+    ]
+    for fn in cache_files:
         path = cache_dir / fn
-        if path.exists():
-            all_patterns.extend(load_patterns(path))
+        if not path.exists():
+            continue
+        for p in load_patterns(path):
+            # advisory_id 충돌 시 OSV 가 먼저 로드 → OSSF dedup. 데이터 손실 X
+            # (OSSF 는 OSV 와 거의 같은 advisory 를 재배포; 메타데이터만 다소 풍부)
+            if p.advisory_id in seen_ids:
+                continue
+            seen_ids.add(p.advisory_id)
+            all_patterns.append(p)
 
     if not all_patterns:
         raise FileNotFoundError(
-            "OSV 캐시가 없습니다. 먼저 수집하세요:\n"
-            "  python -m detector.knowledge.osv PyPI\n"
-            "  python -m detector.knowledge.osv npm"
+            "위협 feed 캐시가 없습니다. 먼저 수집하세요:\n"
+            "  python -m pkgsentinel.knowledge.osv PyPI\n"
+            "  python -m pkgsentinel.knowledge.osv npm\n"
+            "  python -m pkgsentinel.knowledge.ossf_malicious  (선택)\n"
         )
 
     return AttackPatternIndex(all_patterns)
