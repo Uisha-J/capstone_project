@@ -66,7 +66,6 @@ def test_basic_structure():
     assert len(bom["components"]) == 1
     assert len(bom["vulnerabilities"]) == 1
     print(f"  OK - purl={bom['components'][0]['purl']}")
-    return True
 
 
 def test_state_mapping():
@@ -86,7 +85,7 @@ def test_state_mapping():
         print(f"  [{status}] {v.value:<14} llm={llm_v.value:<11} -> {actual}")
         if actual != expected:
             ok = False
-    return ok
+    assert ok
 
 
 def test_metadata_properties():
@@ -109,7 +108,7 @@ def test_metadata_properties():
             ok = False
         else:
             print(f"  OK  {k} = {v}")
-    return ok
+    assert ok
 
 
 def test_json_serializable():
@@ -119,7 +118,7 @@ def test_json_serializable():
     parsed = json.loads(s)  # round-trip 가능해야 함
     print(f"  json size: {len(s)} chars")
     print(f"  vulnerabilities: {len(parsed['vulnerabilities'])}")
-    return parsed["vulnerabilities"][0]["id"] == "T1041"
+    assert parsed["vulnerabilities"][0]["id"] == "T1041"
 
 
 def test_purl_npm():
@@ -130,17 +129,26 @@ def test_purl_npm():
     bom = to_cyclonedx(rep)
     purl = bom["components"][0]["purl"]
     print(f"  purl: {purl}")
-    return purl == "pkg:npm/chalk@5.0.0"
+    assert purl == "pkg:npm/chalk@5.0.0"
 
 
 def main():
-    ok = True
-    ok &= test_basic_structure()
-    ok &= test_state_mapping()
-    ok &= test_metadata_properties()
-    ok &= test_json_serializable()
-    ok &= test_purl_npm()
-    print("\n" + ("ALL OK" if ok else "FAILED"))
+    tests = [
+        test_basic_structure,
+        test_state_mapping,
+        test_metadata_properties,
+        test_json_serializable,
+        test_purl_npm,
+    ]
+    failed = 0
+    for t in tests:
+        try:
+            t()
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            failed += 1
+    print("\n" + ("ALL OK" if failed == 0 else f"FAILED: {failed}"))
 
 
 if __name__ == "__main__":

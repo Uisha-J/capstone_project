@@ -47,7 +47,6 @@ def test_db_is_encrypted():
     head = TEST_DB_PATH.read_bytes()[:16]
     assert not head.startswith(b"SQLite format"), "DB header looks like plaintext SQLite"
     print(f"  OK header={head.hex()}, NOT plaintext SQLite")
-    return True
 
 
 def test_wrong_key_rejected():
@@ -55,13 +54,10 @@ def test_wrong_key_rejected():
     db1 = _fresh_db()
     db1.close()
     # 새 ThreatDB 인스턴스 with wrong key
-    try:
+    import pytest
+    with pytest.raises(RuntimeError) as ei:
         ThreatDB(TEST_DB_PATH, passphrase="wrong-key-zzz")
-        print("  FAIL: opened with wrong key")
-        return False
-    except RuntimeError as e:
-        print(f"  OK rejected: {str(e)[:80]}")
-        return True
+    print(f"  OK rejected: {str(ei.value)[:80]}")
 
 
 # ─────────────── 2. 무결성 검증 ───────────────
@@ -80,7 +76,6 @@ def test_merkle_tamper_detection():
 
     assert root != root2
     print(f"  OK root1={root[:16]}.., root2={root2[:16]}.. (changed)")
-    return True
 
 
 def test_row_hmac_tamper_detection():
@@ -94,7 +89,6 @@ def test_row_hmac_tamper_detection():
     row["verdict"] = "MALICIOUS"  # 변조
     assert not rh.verify(row, sig)
     print("  OK verify rejects modified row")
-    return True
 
 
 def test_integrity_mode_ranking():
@@ -112,7 +106,6 @@ def test_integrity_mode_ranking():
     ok, why = chk_strict.matches(cached_fast, fresh_strict)
     assert not ok, f"weaker cache should not match stronger fresh: {why}"
     print(f"  OK weaker cache rejected: {why[:60]}")
-    return True
 
 
 # ─────────────── 3. 위협 피드 + 필터 ───────────────
@@ -134,7 +127,6 @@ def test_known_malicious_exact_match():
     assert rpt.exact_match
     assert rpt.advisory_id == "MAL-2025-test"
     print("  OK")
-    return True
 
 
 def test_typosquat_detection():
@@ -151,7 +143,6 @@ def test_typosquat_detection():
     print(f"  typosquat candidates: {rpt.typosquat_candidates}")
     assert any(c["target"] == "requests" for c in rpt.typosquat_candidates)
     print("  OK")
-    return True
 
 
 def test_popular_skips_typosquat():
@@ -172,7 +163,6 @@ def test_popular_skips_typosquat():
     assert rpt.popular_rank == 134
     assert rpt.typosquat_candidates == []  # popular 면 검사 skip
     print("  OK")
-    return True
 
 
 # ─────────────── 4. 캐시 ───────────────
@@ -193,7 +183,6 @@ def test_cache_basic_hit_miss():
     h = cache.get(key)
     assert h.hit
     print(f"  hit after put: {h.reason}")
-    return True
 
 
 def test_cache_invalidation_by_new_advisory():
@@ -222,7 +211,6 @@ def test_cache_invalidation_by_new_advisory():
     assert not h.hit
     assert "advisory" in h.reason.lower()
     print("  OK invalidated")
-    return True
 
 
 def test_cache_engine_version_invalidation():
@@ -250,7 +238,6 @@ def test_cache_engine_version_invalidation():
     h = cache.get(fresh_key)
     print(f"  hit?: {h.hit}, reason={h.reason}")
     assert not h.hit
-    return True
 
 
 def test_paranoid_row_hmac():
@@ -279,7 +266,6 @@ def test_paranoid_row_hmac():
     assert not h.hit
     assert "HMAC" in h.reason or "tamper" in h.reason.lower()
     print("  OK tamper detected by HMAC")
-    return True
 
 
 # ─────────────── main ───────────────
@@ -302,9 +288,7 @@ def main():
     failed = 0
     for t in tests:
         try:
-            ok = t()
-            if not ok:
-                failed += 1
+            t()
         except Exception:
             import traceback
             traceback.print_exc()

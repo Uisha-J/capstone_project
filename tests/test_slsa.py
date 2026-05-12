@@ -15,7 +15,7 @@ def test_no_metadata():
     print("== No metadata ==")
     rpt = evaluate(None, Ecosystem.NPM)
     print(f"  level={rpt.level.value}, error={rpt.error}")
-    return rpt.level == SLSALevel.UNKNOWN
+    assert rpt.level == SLSALevel.UNKNOWN
 
 
 def test_npm_no_provenance():
@@ -33,7 +33,7 @@ def test_npm_no_provenance():
     }
     rpt = evaluate(raw, Ecosystem.NPM)
     print(f"  level={rpt.level.value}, prov={rpt.has_provenance}, sig={rpt.has_signature}")
-    return rpt.level == SLSALevel.L0
+    assert rpt.level == SLSALevel.L0
 
 
 def test_npm_with_provenance():
@@ -60,7 +60,7 @@ def test_npm_with_provenance():
     print(f"  level={rpt.level.value}, prov={rpt.has_provenance}, sig={rpt.has_signature}")
     print(f"  source_uri={rpt.source_uri}")
     print(f"  notes={rpt.notes}")
-    return rpt.level == SLSALevel.L2 and rpt.has_provenance and rpt.has_signature
+    assert rpt.level == SLSALevel.L2 and rpt.has_provenance and rpt.has_signature
 
 
 def test_pypi_no_attestation():
@@ -81,7 +81,7 @@ def test_pypi_no_attestation():
     rpt = evaluate(raw, Ecosystem.PYPI)
     print(f"  level={rpt.level.value}, prov={rpt.has_provenance}, sig={rpt.has_signature}")
     print(f"  notes={rpt.notes}")
-    return rpt.level == SLSALevel.L0
+    assert rpt.level == SLSALevel.L0
 
 
 def test_pypi_with_attestation():
@@ -102,31 +102,40 @@ def test_pypi_with_attestation():
     rpt = evaluate(raw, Ecosystem.PYPI)
     print(f"  level={rpt.level.value}, prov={rpt.has_provenance}")
     print(f"  notes={rpt.notes}")
-    return rpt.level == SLSALevel.L2 and rpt.has_provenance
+    assert rpt.level == SLSALevel.L2 and rpt.has_provenance
 
 
 def test_real_npm():
     """선택적 라이브 테스트 (SLSA_LIVE=1)."""
     if os.getenv("SLSA_LIVE") != "1":
         print("\n== Live npm SKIPPED (set SLSA_LIVE=1) ==")
-        return True
+        return
     from pkgsentinel.stages.stage0_registry import check
     info = check("sigstore", Ecosystem.NPM)
     rpt = evaluate(info.raw_metadata, Ecosystem.NPM)
     print("\n== Live npm sigstore ==")
     print(f"  level={rpt.level.value}, prov={rpt.has_provenance}")
-    return rpt.has_provenance  # sigstore npm 은 provenance 보유
+    assert rpt.has_provenance  # sigstore npm 은 provenance 보유
 
 
 def main():
-    ok = True
-    ok &= test_no_metadata()
-    ok &= test_npm_no_provenance()
-    ok &= test_npm_with_provenance()
-    ok &= test_pypi_no_attestation()
-    ok &= test_pypi_with_attestation()
-    ok &= test_real_npm()
-    print("\n" + ("ALL OK" if ok else "FAILED"))
+    tests = [
+        test_no_metadata,
+        test_npm_no_provenance,
+        test_npm_with_provenance,
+        test_pypi_no_attestation,
+        test_pypi_with_attestation,
+        test_real_npm,
+    ]
+    failed = 0
+    for t in tests:
+        try:
+            t()
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            failed += 1
+    print("\n" + ("ALL OK" if failed == 0 else f"FAILED: {failed}"))
 
 
 if __name__ == "__main__":

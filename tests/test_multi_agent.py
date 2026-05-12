@@ -78,7 +78,6 @@ def test_consensus_rules():
     ])
     assert c.verdict == LLMVerdict.SUSPICIOUS
     print(f"  2xS -> {c.verdict.value}  OK")
-    return True
 
 
 def test_malicious_consensus():
@@ -104,7 +103,6 @@ def test_malicious_consensus():
         print(f"    [{a.name}] {a.verdict.value} (conf={a.confidence:.2f})")
     assert c.verdict == LLMVerdict.MALICIOUS, f"expected MALICIOUS, got {c.verdict}"
     print("  OK")
-    return True
 
 
 def test_benign_consensus():
@@ -130,7 +128,6 @@ def test_benign_consensus():
         print(f"    [{a.name}] {a.verdict.value} (conf={a.confidence:.2f})")
     assert c.verdict == LLMVerdict.BENIGN, f"expected BENIGN, got {c.verdict}"
     print("  OK")
-    return True
 
 
 def test_adapter():
@@ -146,16 +143,24 @@ def test_adapter():
     print(f"  verdict={resp.verdict.value}, model={resp.model}")
     print(f"  most_convincing={resp.most_convincing_evidence}")
     print("  OK")
-    return True
 
 
 def main():
-    ok = True
-    ok &= test_consensus_rules()
-    ok &= test_malicious_consensus()
-    ok &= test_benign_consensus()
-    ok &= test_adapter()
-    print("\n" + ("ALL OK" if ok else "FAILED"))
+    tests = [
+        test_consensus_rules,
+        test_malicious_consensus,
+        test_benign_consensus,
+        test_adapter,
+    ]
+    failed = 0
+    for t in tests:
+        try:
+            t()
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            failed += 1
+    print("\n" + ("ALL OK" if failed == 0 else f"FAILED: {failed}"))
 
 
 if __name__ == "__main__":

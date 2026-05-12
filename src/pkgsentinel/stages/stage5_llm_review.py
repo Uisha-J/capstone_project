@@ -96,6 +96,13 @@ Respond with JSON only (fields: verdict, reasoning, most_convincing_evidence).
 def _call_claude(system: str, user: str, model: str) -> str:
     """
     Anthropic SDK 호출. 설치/키 없으면 RuntimeError.
+
+    Prompt caching (5-min TTL) 적용 — system prompt 는 매 호출 동일하므로
+    cache_control: ephemeral 로 표시. cache hit 시 input 비용 -90%
+    ($3/1M → $0.30/1M). 동일 시스템 프롬프트로 다중 호출하는 LAMPS
+    multi-agent 흐름에서 효과 큼.
+
+    근거: https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
     """
     try:
         import anthropic
@@ -109,10 +116,18 @@ def _call_claude(system: str, user: str, model: str) -> str:
         raise RuntimeError("ANTHROPIC_API_KEY 환경변수 미설정")
 
     client = anthropic.Anthropic(api_key=api_key)
+    # system 을 구조화 블록으로 전달 + cache_control 표시.
+    # Anthropic SDK 는 system 인자에 list[dict] 형태를 받아들임.
     resp = client.messages.create(
         model=model,
         max_tokens=1000,
-        system=system,
+        system=[
+            {
+                "type": "text",
+                "text": system,
+                "cache_control": {"type": "ephemeral"},
+            }
+        ],
         messages=[{"role": "user", "content": user}],
     )
     # 텍스트 첫 블록

@@ -14,14 +14,14 @@ def test_atlas_basic():
     s = mitre_atlas.stats()
     print(f"  total: {s['total']}, supply_chain_relevant: {s['supply_chain_relevant']}")
     print(f"  by tactic: {s['by_tactic']}")
-    return s["total"] >= 8 and s["supply_chain_relevant"] >= 6
+    assert s["total"] >= 8 and s["supply_chain_relevant"] >= 6
 
 
 def test_atlas_get():
     print("\n== ATLAS get ==")
     t = mitre_atlas.get("AML.T0010.002")
     print(f"  AML.T0010.002 -> {t.name if t else 'NOT FOUND'}")
-    return t is not None and "ML Software" in t.name
+    assert t is not None and "ML Software" in t.name
 
 
 def test_atlas_slopsquatting_techniques():
@@ -33,16 +33,15 @@ def test_atlas_slopsquatting_techniques():
     missing = must_have - set(ids)
     if missing:
         print(f"  MISSING: {missing}")
-        return False
+    assert not missing
     print(f"  OK: contains {must_have}")
-    return True
 
 
 def test_owasp_basic():
     print("\n== OWASP LLM basic ==")
     s = owasp_llm.stats()
     print(f"  total: {s['total']}, slopsquatting_related: {s['slopsquatting_related']}")
-    return s["total"] == 10 and s["slopsquatting_related"] >= 1
+    assert s["total"] == 10 and s["slopsquatting_related"] >= 1
 
 
 def test_owasp_llm05():
@@ -50,7 +49,7 @@ def test_owasp_llm05():
     it = owasp_llm.get("LLM05")
     print(f"  name: {it.name if it else 'NOT FOUND'}")
     print(f"  related_to_slopsquatting: {it.related_to_slopsquatting}")
-    return it is not None and it.related_to_slopsquatting
+    assert it is not None and it.related_to_slopsquatting
 
 
 def test_owasp_verdict_mapping():
@@ -69,18 +68,27 @@ def test_owasp_verdict_mapping():
         if got != expected:
             ok = False
         print(f"  [{mark}] {v:<14} -> {got}")
-    return ok
+    assert ok
 
 
 def main():
-    ok = True
-    ok &= test_atlas_basic()
-    ok &= test_atlas_get()
-    ok &= test_atlas_slopsquatting_techniques()
-    ok &= test_owasp_basic()
-    ok &= test_owasp_llm05()
-    ok &= test_owasp_verdict_mapping()
-    print("\n" + ("ALL OK" if ok else "FAILED"))
+    tests = [
+        test_atlas_basic,
+        test_atlas_get,
+        test_atlas_slopsquatting_techniques,
+        test_owasp_basic,
+        test_owasp_llm05,
+        test_owasp_verdict_mapping,
+    ]
+    failed = 0
+    for t in tests:
+        try:
+            t()
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            failed += 1
+    print("\n" + ("ALL OK" if failed == 0 else f"FAILED: {failed}"))
 
 
 if __name__ == "__main__":

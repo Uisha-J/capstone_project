@@ -33,6 +33,30 @@ class IndicatorHit:
     confidence: float           # 0.0~1.0
     reason: str
 
+    def to_dict(self) -> dict:
+        return {
+            "indicator_code": self.indicator.code,
+            "file_path": self.file_path,
+            "line": self.line,
+            "snippet": self.snippet,
+            "confidence": self.confidence,
+            "reason": self.reason,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> IndicatorHit:
+        # MaliciousIndicator 본체는 INDICATORS 카탈로그에서 재참조.
+        # 카탈로그에 없으면 (지표 버전 변경) — KeyError → 캐시 미스로 처리.
+        ind = INDICATORS[d["indicator_code"]]
+        return cls(
+            indicator=ind,
+            file_path=d["file_path"],
+            line=int(d.get("line", 0)),
+            snippet=d.get("snippet", ""),
+            confidence=float(d.get("confidence", 0.0)),
+            reason=d.get("reason", ""),
+        )
+
 
 # ─────────────────── 1) Behavior Sequence 기반 매칭 ───────────────────
 # (Stage 2 의 결과를 활용)
@@ -600,6 +624,13 @@ class IndicatorMatchReport:
     @property
     def high_severity_count(self) -> int:
         return sum(1 for h in self.hits if h.indicator.severity == Severity.HIGH)
+
+    def to_dict(self) -> dict:
+        return {"hits": [h.to_dict() for h in self.hits]}
+
+    @classmethod
+    def from_dict(cls, d: dict) -> IndicatorMatchReport:
+        return cls(hits=[IndicatorHit.from_dict(h) for h in d.get("hits", [])])
 
 
 def match_all(

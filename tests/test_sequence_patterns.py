@@ -64,7 +64,7 @@ def test_cred_exfil():
     print(f"  matched: {codes}")
     for m in rpt.matches:
         print(f"  {m.to_summary()}")
-    return "SP-001" in codes
+    assert "SP-001" in codes
 
 
 def test_encoded_exec():
@@ -74,7 +74,7 @@ def test_encoded_exec():
     print(f"  matched: {codes}")
     for m in rpt.matches:
         print(f"  {m.to_summary()}")
-    return "SP-003" in codes
+    assert "SP-003" in codes
 
 
 def test_recon():
@@ -85,7 +85,7 @@ def test_recon():
     for m in rpt.matches:
         print(f"  {m.to_summary()}")
     # SP-001 (cred 형태) 또는 SP-004 (recon) 둘 중 하나는 매칭되어야
-    return ("SP-001" in codes) or ("SP-004" in codes)
+    assert ("SP-001" in codes) or ("SP-004" in codes)
 
 
 def test_benign():
@@ -93,7 +93,7 @@ def test_benign():
     rpt = _mine(SAMPLE_BENIGN)
     codes = sorted({m.pattern.code for m in rpt.matches})
     print(f"  matched: {codes}")
-    return len(rpt.matches) == 0
+    assert len(rpt.matches) == 0
 
 
 def test_pattern_catalog():
@@ -103,17 +103,26 @@ def test_pattern_catalog():
     for p in PATTERNS:
         sev_counts[p.severity.value] = sev_counts.get(p.severity.value, 0) + 1
     print(f"  severity counts: {sev_counts}")
-    return len(PATTERNS) >= 6
+    assert len(PATTERNS) >= 6
 
 
 def main():
-    ok = True
-    ok &= test_cred_exfil()
-    ok &= test_encoded_exec()
-    ok &= test_recon()
-    ok &= test_benign()
-    ok &= test_pattern_catalog()
-    print("\n" + ("ALL OK" if ok else "FAILED"))
+    tests = [
+        test_cred_exfil,
+        test_encoded_exec,
+        test_recon,
+        test_benign,
+        test_pattern_catalog,
+    ]
+    failed = 0
+    for t in tests:
+        try:
+            t()
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            failed += 1
+    print("\n" + ("ALL OK" if failed == 0 else f"FAILED: {failed}"))
 
 
 if __name__ == "__main__":

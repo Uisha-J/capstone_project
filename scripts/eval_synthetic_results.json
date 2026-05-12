@@ -93,13 +93,13 @@
     {
       "name": "obfuscated-import-exec",
       "label": "malicious",
-      "verdict": "CLEAN",
-      "expected": false,
-      "severity_max": "MEDIUM",
+      "verdict": "SUSPICIOUS",
+      "expected": true,
+      "severity_max": "HIGH",
       "matchers": {
         "ttp_match": 0,
-        "ind_47": 2,
-        "ind_47_high": 0,
+        "ind_47": 3,
+        "ind_47_high": 1,
         "seq_pattern": 0,
         "seq_high": 0,
         "taint_flows": 0,
@@ -244,8 +244,8 @@
         "ttp_match": 0,
         "ind_47": 3,
         "ind_47_high": 2,
-        "seq_pattern": 1,
-        "seq_high": 1,
+        "seq_pattern": 0,
+        "seq_high": 0,
         "taint_flows": 0,
         "llm_stub": "benign"
       },
@@ -347,12 +347,12 @@
       "label": "malicious",
       "verdict": "SUSPICIOUS",
       "expected": true,
-      "severity_max": "MEDIUM",
+      "severity_max": "HIGH",
       "matchers": {
         "ttp_match": 0,
-        "ind_47": 2,
-        "ind_47_high": 0,
-        "seq_pattern": 0,
+        "ind_47": 3,
+        "ind_47_high": 1,
+        "seq_pattern": 1,
         "seq_high": 0,
         "taint_flows": 1,
         "llm_stub": "benign"
@@ -764,8 +764,8 @@
       "severity_max": "HIGH",
       "matchers": {
         "ttp_match": 0,
-        "ind_47": 6,
-        "ind_47_high": 3,
+        "ind_47": 5,
+        "ind_47_high": 2,
         "seq_pattern": 1,
         "seq_high": 0,
         "taint_flows": 0,
@@ -1106,12 +1106,12 @@
       "severity_max": "HIGH",
       "matchers": {
         "ttp_match": 0,
-        "ind_47": 5,
-        "ind_47_high": 3,
-        "seq_pattern": 2,
-        "seq_high": 1,
+        "ind_47": 4,
+        "ind_47_high": 2,
+        "seq_pattern": 0,
+        "seq_high": 0,
         "taint_flows": 0,
-        "llm_stub": "suspicious"
+        "llm_stub": "benign"
       },
       "elapsed_s": 0.0,
       "note": "실제: pytorch nightly torchtriton incident"
@@ -1162,8 +1162,8 @@
         "ttp_match": 0,
         "ind_47": 2,
         "ind_47_high": 1,
-        "seq_pattern": 2,
-        "seq_high": 2,
+        "seq_pattern": 1,
+        "seq_high": 1,
         "taint_flows": 0,
         "llm_stub": "benign"
       },
@@ -2162,14 +2162,14 @@
     }
   ],
   "metrics": {
-    "tp": 59,
+    "tp": 60,
     "tn": 60,
     "fp": 0,
-    "fn": 1,
+    "fn": 0,
     "precision": 1.0,
-    "recall": 0.9833,
-    "f1": 0.9916,
-    "accuracy": 0.9917
+    "recall": 1.0,
+    "f1": 1.0,
+    "accuracy": 1.0
   },
-  "elapsed_total_s": 0.13
+  "elapsed_total_s": 0.12
 }

@@ -109,9 +109,73 @@ class BehaviorReport:
 # ─────────────── Python AST 방문자 ───────────────
 
 class _PyCallVisitor(ast.NodeVisitor):
+    """Python AST 호출 수집 + 단순 alias 추적.
+
+    alias 추적 대상 (obfuscated-import-exec 류 FN 차단):
+      - `m = __import__("subprocess")`             → m → subprocess
+      - `m = importlib.import_module("os")`        → m → os
+      - `import subprocess as sp`                  → sp → subprocess
+      - `from importlib import import_module as I` → I → importlib.import_module
+      - `from subprocess import run as r`          → r → subprocess.run
+
+    이렇게 추적된 alias 는 후속 `m.run(...)` 같은 호출명 해석 시 leftmost
+    Name 을 모듈명으로 치환해 catalog 매칭률을 높임. 단순한 inter-procedural
+    분석은 의도적 비채택 — taint_slicer 에서 별도로 다룸.
+    """
     def __init__(self, source_lines: list[str]):
         self.source_lines = source_lines
         self.calls: list[APICall] = []
+        # local-name → canonical-dotted-name
+        # 예: {"m": "subprocess", "sp": "subprocess", "I": "importlib.import_module"}
+        self.aliases: dict[str, str] = {}
+
+    # ── alias 수집 ──
+
+    def visit_Import(self, node: ast.Import):
+        # import subprocess           → alias[subprocess] = subprocess (no-op 이지만 일관성)
+        # import subprocess as sp     → alias[sp] = subprocess
+        for n in node.names:
+            local = n.asname or n.name.split(".")[0]
+            self.aliases[local] = n.name
+        self.generic_visit(node)
+
+    def visit_ImportFrom(self, node: ast.ImportFrom):
+        # from subprocess import run, Popen as P
+        if not node.module:
+            return
+        for n in node.names:
+            local = n.asname or n.name
+            self.aliases[local] = f"{node.module}.{n.name}"
+        self.generic_visit(node)
+
+    def visit_Assign(self, node: ast.Assign):
+        # 단일 target 만 처리 — tuple-unpack 은 의도적 비채택.
+        if len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+            target = node.targets[0].id
+            mod = self._extract_dynamic_import_module(node.value)
+            if mod is not None:
+                self.aliases[target] = mod
+        self.generic_visit(node)
+
+    def _extract_dynamic_import_module(self, val: ast.AST) -> str | None:
+        """`__import__("x")` 또는 `importlib.import_module("x")` 에서 "x" 추출."""
+        if not isinstance(val, ast.Call):
+            return None
+        raw = self._raw_call_name(val.func)
+        if raw not in ("__import__", "importlib.import_module"):
+            # alias 된 import_module 도 인식 — 예: I("os") where I=importlib.import_module
+            if raw and self.aliases.get(raw) in (
+                "importlib.import_module", "__import__",
+            ):
+                pass
+            else:
+                return None
+        if val.args and isinstance(val.args[0], ast.Constant) \
+                and isinstance(val.args[0].value, str):
+            return val.args[0].value
+        return None
+
+    # ── 호출 수집 ──
 
     def visit_Call(self, node: ast.Call):
         name = self._resolve_call_name(node.func)
@@ -128,12 +192,23 @@ class _PyCallVisitor(ast.NodeVisitor):
                 ))
         self.generic_visit(node)
 
-    # attr 체인: a.b.c.func → "a.b.c.func"
+    # attr 체인: a.b.c.func → "a.b.c.func", leftmost Name 은 alias 치환.
     def _resolve_call_name(self, node: ast.AST) -> str | None:
+        if isinstance(node, ast.Name):
+            return self.aliases.get(node.id, node.id)
+        if isinstance(node, ast.Attribute):
+            left = self._resolve_call_name(node.value)
+            if left is None:
+                return node.attr
+            return f"{left}.{node.attr}"
+        return None
+
+    # alias 치환 없이 원본 이름만 추출 (alias 자기참조 방지)
+    def _raw_call_name(self, node: ast.AST) -> str | None:
         if isinstance(node, ast.Name):
             return node.id
         if isinstance(node, ast.Attribute):
-            left = self._resolve_call_name(node.value)
+            left = self._raw_call_name(node.value)
             if left is None:
                 return node.attr
             return f"{left}.{node.attr}"

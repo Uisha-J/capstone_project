@@ -42,7 +42,7 @@ def test_well_maintained_package():
     for c in rpt.checks:
         print(f"    {c.code:<8} {c.status.value:<7} {c.title}")
     # 7/11 이상 통과 기대
-    return rpt.pass_count >= 7
+    assert rpt.pass_count >= 7
 
 
 def test_unmaintained_package():
@@ -63,7 +63,7 @@ def test_unmaintained_package():
     for c in rpt.checks:
         print(f"    {c.code:<8} {c.status.value:<7} {c.title}")
     # FAIL 항목이 4 개 이상 기대 (방치 + SBOM 없음 + 코드리뷰 없음 등)
-    return rpt.fail_count >= 4
+    assert rpt.fail_count >= 4
 
 
 def test_no_scorecard():
@@ -79,7 +79,7 @@ def test_no_scorecard():
     # SECURITY.md, registry, integrity 는 스코어카드 없이도 PASS
     pass_codes = {c.code for c in rpt.checks if c.status == SSDFStatus.PASS}
     print(f"  PASS codes: {sorted(pass_codes)}")
-    return "PW.4.4" in pass_codes and "PW.4.5" in pass_codes and "PO.4.1" in pass_codes
+    assert "PW.4.4" in pass_codes and "PW.4.5" in pass_codes and "PO.4.1" in pass_codes
 
 
 def test_npm_integrity():
@@ -103,16 +103,25 @@ def test_npm_integrity():
     )
     pw45 = next(c for c in rpt.checks if c.code == "PW.4.5")
     print(f"  PW.4.5 status={pw45.status.value}, evidence={pw45.evidence[:80]}")
-    return pw45.status == SSDFStatus.PASS
+    assert pw45.status == SSDFStatus.PASS
 
 
 def main():
-    ok = True
-    ok &= test_well_maintained_package()
-    ok &= test_unmaintained_package()
-    ok &= test_no_scorecard()
-    ok &= test_npm_integrity()
-    print("\n" + ("ALL OK" if ok else "FAILED"))
+    tests = [
+        test_well_maintained_package,
+        test_unmaintained_package,
+        test_no_scorecard,
+        test_npm_integrity,
+    ]
+    failed = 0
+    for t in tests:
+        try:
+            t()
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            failed += 1
+    print("\n" + ("ALL OK" if failed == 0 else f"FAILED: {failed}"))
 
 
 if __name__ == "__main__":

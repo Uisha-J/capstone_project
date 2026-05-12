@@ -551,19 +551,64 @@ def run_pipeline(
         return report
 
     # ========== Stage 2B: 문자열 상수 풀 ==========
+    # stage_cache 통합 — 파일별 SuspiciousString 결과를 캐시. 적중 시 재파싱 없이
+    # 결과 → evidence 재플레이. evidence 자체는 stage 간 누적이므로 캐시 X.
+    _stage2b_cache_status = "skipped"
     try:
+        from .db.stage_cache import StageCache, StageCacheKey
+        from .stages.string_analysis import SuspiciousString
+        _sc = StageCache() if ctx.options.use_cache else None
+        _ck2b = StageCacheKey(
+            package=package, ecosystem=ecosystem.value,
+            version=target_version, stage="stage_2b_string",
+        )
+        _hit = (
+            _sc.get(_ck2b, archive_sha256=ctx.archive_sha256)
+            if _sc and not ctx.options.force_rescan
+            else None
+        )
         total_strs = 0
-        for sf in ctx.ext.source_files:
-            if sf.language not in ("python", "javascript"):
-                continue
-            strs = analyze_strings(sf.path, sf.content, sf.language)
-            if strs:
-                total_strs += len(strs)
-                ctx.evidence.extend(_sstr_to_evidence(sf.path, strs))
+        if _hit is not None and _hit.hit:
+            # 캐시 적중 — payload 는 {path: [SuspiciousString.to_dict(), ...]}
+            try:
+                per_file = _hit.payload.get("per_file", {})
+                for path, items in per_file.items():
+                    strs = [SuspiciousString.from_dict(d) for d in items]
+                    if strs:
+                        total_strs += len(strs)
+                        ctx.evidence.extend(_sstr_to_evidence(path, strs))
+                _stage2b_cache_status = "hit"
+            except Exception:
+                # 페이로드 복원 실패 → 재계산 fall-through
+                _hit = None
+
+        if _hit is None or not _hit.hit:
+            per_file_payload: dict[str, list[dict]] = {}
+            for sf in ctx.ext.source_files:
+                if sf.language not in ("python", "javascript"):
+                    continue
+                strs = analyze_strings(sf.path, sf.content, sf.language)
+                if strs:
+                    total_strs += len(strs)
+                    ctx.evidence.extend(_sstr_to_evidence(sf.path, strs))
+                    per_file_payload[sf.path] = [s.to_dict() for s in strs]
+            _stage2b_cache_status = "miss" if _hit is not None else "disabled"
+            if _sc:
+                try:
+                    _sc.put(
+                        _ck2b, {"per_file": per_file_payload},
+                        archive_sha256=ctx.archive_sha256,
+                    )
+                except Exception:
+                    pass
+
         ctx.stage_results.append(StageResult(
             stage="stage_2b_string_analysis",
             success=True,
-            payload={"suspicious_strings": total_strs},
+            payload={
+                "suspicious_strings": total_strs,
+                "stage_cache": _stage2b_cache_status,
+            },
         ))
     except Exception as e:
         ctx.stage_results.append(StageResult(
@@ -572,8 +617,39 @@ def run_pipeline(
 
     # ========== Stage 3B: 버전 ctx.diff ==========
     ctx.diff = None
+    _stage3b_cache_status = "skipped"
     try:
-        ctx.diff = analyze_full_diff(reg, ctx.ext, ctx.behavior)
+        from .db.stage_cache import StageCache, StageCacheKey
+        from .stages.stage3b_full_diff import FullDiffResult
+        _sc = StageCache() if ctx.options.use_cache else None
+        _ck3b = StageCacheKey(
+            package=package, ecosystem=ecosystem.value,
+            version=target_version, stage="stage_3b_version_diff",
+        )
+        _hit = (
+            _sc.get(_ck3b, archive_sha256=ctx.archive_sha256)
+            if _sc and not ctx.options.force_rescan
+            else None
+        )
+        if _hit is not None and _hit.hit:
+            try:
+                ctx.diff = FullDiffResult.from_dict(_hit.payload)
+                _stage3b_cache_status = "hit"
+            except Exception:
+                _hit = None
+
+        if _hit is None or not _hit.hit:
+            ctx.diff = analyze_full_diff(reg, ctx.ext, ctx.behavior)
+            _stage3b_cache_status = "miss" if _hit is not None else "disabled"
+            if _sc:
+                try:
+                    _sc.put(
+                        _ck3b, ctx.diff.to_dict(),
+                        archive_sha256=ctx.archive_sha256,
+                    )
+                except Exception:
+                    pass
+
         ctx.stage_results.append(StageResult(
             stage="stage_3b_version_diff",
             success=ctx.diff.error is None,
@@ -582,6 +658,7 @@ def run_pipeline(
                 "compared": ctx.diff.compared_versions,
                 "changed_files": len(ctx.diff.file_diffs),
                 "severity": ctx.diff.overall_severity.value,
+                "stage_cache": _stage3b_cache_status,
             },
         ))
     except Exception as e:
@@ -590,12 +667,47 @@ def run_pipeline(
         ))
 
     # ========== Stage 4: TTP 매칭 ==========
+    _stage4_cache_status = "skipped"
     try:
-        match_report = match_ttps(ctx.behavior, top_k=3)
+        from .db.stage_cache import StageCache, StageCacheKey
+        from .stages.stage4_ttp_match import TTPMatchReport
+        _sc = StageCache() if ctx.options.use_cache else None
+        _ck4 = StageCacheKey(
+            package=package, ecosystem=ecosystem.value,
+            version=target_version, stage="stage_4_ttp",
+        )
+        _hit = (
+            _sc.get(_ck4, archive_sha256=ctx.archive_sha256)
+            if _sc and not ctx.options.force_rescan
+            else None
+        )
+        match_report = None
+        if _hit is not None and _hit.hit:
+            try:
+                match_report = TTPMatchReport.from_dict(_hit.payload)
+                _stage4_cache_status = "hit"
+            except Exception:
+                match_report = None
+
+        if match_report is None:
+            match_report = match_ttps(ctx.behavior, top_k=3)
+            _stage4_cache_status = "miss" if _hit is not None else "disabled"
+            if _sc:
+                try:
+                    _sc.put(
+                        _ck4, match_report.to_dict(),
+                        archive_sha256=ctx.archive_sha256,
+                    )
+                except Exception:
+                    pass
+
         ctx.stage_results.append(StageResult(
             stage="stage_4_ttp_matching",
             success=True,
-            payload={"matches": len(match_report.matches)},
+            payload={
+                "matches": len(match_report.matches),
+                "stage_cache": _stage4_cache_status,
+            },
         ))
     except Exception as e:
         ctx.stage_results.append(StageResult(
@@ -633,24 +745,56 @@ def run_pipeline(
         author = ""
 
     # ========== Stage 4C: 47-Indicator 매처 (논문 2025) ==========
+    _stage4c_cache_status = "skipped"
     try:
-        # 의존성 추출 (있으면 메타 매처에 전달)
-        declared_deps: list[str] = []
-        try:
-            from .stages.stage_dependency import extract_dependencies
-            dep_ext = extract_dependencies(ctx.ext.source_files, ecosystem)
-            declared_deps = [d.name for d in dep_ext.direct_deps]
-        except Exception:
-            pass
-
-        ind_report = match_47_indicators(
-            behavior_files=ctx.behavior.files,
-            source_files=ctx.ext.source_files,
-            package_name=package,
-            description=ctx.description,
-            author=author,
-            declared_deps=declared_deps,
+        from .db.stage_cache import StageCache, StageCacheKey
+        from .stages.indicator_matcher import IndicatorMatchReport
+        _sc = StageCache() if ctx.options.use_cache else None
+        _ck4c = StageCacheKey(
+            package=package, ecosystem=ecosystem.value,
+            version=target_version, stage="stage_4c_ind47",
         )
+        _hit = (
+            _sc.get(_ck4c, archive_sha256=ctx.archive_sha256)
+            if _sc and not ctx.options.force_rescan
+            else None
+        )
+        ind_report = None
+        if _hit is not None and _hit.hit:
+            try:
+                ind_report = IndicatorMatchReport.from_dict(_hit.payload)
+                _stage4c_cache_status = "hit"
+            except Exception:
+                ind_report = None
+
+        if ind_report is None:
+            # 의존성 추출 (있으면 메타 매처에 전달)
+            declared_deps: list[str] = []
+            try:
+                from .stages.stage_dependency import extract_dependencies
+                dep_ext = extract_dependencies(ctx.ext.source_files, ecosystem)
+                declared_deps = [d.name for d in dep_ext.direct_deps]
+            except Exception:
+                pass
+
+            ind_report = match_47_indicators(
+                behavior_files=ctx.behavior.files,
+                source_files=ctx.ext.source_files,
+                package_name=package,
+                description=ctx.description,
+                author=author,
+                declared_deps=declared_deps,
+            )
+            _stage4c_cache_status = "miss" if _hit is not None else "disabled"
+            if _sc:
+                try:
+                    _sc.put(
+                        _ck4c, ind_report.to_dict(),
+                        archive_sha256=ctx.archive_sha256,
+                    )
+                except Exception:
+                    pass
+
         # 파일별 지표 코드 집합 — risk_combo escalation 은 file-local 판정.
         # 패키지 전역 집합을 쓰면 한 파일의 결정적 코드가 다른 파일 수십 개의
         # weak 지표를 모두 HIGH 로 부풀려 합법 프레임워크 FP 폭증 (django 케이스).
@@ -668,6 +812,7 @@ def run_pipeline(
                 "total_hits": len(ind_report.hits),
                 "high_severity": ind_report.high_severity_count,
                 "categories": [c.value for c in ind_report.categories_present],
+                "stage_cache": _stage4c_cache_status,
             },
         ))
     except Exception as e:
@@ -677,8 +822,40 @@ def run_pipeline(
         ))
 
     # ========== Stage 4E: Sequential Pattern Mining ==========
+    _stage4e_cache_status = "skipped"
     try:
-        seq_rpt = mine_sequences(ctx.behavior)
+        from .db.stage_cache import StageCache, StageCacheKey
+        from .stages.sequence_patterns import SequenceMineReport
+        _sc = StageCache() if ctx.options.use_cache else None
+        _ck4e = StageCacheKey(
+            package=package, ecosystem=ecosystem.value,
+            version=target_version, stage="stage_4e_sequence",
+        )
+        _hit = (
+            _sc.get(_ck4e, archive_sha256=ctx.archive_sha256)
+            if _sc and not ctx.options.force_rescan
+            else None
+        )
+        seq_rpt = None
+        if _hit is not None and _hit.hit:
+            try:
+                seq_rpt = SequenceMineReport.from_dict(_hit.payload)
+                _stage4e_cache_status = "hit"
+            except Exception:
+                seq_rpt = None
+
+        if seq_rpt is None:
+            seq_rpt = mine_sequences(ctx.behavior)
+            _stage4e_cache_status = "miss" if _hit is not None else "disabled"
+            if _sc:
+                try:
+                    _sc.put(
+                        _ck4e, seq_rpt.to_dict(),
+                        archive_sha256=ctx.archive_sha256,
+                    )
+                except Exception:
+                    pass
+
         for m in seq_rpt.matches:
             ctx.evidence.append(_sequence_match_to_evidence(m))
         ctx.stage_results.append(StageResult(
@@ -688,6 +865,7 @@ def run_pipeline(
             payload={
                 "patterns_matched": len(seq_rpt.matches),
                 "patterns": sorted({m.pattern.code for m in seq_rpt.matches}),
+                "stage_cache": _stage4e_cache_status,
             },
         ))
     except Exception as e:
@@ -701,20 +879,79 @@ def run_pipeline(
     # Stage 5 LLM 프롬프트 토큰을 줄임.
     taint_slice_by_path: dict[str, str] = {}
     taint_total_flows = 0
+    _stage4d_cache_status = "skipped"
     try:
-        for sf in ctx.ext.source_files:
-            if sf.language != "python":
-                continue  # JS 는 차후 (tree-sitter 기반)
-            rpt = taint_analyze_python(sf.content)
-            if rpt.flows:
-                taint_total_flows += len(rpt.flows)
-                taint_slice_by_path[sf.path] = taint_slice_for_llm(sf.content, rpt.flows)
+        from .db.stage_cache import StageCache, StageCacheKey
+        from .stages.taint_slicer import TaintFlow
+        _sc = StageCache() if ctx.options.use_cache else None
+        _ck4d = StageCacheKey(
+            package=package, ecosystem=ecosystem.value,
+            version=target_version, stage="stage_4d_taint",
+        )
+        _hit = (
+            _sc.get(_ck4d, archive_sha256=ctx.archive_sha256)
+            if _sc and not ctx.options.force_rescan
+            else None
+        )
+
+        # path → source content (taint_slice_for_llm 재계산용)
+        _content_by_path = {
+            sf.path: sf.content
+            for sf in ctx.ext.source_files
+            if sf.language == "python"
+        }
+
+        flows_by_path: dict[str, list[TaintFlow]] | None = None
+        if _hit is not None and _hit.hit:
+            try:
+                cached = _hit.payload.get("flows_by_path", {})
+                flows_by_path = {
+                    p: [TaintFlow.from_dict(f) for f in items]
+                    for p, items in cached.items()
+                }
+                _stage4d_cache_status = "hit"
+            except Exception:
+                flows_by_path = None
+
+        if flows_by_path is None:
+            flows_by_path = {}
+            for sf in ctx.ext.source_files:
+                if sf.language != "python":
+                    continue  # JS 는 차후 (tree-sitter 기반)
+                rpt = taint_analyze_python(sf.content)
+                if rpt.flows:
+                    flows_by_path[sf.path] = rpt.flows
+            _stage4d_cache_status = "miss" if _hit is not None else "disabled"
+            if _sc:
+                try:
+                    _sc.put(
+                        _ck4d,
+                        {
+                            "flows_by_path": {
+                                p: [f.to_dict() for f in flows]
+                                for p, flows in flows_by_path.items()
+                            }
+                        },
+                        archive_sha256=ctx.archive_sha256,
+                    )
+                except Exception:
+                    pass
+
+        for path, flows in flows_by_path.items():
+            if not flows:
+                continue
+            taint_total_flows += len(flows)
+            content = _content_by_path.get(path, "")
+            if content:
+                taint_slice_by_path[path] = taint_slice_for_llm(content, flows)
+
         ctx.stage_results.append(StageResult(
             stage="stage_4d_taint_slicing",
             success=True,
             payload={
                 "files_with_flows": len(taint_slice_by_path),
                 "total_flows": taint_total_flows,
+                "stage_cache": _stage4d_cache_status,
             },
         ))
     except Exception as e:

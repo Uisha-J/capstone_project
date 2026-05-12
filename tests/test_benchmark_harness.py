@@ -57,7 +57,7 @@ def test_basic_metrics():
           f"FP={summary.false_positives} FN={summary.false_negatives}")
     print(f"  P={summary.precision:.3f} R={summary.recall:.3f} F1={summary.f1:.3f}")
     print(f"  acc={summary.accuracy:.3f}")
-    return (
+    assert (
         summary.true_positives == 2
         and summary.true_negatives == 2
         and summary.false_positives == 0
@@ -76,7 +76,7 @@ def test_false_positive():
         ]
         results, summary = harness.run_benchmark(rows, progress=False)
         print(f"  FP={summary.false_positives}, P={summary.precision:.3f}")
-        return summary.false_positives == 1 and summary.precision == 0.5
+        assert summary.false_positives == 1 and summary.precision == 0.5
     finally:
         _FAKE_LABELS["flask"] = Verdict.CLEAN  # 원복
 
@@ -92,7 +92,7 @@ def test_false_negative():
         ]
         results, summary = harness.run_benchmark(rows, progress=False)
         print(f"  FN={summary.false_negatives}, R={summary.recall:.3f}")
-        return summary.false_negatives == 1 and summary.recall == 0.0
+        assert summary.false_negatives == 1 and summary.recall == 0.0
     finally:
         _FAKE_LABELS["evil-stealer"] = Verdict.MALICIOUS  # 원복
 
@@ -105,7 +105,7 @@ def test_error_packages():
     ]
     results, summary = harness.run_benchmark(rows, progress=False)
     print(f"  errors={summary.errors}, TP={summary.true_positives}")
-    return summary.errors == 1 and summary.true_positives == 1
+    assert summary.errors == 1 and summary.true_positives == 1
 
 
 def test_csv_loader():
@@ -116,17 +116,26 @@ def test_csv_loader():
     print(f"  rows: {len(rows)}")
     for r in rows:
         print(f"    {r.package:<14} {r.ecosystem.value:<5} {r.expected_label}")
-    return len(rows) == 5
+    assert len(rows) == 5
 
 
 def main():
-    ok = True
-    ok &= test_basic_metrics()
-    ok &= test_false_positive()
-    ok &= test_false_negative()
-    ok &= test_error_packages()
-    ok &= test_csv_loader()
-    print("\n" + ("ALL OK" if ok else "FAILED"))
+    tests = [
+        test_basic_metrics,
+        test_false_positive,
+        test_false_negative,
+        test_error_packages,
+        test_csv_loader,
+    ]
+    failed = 0
+    for t in tests:
+        try:
+            t()
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            failed += 1
+    print("\n" + ("ALL OK" if failed == 0 else f"FAILED: {failed}"))
 
 
 if __name__ == "__main__":

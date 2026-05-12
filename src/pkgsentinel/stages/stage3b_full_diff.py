@@ -33,6 +33,29 @@ class FileDiff:
     size_after: int = 0
     dimensions_added: list[AttackDimension] = field(default_factory=list)
 
+    def to_dict(self) -> dict:
+        return {
+            "path": self.path,
+            "kind": self.kind,
+            "new_apis": list(self.new_apis),
+            "size_before": self.size_before,
+            "size_after": self.size_after,
+            "dimensions_added": [d.value for d in self.dimensions_added],
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> FileDiff:
+        return cls(
+            path=d["path"],
+            kind=d["kind"],
+            new_apis=list(d.get("new_apis", [])),
+            size_before=int(d.get("size_before", 0)),
+            size_after=int(d.get("size_after", 0)),
+            dimensions_added=[
+                AttackDimension(v) for v in d.get("dimensions_added", [])
+            ],
+        )
+
 
 @dataclass
 class FullDiffResult:
@@ -42,6 +65,27 @@ class FullDiffResult:
     overall_severity: Severity = Severity.LOW
     summary: str = ""
     error: str | None = None
+
+    def to_dict(self) -> dict:
+        return {
+            "current_version": self.current_version,
+            "compared_versions": list(self.compared_versions),
+            "file_diffs": [fd.to_dict() for fd in self.file_diffs],
+            "overall_severity": self.overall_severity.value,
+            "summary": self.summary,
+            "error": self.error,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> FullDiffResult:
+        return cls(
+            current_version=d.get("current_version", ""),
+            compared_versions=list(d.get("compared_versions", [])),
+            file_diffs=[FileDiff.from_dict(fd) for fd in d.get("file_diffs", [])],
+            overall_severity=Severity(d.get("overall_severity", Severity.LOW.value)),
+            summary=d.get("summary", ""),
+            error=d.get("error"),
+        )
 
     def to_version_diff_info(self) -> VersionDiffInfo | None:
         if not self.compared_versions or self.error:

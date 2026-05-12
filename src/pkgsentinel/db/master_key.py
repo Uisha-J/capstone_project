@@ -56,8 +56,128 @@ def from_keyring() -> str | None:
         return None
 
 
+# ─────────────── KMS 백엔드 (선택적) ───────────────
+# AISLOP_KMS = "aws" | "vault" | "gcp"  로 선택. 미설정 시 비활성.
+# 각 백엔드는 해당 SDK 가 설치되어 있을 때만 동작. 클라우드 IAM 자격증명은
+# 호스트 환경 (EC2 IMDSv2, 워크로드 ID 등) 으로 자동 픽업.
+
+ENV_KMS_BACKEND = "AISLOP_KMS"
+
+ENV_AWS_SECRET_ID = "AISLOP_AWS_SECRET_ID"        # e.g. "prod/pkgsentinel/db-key"
+ENV_AWS_REGION = "AWS_REGION"
+
+ENV_VAULT_ADDR = "VAULT_ADDR"                     # e.g. "https://vault.corp:8200"
+ENV_VAULT_TOKEN = "VAULT_TOKEN"
+ENV_VAULT_PATH = "AISLOP_VAULT_PATH"              # e.g. "secret/data/pkgsentinel/db-key"
+ENV_VAULT_FIELD = "AISLOP_VAULT_FIELD"            # default: "passphrase"
+
+ENV_GCP_NAME = "AISLOP_GCP_SECRET_NAME"
+# e.g. "projects/MY_PROJECT/secrets/pkgsentinel-db-key/versions/latest"
+
+
+def from_aws_secrets_manager() -> str | None:
+    """AWS Secrets Manager 에서 secret string 조회.
+
+    설정: AISLOP_AWS_SECRET_ID + AWS_REGION (또는 ~/.aws/config 의 default region).
+    """
+    secret_id = os.environ.get(ENV_AWS_SECRET_ID, "").strip()
+    if not secret_id:
+        return None
+    try:
+        import boto3  # type: ignore
+    except ImportError:
+        return None
+    try:
+        region = os.environ.get(ENV_AWS_REGION) or None
+        client = boto3.client("secretsmanager", region_name=region)
+        resp = client.get_secret_value(SecretId=secret_id)
+        v = resp.get("SecretString")
+        return v.strip() if v else None
+    except Exception:
+        return None
+
+
+def from_hashicorp_vault() -> str | None:
+    """HashiCorp Vault KV v2 에서 비밀 조회.
+
+    설정: VAULT_ADDR + VAULT_TOKEN + AISLOP_VAULT_PATH (예: 'secret/data/foo').
+    AISLOP_VAULT_FIELD 가 없으면 'passphrase' 필드 사용.
+    """
+    addr = os.environ.get(ENV_VAULT_ADDR, "").strip()
+    path = os.environ.get(ENV_VAULT_PATH, "").strip()
+    token = os.environ.get(ENV_VAULT_TOKEN, "").strip()
+    if not (addr and path and token):
+        return None
+    try:
+        import hvac  # type: ignore
+    except ImportError:
+        return None
+    try:
+        client = hvac.Client(url=addr, token=token)
+        # KV v2 는 secret/data/<path> 형식 — 호출 시 mount 와 path 분리 필요.
+        # 간소화: read_secret_version 사용 (mount_point 기본 'secret').
+        # AISLOP_VAULT_PATH 가 'secret/data/foo/bar' 라면 분해해서 mount=secret, path=foo/bar.
+        if path.startswith("secret/data/"):
+            mount = "secret"
+            inner = path[len("secret/data/"):]
+        elif "/data/" in path:
+            mount, inner = path.split("/data/", 1)
+        else:
+            mount = "secret"
+            inner = path
+        resp = client.secrets.kv.v2.read_secret_version(
+            mount_point=mount, path=inner, raise_on_deleted_version=True,
+        )
+        field = os.environ.get(ENV_VAULT_FIELD, "passphrase")
+        data = (resp.get("data") or {}).get("data") or {}
+        v = data.get(field)
+        return v.strip() if isinstance(v, str) and v else None
+    except Exception:
+        return None
+
+
+def from_gcp_secret_manager() -> str | None:
+    """GCP Secret Manager 에서 비밀 조회.
+
+    설정: AISLOP_GCP_SECRET_NAME (전체 리소스 이름).
+    """
+    name = os.environ.get(ENV_GCP_NAME, "").strip()
+    if not name:
+        return None
+    try:
+        from google.cloud import secretmanager  # type: ignore
+    except ImportError:
+        return None
+    try:
+        client = secretmanager.SecretManagerServiceClient()
+        resp = client.access_secret_version(request={"name": name})
+        v = resp.payload.data.decode("utf-8")
+        return v.strip() if v else None
+    except Exception:
+        return None
+
+
+def from_kms() -> str | None:
+    """AISLOP_KMS 설정에 따라 해당 백엔드 호출."""
+    backend = os.environ.get(ENV_KMS_BACKEND, "").strip().lower()
+    if backend == "aws":
+        return from_aws_secrets_manager()
+    if backend == "vault":
+        return from_hashicorp_vault()
+    if backend == "gcp":
+        return from_gcp_secret_manager()
+    return None
+
+
 def resolve_passphrase() -> str | None:
-    return from_env() or from_keyfile() or from_keyring()
+    # KMS 가 명시적으로 설정돼 있으면 우선 — env/keyfile 보다 강한 신뢰 도메인.
+    # env (CI secret) → keyfile (로컬) → keyring (OS 보안저장소) 순.
+    return (
+        from_kms()
+        or from_env()
+        or from_keyfile()
+        or from_keyring()
+    )
 
 
 # ─────────────── 생성 / 저장 ───────────────

@@ -112,6 +112,30 @@ class TTPEntry:
             d["embedding"] = self.embedding
         return d
 
+    @classmethod
+    def from_dict(cls, d: dict) -> "TTPEntry":
+        collected_raw = d.get("collected_at")
+        if isinstance(collected_raw, str) and collected_raw:
+            try:
+                collected = datetime.fromisoformat(collected_raw)
+            except ValueError:
+                collected = datetime.now(UTC)
+        else:
+            collected = datetime.now(UTC)
+        return cls(
+            ttp_id=d["ttp_id"],
+            ttp_name=d["ttp_name"],
+            source=TTPSource(d["source"]),
+            kb_version=d.get("kb_version", ""),
+            description=d.get("description", ""),
+            detection_hints=list(d.get("detection_hints", [])),
+            mitigations=list(d.get("mitigations", [])),
+            severity=Severity(d.get("severity", Severity.MEDIUM.value)),
+            url=d.get("url", ""),
+            embedding=d.get("embedding"),
+            collected_at=collected,
+        )
+
 
 # ───────────────────────── Evidence ─────────────────────────
 

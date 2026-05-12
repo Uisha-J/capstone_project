@@ -56,7 +56,6 @@ dynamic_tools = false
     assert "plan-then-execute" in m.design_patterns.applied
     assert not m.tool_registry.dynamic_tools
     print(f"  OK declared={m.capabilities}")
-    return True
 
 
 def test_manifest_npm_camelcase():
@@ -83,7 +82,6 @@ def test_manifest_npm_camelcase():
     assert m.tool_registry.dynamic_tools
     assert m.tool_registry.tool_signature_verification
     print("  OK camelCase normalized")
-    return True
 
 
 def test_manifest_absent():
@@ -92,7 +90,6 @@ def test_manifest_absent():
     m2 = parse_npm_package('{"name":"x"}')
     assert m2 is None
     print("\n== manifest absent: returns None ==  OK")
-    return True
 
 
 # ─────────────── capability detector ───────────────
@@ -119,7 +116,7 @@ def f():
     print(f"  detected: {sorted(caps)}")
     if missing:
         print(f"  MISSING: {sorted(missing)}")
-    return not missing
+    assert not missing
 
 
 def test_capability_credential_path():
@@ -127,7 +124,7 @@ def test_capability_credential_path():
     caps = extract_capabilities_python({"x.py": src})
     print("\n== credential-paths detection ==")
     print(f"  caps: {sorted(caps)}")
-    return Capability.CREDENTIAL_PATHS in caps
+    assert Capability.CREDENTIAL_PATHS in caps
 
 
 def test_abc_mapping():
@@ -139,7 +136,6 @@ def test_abc_mapping():
     abc = map_to_abc({Capability.NETWORK, Capability.ENV_SECRETS, Capability.SHELL})
     assert abc == {"A", "B", "C"}, abc
     print(f"  OK trifecta: {abc}")
-    return True
 
 
 # ─────────────── signals ───────────────
@@ -163,7 +159,7 @@ def loop():
     )
     print(f"  score={rep.score}, threshold={AGENTIC_THRESHOLD}")
     print(f"  matched: {rep.matched}")
-    return rep.is_agentic
+    assert rep.is_agentic
 
 
 def test_signals_clean_lib():
@@ -175,7 +171,7 @@ def test_signals_clean_lib():
         sources={"util.py": "import json\ndef parse(s): return json.loads(s)"},
     )
     print(f"  score={rep.score}")
-    return not rep.is_agentic
+    assert not rep.is_agentic
 
 
 def test_signals_simple_chat_wrapper():
@@ -194,7 +190,7 @@ def chat(q):
     # description: "Simple OpenAI wrapper" 가 단어 일치는 안 함, but 'openai' SDK + LLM call 만
     # → 합 = 2 (LLM SDK) + 2 (openai 추정) ≤ 4. agentic 아님.
     print(f"  score={rep.score}, is_agentic={rep.is_agentic}")
-    return not rep.is_agentic
+    assert not rep.is_agentic
 
 
 # ─────────────── HITL ───────────────
@@ -220,7 +216,6 @@ graph = chain | HumanInTheLoop(approve_actions=["send"])
     src3 = "x = 1 + 1"
     assert not detect_human_in_the_loop({"x.py": src3}, language="python")
     print("  OK absent")
-    return True
 
 
 # ─────────────── R1-R4 ───────────────
@@ -236,7 +231,6 @@ os.setuid(0)
     r22 = [h for h in hits if h.rule_id == "R2-2"]
     assert r22 and r22[0].severity == RuleSeverity.MALICIOUS
     print("  OK MALICIOUS for setuid(0)")
-    return True
 
 
 def test_r2_3_sandbox_escape():
@@ -247,7 +241,6 @@ def test_r2_3_sandbox_escape():
     r23 = [h for h in hits if h.rule_id == "R2-3"]
     assert r23 and r23[0].severity == RuleSeverity.MALICIOUS
     print("  OK MALICIOUS for docker.sock access")
-    return True
 
 
 def test_r3_undeclared_dangerous():
@@ -260,7 +253,33 @@ def test_r3_undeclared_dangerous():
     r3 = [h for h in hits if h.rule_id == "R3-dangerous"]
     assert r3 and r3[0].severity == RuleSeverity.MALICIOUS
     print("  OK MALICIOUS for undeclared shell")
+
+
+def test_r4_5_name_behavior_mismatch():
+    print("\n== R4-5: benign-name function with dangerous body ==")
+    src = '''
+import subprocess
+def validate_config(path):
+    """Validate a config file path."""
+    subprocess.run(["cat", path], shell=True)
     return True
+'''
+    hits = R4_check({"x.py": src}, detected_capabilities=set())
+    r45 = [h for h in hits if h.rule_id == "R4-5"]
+    assert r45, f"expected R4-5 hit, got {[h.rule_id for h in hits]}"
+    assert r45[0].severity == RuleSeverity.HIGH_RISK
+    print(f"  OK detected: {r45[0].reason[:80]}")
+
+
+def test_r4_5_no_false_positive_on_normal_validator():
+    """Pure validator (no shell / network) → R4-5 미발화."""
+    src = '''
+def validate_email(addr):
+    return "@" in addr and "." in addr
+'''
+    hits = R4_check({"x.py": src}, detected_capabilities=set())
+    assert not [h for h in hits if h.rule_id == "R4-5"]
+    print("  OK: pure validator passes")
 
 
 def test_r4_1_covert_logger():
@@ -276,7 +295,6 @@ def log_interaction(query, response):
     r41 = [h for h in hits if h.rule_id == "R4-1"]
     assert r41 and r41[0].severity == RuleSeverity.MALICIOUS
     print("  OK detected logging-named function with external POST")
-    return True
 
 
 # ─────────────── 결정 트리 e2e ───────────────
@@ -289,7 +307,7 @@ def test_e2e_clean_non_agentic():
         sources={"x.py": "import json\ndef p(s): return json.loads(s)"},
     )
     print(f"  is_agentic={r.is_agentic}, verdict={r.verdict.value}")
-    return not r.is_agentic and r.verdict == Verdict.CLEAN
+    assert not r.is_agentic and r.verdict == Verdict.CLEAN
 
 
 def test_e2e_honest_manifest():
@@ -320,7 +338,7 @@ applied = ["plan-then-execute"]
     )
     print(f"  verdict={r.verdict.value}")
     print(f"  reason={r.reason}")
-    return r.verdict == Verdict.AGENTIC
+    assert r.verdict == Verdict.AGENTIC
 
 
 def test_e2e_undeclared_shell_malicious():
@@ -339,7 +357,7 @@ def run(q):
         pyproject_text='[tool.aislopsq]\nagentic = true\ncapabilities = ["llm-call"]',
     )
     print(f"  verdict={r.verdict.value}, undeclared={sorted(r.undeclared)}")
-    return r.verdict == Verdict.MALICIOUS and Capability.SHELL in r.undeclared
+    assert r.verdict == Verdict.MALICIOUS and Capability.SHELL in r.undeclared
 
 
 def test_e2e_lethal_trifecta_no_hitl():
@@ -368,7 +386,7 @@ session_isolation = false
 """,
     )
     print(f"  verdict={r.verdict.value}, abc={sorted(r.abc_actual)}")
-    return r.verdict == Verdict.HIGH_RISK and r.abc_actual == {"A", "B", "C"}
+    assert r.verdict == Verdict.HIGH_RISK and r.abc_actual == {"A", "B", "C"}
 
 
 def test_e2e_manifest_absent_agentic():
@@ -390,7 +408,7 @@ def loop():
     print(f"  is_agentic={r.is_agentic}, verdict={r.verdict.value}")
     print(f"  reason={r.reason}")
     # agentic 으로 판정 + manifest 부재 → declared=∅, detected ⊆ minor → AGENTIC + warning
-    return r.is_agentic and r.verdict in (Verdict.AGENTIC, Verdict.SUSPICIOUS)
+    assert r.is_agentic and r.verdict in (Verdict.AGENTIC, Verdict.SUSPICIOUS)
 
 
 # ─────────────── main ───────────────
@@ -411,6 +429,8 @@ def main():
         test_r2_3_sandbox_escape,
         test_r3_undeclared_dangerous,
         test_r4_1_covert_logger,
+        test_r4_5_name_behavior_mismatch,
+        test_r4_5_no_false_positive_on_normal_validator,
         test_e2e_clean_non_agentic,
         test_e2e_honest_manifest,
         test_e2e_undeclared_shell_malicious,
@@ -420,10 +440,7 @@ def main():
     failed = 0
     for t in tests:
         try:
-            ok = t()
-            if not ok:
-                failed += 1
-                print(f"  ! {t.__name__} returned False")
+            t()
         except Exception:
             import traceback
             traceback.print_exc()

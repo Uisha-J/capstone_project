@@ -36,7 +36,7 @@ def test_url_extraction():
         if got != expected:
             ok = False
         print(f"  [{mark}] {url!r:<60} -> {got}")
-    return ok
+    assert ok
 
 
 def test_metadata_extraction():
@@ -60,7 +60,7 @@ def test_metadata_extraction():
     s_npm = find_github_repo_in_metadata(npm_meta, Ecosystem.NPM)
     print(f"  PyPI: {s_pypi}  (expected pallets/flask)")
     print(f"  npm : {s_npm}   (expected chalk/chalk)")
-    return s_pypi == "pallets/flask" and s_npm == "chalk/chalk"
+    assert s_pypi == "pallets/flask" and s_npm == "chalk/chalk"
 
 
 def test_unknown_repo():
@@ -68,14 +68,14 @@ def test_unknown_repo():
     rpt = fetch_scorecard("nonexistent-org-xyz/nonexistent-repo-abc", timeout=8)
     print(f"  available: {rpt.available}")
     print(f"  error    : {rpt.error}")
-    return not rpt.available
+    assert not rpt.available
 
 
 def test_real_fetch():
     """선택적: 실제 API 호출 — SCORECARD_LIVE=1 일 때만."""
     if os.getenv("SCORECARD_LIVE") != "1":
         print("\n== Live fetch SKIPPED (set SCORECARD_LIVE=1 to enable) ==")
-        return True
+        return
     print("\n== Live fetch (pallets/flask) ==")
     rpt = fetch_scorecard("pallets/flask")
     print(f"  available    : {rpt.available}")
@@ -85,16 +85,25 @@ def test_real_fetch():
     print(f"  risk signals : {len(sig)}")
     for s in sig[:3]:
         print(f"    - {s[:120]}")
-    return rpt.available and rpt.overall_score is not None
+    assert rpt.available and rpt.overall_score is not None
 
 
 def main():
-    ok = True
-    ok &= test_url_extraction()
-    ok &= test_metadata_extraction()
-    ok &= test_unknown_repo()
-    ok &= test_real_fetch()
-    print("\n" + ("ALL OK" if ok else "FAILED"))
+    tests = [
+        test_url_extraction,
+        test_metadata_extraction,
+        test_unknown_repo,
+        test_real_fetch,
+    ]
+    failed = 0
+    for t in tests:
+        try:
+            t()
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            failed += 1
+    print("\n" + ("ALL OK" if failed == 0 else f"FAILED: {failed}"))
 
 
 if __name__ == "__main__":

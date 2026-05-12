@@ -39,6 +39,27 @@ class TTPMatch:
     similarity: float
     sequence_text: str   # 자연어 변환된 시퀀스 설명
 
+    def to_dict(self) -> dict:
+        return {
+            "file_path": self.file_path,
+            "sequence": list(self.sequence),
+            "dimensions": [d.value for d in self.dimensions],
+            "ttp": self.ttp.to_dict(),
+            "similarity": self.similarity,
+            "sequence_text": self.sequence_text,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> TTPMatch:
+        return cls(
+            file_path=d["file_path"],
+            sequence=list(d.get("sequence", [])),
+            dimensions=[AttackDimension(v) for v in d.get("dimensions", [])],
+            ttp=TTPEntry.from_dict(d["ttp"]),
+            similarity=float(d.get("similarity", 0.0)),
+            sequence_text=d.get("sequence_text", ""),
+        )
+
 
 @dataclass
 class TTPMatchReport:
@@ -47,6 +68,13 @@ class TTPMatchReport:
     @property
     def has_strong_match(self) -> bool:
         return any(m.similarity >= VERY_STRONG_THRESHOLD for m in self.matches)
+
+    def to_dict(self) -> dict:
+        return {"matches": [m.to_dict() for m in self.matches]}
+
+    @classmethod
+    def from_dict(cls, d: dict) -> TTPMatchReport:
+        return cls(matches=[TTPMatch.from_dict(m) for m in d.get("matches", [])])
 
 
 # ─────────────── 시퀀스 → 자연어 변환 ───────────────

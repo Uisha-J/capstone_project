@@ -90,11 +90,47 @@ class TaintFlow:
         chain = [self.source_call] + self.transforms + [self.sink_call]
         return " -> ".join(chain)
 
+    def to_dict(self) -> dict:
+        return {
+            "source_call": self.source_call,
+            "source_line": self.source_line,
+            "sink_call": self.sink_call,
+            "sink_line": self.sink_line,
+            "tainted_var": self.tainted_var,
+            "transforms": list(self.transforms),
+            "file_path": self.file_path,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> TaintFlow:
+        return cls(
+            source_call=d["source_call"],
+            source_line=int(d.get("source_line", 0)),
+            sink_call=d["sink_call"],
+            sink_line=int(d.get("sink_line", 0)),
+            tainted_var=d.get("tainted_var", ""),
+            transforms=list(d.get("transforms", [])),
+            file_path=d.get("file_path", ""),
+        )
+
 
 @dataclass
 class TaintReport:
     flows: list[TaintFlow] = field(default_factory=list)
     error: str | None = None
+
+    def to_dict(self) -> dict:
+        return {
+            "flows": [f.to_dict() for f in self.flows],
+            "error": self.error,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> TaintReport:
+        return cls(
+            flows=[TaintFlow.from_dict(f) for f in d.get("flows", [])],
+            error=d.get("error"),
+        )
 
 
 # ─────────────────── Python AST taint ───────────────────
@@ -308,6 +344,137 @@ def analyze_file(f: EntryFile) -> TaintReport:
         return rpt
     # JS 는 추후 (tree-sitter 기반) 추가
     return TaintReport()
+
+
+# ─────────────────── 모듈 간 (cross-file) ───────────────────
+
+def _path_to_module(path: str) -> str | None:
+    """소스 경로 → 도트 경로. `src/foo/bar.py` → `foo.bar`.
+
+    아카이브 prefix(<pkg>-<ver>/) 도 시도해서 떼어 본다. `__init__.py` 는
+    디렉터리 모듈로 간주.
+    """
+    p = path.replace("\\", "/")
+    if not p.endswith(".py"):
+        return None
+    p = p[: -len(".py")]
+    parts = [s for s in p.split("/") if s and s not in ("src",)]
+    # 패키지 표준 prefix 제거 (foo-1.2/, package/)
+    if parts and ("-" in parts[0] or parts[0] == "package"):
+        parts = parts[1:]
+    if not parts:
+        return None
+    if parts[-1] == "__init__":
+        parts = parts[:-1]
+    if not parts:
+        return None
+    return ".".join(parts)
+
+
+def _collect_module_level_taints(source: str) -> dict[str, dict]:
+    """모듈 레벨 (top-level Assign) 에서 source 호출로 받은 변수만 추출.
+
+    반환: {var_name: {"source": str, "line": int, "transforms": [...]}}
+    """
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return {}
+    analyzer = _PyTaintAnalyzer()
+    # ast.Module 의 직접 body 만 본다 — 함수 안쪽은 모듈 외부에서 접근 불가
+    for node in tree.body:
+        analyzer.visit(node)
+    # tainted dict 가 모듈 attribute 노출 후보
+    return dict(analyzer.tainted)
+
+
+def analyze_python_cross_file(
+    sources: dict[str, str],
+) -> dict[str, TaintReport]:
+    """모듈 간 taint 전파를 포함한 다중 파일 분석.
+
+    동작:
+      1. 1차 패스 — 각 파일의 모듈-레벨 tainted 변수 수집 → exports 테이블.
+      2. 2차 패스 — 각 파일에서 `from <X> import <Y>` 발견 시
+         X 가 위 exports 테이블에 있고 Y 가 그 모듈의 tainted 변수면
+         Y 를 현재 파일 분석기의 초기 tainted 로 주입.
+      3. 같은 분석기로 visit → cross-file flow 가 일반 flow 와 동일하게 기록.
+
+    한계:
+      - 모듈 객체 export (`from . import config; config.SECRET`) 미지원.
+      - 상대 import 는 path → module 변환 결과의 끝 부분 매칭으로 best-effort.
+      - 순환 import 는 1-단계만 전파 (의도적).
+    """
+    # ── 1) 각 파일의 모듈명 + 모듈-레벨 taint exports ──
+    file_module: dict[str, str] = {}   # path → module-dot-path
+    module_exports: dict[str, dict[str, dict]] = {}  # module → {var: source_info}
+    module_file: dict[str, str] = {}   # module → path (for flow.file_path)
+    for path, src in sources.items():
+        mod = _path_to_module(path)
+        if mod is None:
+            continue
+        file_module[path] = mod
+        exports = _collect_module_level_taints(src)
+        if exports:
+            module_exports[mod] = exports
+            module_file[mod] = path
+
+    # ── 2) 각 파일을 분석하면서 ImportFrom 으로 외부 모듈의 taint 주입 ──
+    reports: dict[str, TaintReport] = {}
+    for path, src in sources.items():
+        try:
+            tree = ast.parse(src)
+        except SyntaxError as e:
+            reports[path] = TaintReport(error=f"SyntaxError: {e}")
+            continue
+
+        analyzer = _PyTaintAnalyzer()
+
+        # ImportFrom 노드를 먼저 훑어 외부 모듈에서 tainted 이름 가져오기
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ImportFrom):
+                continue
+            if not node.module:
+                continue
+            target_mod = node.module
+            # 정확 일치 우선
+            exports = module_exports.get(target_mod)
+            # 차선: 같은 패키지 안 상대 경로 (`from .config import X`)
+            # → 현재 파일의 module 의 부모 + node.module 비교
+            if exports is None and path in file_module:
+                cur_mod = file_module[path]
+                # 정확히 같지 않더라도 끝 부분 매칭
+                for mod_name, mod_taints in module_exports.items():
+                    if mod_name.endswith("." + target_mod) or mod_name == target_mod:
+                        exports = mod_taints
+                        break
+            if not exports:
+                continue
+            for alias in node.names:
+                origin_name = alias.name
+                local_name = alias.asname or alias.name
+                if origin_name in exports:
+                    info = dict(exports[origin_name])
+                    # cross-file marker: file_path 를 source 모듈 파일로 기록
+                    # — slice_for_llm 이 호출자 파일을 우선 보고, source_call 에 origin 모듈 표기
+                    src_origin = info.get("source", "")
+                    src_file = module_file.get(target_mod, "")
+                    transforms = list(info.get("transforms", []))
+                    if src_file and src_file != path:
+                        transforms = [f"<cross-file from {src_file}>"] + transforms
+                    analyzer.tainted[local_name] = {
+                        "source": src_origin,
+                        "line": info.get("line", 0),
+                        "transforms": transforms,
+                    }
+
+        analyzer.visit(tree)
+        rpt = TaintReport(flows=analyzer.flows)
+        for flow in rpt.flows:
+            flow.file_path = path
+        reports[path] = rpt
+
+    return reports
 
 
 def slice_for_llm(

@@ -58,11 +58,45 @@ class SequenceMatch:
         names = " -> ".join(c.name for c in self.matched_calls)
         return f"{self.pattern.code} [{self.pattern.name}]: {names}"
 
+    def to_dict(self) -> dict:
+        return {
+            "pattern_code": self.pattern.code,
+            "file_path": self.file_path,
+            "matched_calls": [c.to_dict() for c in self.matched_calls],
+            "span": list(self.span),
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> SequenceMatch:
+        # PATTERNS 카탈로그에서 code 로 패턴 재참조.
+        # 카탈로그에 없으면 KeyError → 호출 측에서 캐시 미스로 처리.
+        pat = next(p for p in PATTERNS if p.code == d["pattern_code"])
+        span_raw = d.get("span", [0, 0])
+        return cls(
+            pattern=pat,
+            file_path=d.get("file_path", ""),
+            matched_calls=[APICall.from_dict(c) for c in d.get("matched_calls", [])],
+            span=(int(span_raw[0]), int(span_raw[1])),
+        )
+
 
 @dataclass
 class SequenceMineReport:
     matches: list[SequenceMatch] = field(default_factory=list)
     error: str | None = None
+
+    def to_dict(self) -> dict:
+        return {
+            "matches": [m.to_dict() for m in self.matches],
+            "error": self.error,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> SequenceMineReport:
+        return cls(
+            matches=[SequenceMatch.from_dict(m) for m in d.get("matches", [])],
+            error=d.get("error"),
+        )
 
 
 # ─────────────── 패턴 카탈로그 ───────────────

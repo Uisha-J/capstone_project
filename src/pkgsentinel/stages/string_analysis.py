@@ -34,6 +34,27 @@ class SuspiciousString:
         s = self.raw
         return s[:80] + "..." if len(s) > 80 else s
 
+    def to_dict(self) -> dict:
+        return {
+            "line": self.line,
+            "raw": self.raw,
+            "decoded": self.decoded,
+            "encoding": self.encoding,
+            "reason": self.reason,
+            "entropy": self.entropy,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> SuspiciousString:
+        return cls(
+            line=d["line"],
+            raw=d["raw"],
+            decoded=d.get("decoded"),
+            encoding=d.get("encoding", "unknown"),
+            reason=d.get("reason", ""),
+            entropy=float(d.get("entropy", 0.0)),
+        )
+
 
 # ─────────────── 엔트로피 ───────────────
 

@@ -70,7 +70,7 @@ def test_priority_buckets():
         if got != expected:
             ok = False
         print(f"  [{mark}] {inp} -> {got} (expected {expected})")
-    return ok
+    assert ok
 
 
 # ─────────────── queue ───────────────
@@ -104,7 +104,6 @@ def test_queue_lock_complete():
     stats = pq.stats()
     print(f"  stats: {stats}")
     assert stats["done"] == 2
-    return True
 
 
 def test_queue_priority_ordering():
@@ -127,7 +126,6 @@ def test_queue_priority_ordering():
 
     print(f"  pop order: {order}")
     assert order == ["p10", "p100", "p200"], f"wrong order: {order}"
-    return True
 
 
 # ─────────────── STIX ───────────────
@@ -166,7 +164,6 @@ def test_stix_bundle_structure():
     s = to_stix_json(_SAMPLE_REPORT)
     parsed = json.loads(s)
     assert parsed["objects"][2]["type"] == "indicator"
-    return True
 
 
 def test_stix_file_emit():
@@ -180,7 +177,6 @@ def test_stix_file_emit():
           f"sha={r['sha256'][:12]}..")
     import shutil
     shutil.rmtree(out, ignore_errors=True)
-    return True
 
 
 # ─────────────── Webhook HMAC ───────────────
@@ -210,8 +206,6 @@ def test_hmac_sign_verify():
     assert not hmac_verify(secret, old, body, f"sha256={old_sig}")
     print("  OK replay rejected")
 
-    return True
-
 
 # ─────────────── Falco ───────────────
 
@@ -225,7 +219,6 @@ def test_falco_rules_yaml():
     assert "AISLOPSQ Outbound" in yml, "rule name missing"
     assert "tags: [aislopsq, supply-chain, network]" in yml
     print("  OK domain rule generated")
-    return True
 
 
 def test_tetragon_policy_yaml():
@@ -238,7 +231,6 @@ def test_tetragon_policy_yaml():
     for line in yml.splitlines()[:10]:
         print(f"    {line}")
     print("  OK tetragon policy with sigkill")
-    return True
 
 
 def test_falco_sink_writes_files():
@@ -253,7 +245,6 @@ def test_falco_sink_writes_files():
     print(f"     tetragon={os.path.basename(r['tetragon'])}")
     import shutil
     shutil.rmtree(out, ignore_errors=True)
-    return True
 
 
 # ─────────────── main ───────────────
@@ -273,9 +264,7 @@ def main():
     failed = 0
     for t in tests:
         try:
-            ok = t()
-            if not ok:
-                failed += 1
+            t()
         except Exception:
             import traceback
             traceback.print_exc()

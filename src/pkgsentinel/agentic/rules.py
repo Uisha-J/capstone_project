@@ -407,9 +407,42 @@ def R3_check(
 # ─────────────── R4. Hidden Side Channel ───────────────
 
 # R4-1: 로깅 툴을 통한 covert exfiltration
+# 키워드는 영문 빈도 상위 동의어 + 산업 표준 NIST/CIS 텔레메트리 용어 포함.
+# 부분 매칭 (substring) 으로 동작 — `event_logger`, `audit_trail`, `usage_stats` 등 매칭.
 _R4_1_LOG_NAMES = [
-    "log", "logger", "audit", "track", "analytics", "telemetry",
+    "log", "logger", "logging",
+    "audit", "trail",
+    "track", "tracker", "tracing",
+    "metric", "metrics",
+    "analytic", "analytics",
+    "telemetry", "telemetric",
+    "stat", "stats", "statistics",
+    "report", "reporter", "reporting",
+    "monitor", "monitoring",
+    "usage", "event",
+    "diagnostic", "diagnostics",
+    "heartbeat", "ping",
+    "instrument", "instrumentation",
 ]
+
+# R4-5: tool-name vs behavior mismatch.
+# "innocent-sounding" 함수명 안에 dangerous API 가 등장하면 의심.
+# 키워드 카탈로그는 일반적인 read-only/validation/format 동사 위주.
+_R4_5_BENIGN_VERBS = [
+    "validate", "verify", "check", "is_", "has_",
+    "format", "parse", "render", "stringify",
+    "get", "fetch_config", "read_config", "read_setting",
+    "compute", "calculate", "compare", "diff_",
+    "convert", "transform", "normalize", "sanitize",
+    "hash_", "encode_safe", "escape",
+]
+_R4_5_DANGEROUS_BODY = re.compile(
+    r"(?:subprocess\.(?:run|Popen|call|check_output)|os\.system|"
+    r"os\.popen|eval\s*\(|exec\s*\(|compile\s*\(|"
+    r"socket\.(?:socket|create_connection)|"
+    r"requests\.(?:post|put|patch)\s*\([\"']https?://(?!localhost|127\.|0\.0\.0\.0))",
+    re.IGNORECASE,
+)
 
 
 def _r4_1_check(src: str, path: str) -> list[RuleHit]:
@@ -444,6 +477,39 @@ def _r4_1_check(src: str, path: str) -> list[RuleHit]:
                 file_path=path, snippet=m.group(0)[:200],
                 reason=f"function '{fn_name}' described as logging "
                        f"but posts to external endpoint",
+            ))
+    return hits
+
+
+def _r4_5_check(src: str, path: str) -> list[RuleHit]:
+    """benign-name vs dangerous-body mismatch (R4-5).
+
+    함수명이 read-only/validation/format 류로 보이는데 본문에 shell exec/
+    network sink 가 등장하면 의심 — Trojan-style 툴 가능성.
+    """
+    hits = []
+    func_pat = re.compile(
+        r"(?:def|async\s+def)\s+(\w+)\s*\([^)]*\)\s*(?:->[^:]+)?:\s*"
+        r"(?:[\"']{3}([^\"']*)[\"']{3})?",
+        re.IGNORECASE,
+    )
+    for m in func_pat.finditer(src):
+        fn_name = (m.group(1) or "").lower()
+        if not any(fn_name.startswith(v) or v in fn_name for v in _R4_5_BENIGN_VERBS):
+            continue
+        # 함수 본문 (다음 def 까지)
+        start = m.end()
+        next_def = re.search(r"\n(?:def|async\s+def|class\s+|@\w)", src[start:])
+        body = src[start:start + (next_def.start() if next_def else 800)]
+        bm = _R4_5_DANGEROUS_BODY.search(body)
+        if bm:
+            hits.append(_make_hit(
+                "R4-5", RuleSeverity.HIGH_RISK,
+                file_path=path, snippet=m.group(0)[:200],
+                reason=(
+                    f"function '{fn_name}' has benign-looking name but body "
+                    f"contains dangerous primitive: {bm.group(0)[:60]}"
+                ),
             ))
     return hits
 
@@ -489,6 +555,9 @@ def R4_check(
     for path, src in sources.items():
         # R4-1
         hits.extend(_r4_1_check(src, path))
+
+        # R4-5 (name vs behavior mismatch)
+        hits.extend(_r4_5_check(src, path))
 
         # R4-2
         for pat in _R4_2_PATTERNS:
