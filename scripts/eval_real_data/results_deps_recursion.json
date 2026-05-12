@@ -8,11 +8,11 @@
       "dev_deps": 2,
       "deps_analyzed": 6,
       "mal": 0,
-      "sus": 0,
-      "clean": 0,
-      "skip": 6,
-      "dep_time_s": 0.0,
-      "total_time_s": 0.2
+      "sus": 3,
+      "clean": 3,
+      "skip": 0,
+      "dep_time_s": 4.56,
+      "total_time_s": 4.77
     },
     {
       "name": "flask",
@@ -22,11 +22,11 @@
       "dev_deps": 2,
       "deps_analyzed": 9,
       "mal": 0,
-      "sus": 0,
-      "clean": 0,
-      "skip": 9,
-      "dep_time_s": 0.0,
-      "total_time_s": 0.23
+      "sus": 4,
+      "clean": 5,
+      "skip": 0,
+      "dep_time_s": 0.93,
+      "total_time_s": 1.17
     },
     {
       "name": "pandas",
@@ -36,11 +36,11 @@
       "dev_deps": 79,
       "deps_analyzed": 30,
       "mal": 0,
-      "sus": 0,
-      "clean": 0,
-      "skip": 30,
-      "dep_time_s": 0.0,
-      "total_time_s": 0.97
+      "sus": 12,
+      "clean": 18,
+      "skip": 0,
+      "dep_time_s": 2.31,
+      "total_time_s": 3.35
     },
     {
       "name": "boto3",
@@ -50,11 +50,11 @@
       "dev_deps": 0,
       "deps_analyzed": 3,
       "mal": 0,
-      "sus": 0,
-      "clean": 0,
-      "skip": 3,
-      "dep_time_s": 0.0,
-      "total_time_s": 0.43
+      "sus": 2,
+      "clean": 1,
+      "skip": 0,
+      "dep_time_s": 0.3,
+      "total_time_s": 0.69
     },
     {
       "name": "react",
@@ -82,7 +82,7 @@
       "clean": 0,
       "skip": 0,
       "dep_time_s": 0.0,
-      "total_time_s": 0.29
+      "total_time_s": 0.26
     },
     {
       "name": "webpack",
@@ -91,12 +91,12 @@
       "direct_deps": 24,
       "dev_deps": 87,
       "deps_analyzed": 30,
-      "mal": 0,
-      "sus": 0,
-      "clean": 0,
-      "skip": 30,
-      "dep_time_s": 0.0,
-      "total_time_s": 1.07
+      "mal": 1,
+      "sus": 5,
+      "clean": 24,
+      "skip": 0,
+      "dep_time_s": 80.39,
+      "total_time_s": 81.19
     },
     {
       "name": "axios",
@@ -105,12 +105,12 @@
       "direct_deps": 3,
       "dev_deps": 38,
       "deps_analyzed": 30,
-      "mal": 0,
-      "sus": 0,
-      "clean": 0,
-      "skip": 30,
-      "dep_time_s": 0.0,
-      "total_time_s": 0.31
+      "mal": 1,
+      "sus": 11,
+      "clean": 18,
+      "skip": 0,
+      "dep_time_s": 61.24,
+      "total_time_s": 61.56
     },
     {
       "name": "typescript",
@@ -119,12 +119,12 @@
       "direct_deps": 0,
       "dev_deps": 42,
       "deps_analyzed": 30,
-      "mal": 0,
-      "sus": 0,
-      "clean": 0,
-      "skip": 30,
-      "dep_time_s": 0.0,
-      "total_time_s": 2.14
+      "mal": 1,
+      "sus": 10,
+      "clean": 19,
+      "skip": 0,
+      "dep_time_s": 48.7,
+      "total_time_s": 50.87
     },
     {
       "name": "django",
@@ -134,16 +134,16 @@
       "dev_deps": 2,
       "deps_analyzed": 5,
       "mal": 0,
-      "sus": 0,
-      "clean": 0,
-      "skip": 5,
-      "dep_time_s": 0.0,
-      "total_time_s": 2.05
+      "sus": 1,
+      "clean": 4,
+      "skip": 0,
+      "dep_time_s": 0.35,
+      "total_time_s": 2.36
     }
   ],
   "summary": {
     "n_ok": 10,
     "n_total": 10,
-    "elapsed_total_s": 8.47
+    "elapsed_total_s": 207.0
   }
 }
