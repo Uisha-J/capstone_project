@@ -52,6 +52,85 @@ _PEP_REQ_RE = re.compile(
 )
 
 
+def _parse_setup_py_deps(content: str) -> list[str]:
+    """setup.py 의 install_requires 를 AST 로 파싱.
+
+    지원 형태:
+      1. setup(install_requires=["a>=1.0", "b"])                    — 직접
+      2. requires = [...]; setup(install_requires=requires)         — 간접 (boto3)
+      3. setup(install_requires=[...]+something)                    — BinOp 의 좌측 list
+
+    반환: 의존성 spec 문자열 리스트 (정규화는 _parse_python_requires 가 처리).
+    """
+    import ast as _ast
+    try:
+        tree = _ast.parse(content)
+    except SyntaxError:
+        return []
+
+    # 1차 패스: 모듈 레벨 Assign 으로 정의된 list[str] 수집
+    bindings: dict[str, list[str]] = {}
+    for node in tree.body:
+        if not isinstance(node, _ast.Assign):
+            continue
+        if len(node.targets) != 1 or not isinstance(node.targets[0], _ast.Name):
+            continue
+        target = node.targets[0].id
+        items = _ast_extract_str_list(node.value)
+        if items is not None:
+            bindings[target] = items
+
+    # 2차 패스: setup(install_requires=...) 인자에서 값 추출
+    for node in _ast.walk(tree):
+        if not isinstance(node, _ast.Call):
+            continue
+        # func 이름이 'setup' 인 경우만
+        func_name = (
+            node.func.id if isinstance(node.func, _ast.Name)
+            else getattr(node.func, "attr", "") if isinstance(node.func, _ast.Attribute)
+            else ""
+        )
+        if func_name != "setup":
+            continue
+        for kw in node.keywords:
+            if kw.arg != "install_requires":
+                continue
+            items = _ast_extract_str_list(kw.value, bindings=bindings)
+            if items is not None:
+                return items
+    return []
+
+
+def _ast_extract_str_list(node, bindings: dict | None = None) -> list[str] | None:
+    """AST 노드가 list[str] 이거나 list-concat (a+b) 이면 평탄화해 반환.
+
+    Name 노드는 bindings 에 등록된 list[str] 이면 그 값으로 풀어 사용.
+    list 가 아니거나 비-문자열 요소가 섞여 있으면 None.
+    """
+    import ast as _ast
+    bindings = bindings or {}
+    if isinstance(node, (_ast.List, _ast.Tuple)):
+        out: list[str] = []
+        for elt in node.elts:
+            if isinstance(elt, _ast.Constant) and isinstance(elt.value, str):
+                out.append(elt.value)
+            else:
+                # 비-문자열 요소 — 보수적으로 무시 (typing/PEP 508 spec 외)
+                return None
+        return out
+    if isinstance(node, _ast.Name):
+        # 변수 참조 (boto3 류: install_requires=requires)
+        return bindings.get(node.id)
+    if isinstance(node, _ast.BinOp) and isinstance(node.op, _ast.Add):
+        # left + right 둘 다 list[str] 인 경우만 평탄화
+        left = _ast_extract_str_list(node.left, bindings=bindings)
+        right = _ast_extract_str_list(node.right, bindings=bindings)
+        if left is not None and right is not None:
+            return left + right
+        return None
+    return None
+
+
 def _parse_python_requires(content: str) -> list[tuple[str, str]]:
     """install_requires 리스트에서 (name, version_spec) 추출."""
     result: list[tuple[str, str]] = []
@@ -104,17 +183,30 @@ def extract_python_deps(source_files: list[FullSourceFile]) -> DependencyExtract
                     for name, spec in _parse_python_requires(dep):
                         result.dev_deps.append(Dependency(name=name, version_spec=spec, source_file=sf.path))
 
-    # 2) setup.py (install_requires 리스트 정규식 매칭 — AST 기반이 더 정확하지만 단순화)
+    # 2) setup.py — AST 기반 (정규식이 놓치는 indirect 형태 처리).
+    #   직접 형태:  setup(..., install_requires=["a>=1.0", "b"], ...)
+    #   간접 형태:  requires = [...]; setup(..., install_requires=requires)  ← boto3 류
     for sf in source_files:
         if sf.basename != "setup.py":
             continue
-        # install_requires=["a>=1.0", "b"]
-        m = re.search(r"install_requires\s*=\s*\[(.*?)\]", sf.content, re.DOTALL)
-        if m:
-            body = m.group(1)
-            for item in re.findall(r"""['"]([^'"]+)['"]""", body):
-                for name, spec in _parse_python_requires(item):
-                    result.direct_deps.append(Dependency(name=name, version_spec=spec, source_file=sf.path))
+        deps_from_setup = _parse_setup_py_deps(sf.content)
+        for item in deps_from_setup:
+            for name, spec in _parse_python_requires(item):
+                result.direct_deps.append(Dependency(
+                    name=name, version_spec=spec, source_file=sf.path,
+                ))
+        if not deps_from_setup:
+            # AST 실패 시 정규식 fallback (구식 setup.py / 비정상 문법)
+            m = re.search(
+                r"install_requires\s*=\s*\[(.*?)\]", sf.content, re.DOTALL,
+            )
+            if m:
+                body = m.group(1)
+                for item in re.findall(r"""['"]([^'"]+)['"]""", body):
+                    for name, spec in _parse_python_requires(item):
+                        result.direct_deps.append(Dependency(
+                            name=name, version_spec=spec, source_file=sf.path,
+                        ))
 
     # 3) requirements.txt
     for sf in source_files:

@@ -20,6 +20,9 @@ class PipelineOptions:
     무결성/캐싱 정책을 바꾸는 용도.
     """
     llm_mode: str = "claude"
+    # Anthropic 모델명 — "claude-sonnet-4-5" (정확도 우선, 기본),
+    # "claude-haiku-4-5" (throughput / 비용 -80%, 정확도 동등 측정됨).
+    llm_model: str = "claude-sonnet-4-5"
     enable_deps: bool = False
     enable_sandbox: bool = False
     verbose: bool = False

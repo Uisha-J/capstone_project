@@ -155,6 +155,7 @@ def process_one(
     job: QueuedJob,
     *,
     llm_mode: str = "stub",
+    llm_model: str = "claude-sonnet-4-5",
     integrity_mode: str = "strict",
     sink_cfg: SinkConfig | None = None,
     verbose: bool = False,
@@ -167,6 +168,7 @@ def process_one(
             ecosystem=Ecosystem(job.ecosystem),
             version=job.version,
             llm_mode=llm_mode,
+            llm_model=llm_model,
             integrity_mode=integrity_mode,
             use_cache=True,
             force_rescan=False,
@@ -216,6 +218,7 @@ def run_worker(
     db: ThreatDB | None = None,
     max_jobs: int = 10,
     llm_mode: str = "stub",
+    llm_model: str = "claude-sonnet-4-5",
     integrity_mode: str = "strict",
     loop: bool = False,
     poll_interval_s: float = 30.0,
@@ -249,6 +252,7 @@ def run_worker(
         result = process_one(
             db, queue, job,
             llm_mode=llm_mode,
+            llm_model=llm_model,
             integrity_mode=integrity_mode,
             sink_cfg=cfg,
             verbose=verbose,
@@ -284,6 +288,15 @@ def _argparser() -> argparse.ArgumentParser:
     p.add_argument("--poll-interval", type=float, default=30.0,
                    help="loop 시 대기 시간 (초)")
     p.add_argument("--llm-mode", choices=["stub", "claude"], default="claude")
+    p.add_argument(
+        "--llm-model",
+        choices=["claude-sonnet-4-5", "claude-haiku-4-5"],
+        default="claude-sonnet-4-5",
+        help=(
+            "Anthropic 모델. sonnet=정확도 우선 (기본), "
+            "haiku=throughput/비용 -80% (정확도 동등 측정됨)"
+        ),
+    )
     p.add_argument("--integrity-mode",
                    choices=["fast", "strict", "paranoid"], default="strict")
     p.add_argument("--passphrase", default=None)
@@ -304,6 +317,7 @@ def main():
         db=db,
         max_jobs=args.max,
         llm_mode=args.llm_mode,
+        llm_model=args.llm_model,
         integrity_mode=args.integrity_mode,
         loop=args.loop,
         poll_interval_s=args.poll_interval,

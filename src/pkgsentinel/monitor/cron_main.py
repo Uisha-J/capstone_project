@@ -57,6 +57,7 @@ def _cmd_worker(args) -> int:
         db=db,
         max_jobs=args.max,
         llm_mode=args.llm_mode,
+        llm_model=args.llm_model,
         integrity_mode=args.integrity_mode,
         loop=args.loop,
         poll_interval_s=args.poll_interval,
@@ -118,6 +119,12 @@ def _build_parser() -> argparse.ArgumentParser:
     s.add_argument("--loop", action="store_true")
     s.add_argument("--poll-interval", type=float, default=30.0)
     s.add_argument("--llm-mode", choices=["stub", "claude"], default="claude")
+    s.add_argument(
+        "--llm-model",
+        choices=["claude-sonnet-4-5", "claude-haiku-4-5"],
+        default="claude-sonnet-4-5",
+        help="Anthropic 모델 (haiku = throughput / 비용 -80%)",
+    )
     s.add_argument("--integrity-mode",
                    choices=["fast", "strict", "paranoid"], default="strict")
     s.add_argument("--verbose", "-v", action="store_true")

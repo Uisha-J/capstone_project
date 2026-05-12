@@ -145,6 +145,7 @@ def run_pipeline(
     ecosystem: Ecosystem,
     version: str | None = None,
     llm_mode: str = "claude",
+    llm_model: str = "claude-sonnet-4-5",
     enable_deps: bool = False,
     enable_sandbox: bool = False,
     verbose: bool = False,
@@ -159,6 +160,7 @@ def run_pipeline(
     # description) 을 공유한다.
     options = PipelineOptions(
         llm_mode=llm_mode,
+        llm_model=llm_model,
         enable_deps=enable_deps,
         enable_sandbox=enable_sandbox,
         verbose=verbose,
@@ -1006,6 +1008,7 @@ def run_pipeline(
                     declared_deps=stage5_declared_deps,
                     taint_slice=taint_slice,
                     mode=ctx.options.llm_mode,
+                    model=ctx.options.llm_model,
                 )
                 multi_agent_consensus_per_file[fs.path] = consensus_rpt
                 llm = consensus_to_llm_response(consensus_rpt)
@@ -1015,6 +1018,7 @@ def run_pipeline(
                     fs, match_report.matches, snippet,
                     version_diff_summary=diff_summary,
                     mode=ctx.options.llm_mode,
+                    model=ctx.options.llm_model,
                     taint_slice=taint_slice,
                 )
             line_start = fs.calls[0].line if fs.calls else 0
