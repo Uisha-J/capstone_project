@@ -342,7 +342,16 @@ def analyze_file(f: EntryFile) -> TaintReport:
         for flow in rpt.flows:
             flow.file_path = f.path
         return rpt
-    # JS 는 추후 (tree-sitter 기반) 추가
+    if f.language == "javascript":
+        # 1) 파일 자체의 module-level tainted 변수 (process.env / fs.read 등) 추출
+        # 2) _js_emit_flows 에 seed 로 전달 → within-file source→sink 흐름 emit
+        # cross-file analyzer 의 import-seed 로직 없이 단일 파일 흐름만 잡음.
+        try:
+            module_taints, _exports = _js_module_level_taints_and_exports(f.content)
+            flows = _js_emit_flows(f.content, module_taints, f.path)
+            return TaintReport(flows=flows)
+        except Exception as e:
+            return TaintReport(error=f"js parse error: {e}")
     return TaintReport()
 
 
