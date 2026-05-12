@@ -232,11 +232,16 @@ def to_stix_json(report: dict) -> str:
 
 @dataclass
 class STIXSink:
-    """파일 / TAXII 2.1 collection 으로 발송."""
+    """파일 / TAXII 2.1 collection 으로 발송.
+
+    TAXII 인증: basic_user/pass (legacy) 또는 taxii_bearer (modern OpenCTI/MISP).
+    Bearer 가 지정되면 우선 사용 — 둘 다 지정 시 Bearer 가 이김.
+    """
     out_dir: str | None = None        # 파일 저장 루트
     taxii_url: str | None = None      # TAXII collection POST URL
-    taxii_user: str | None = None
-    taxii_pass: str | None = None
+    taxii_user: str | None = None     # Basic
+    taxii_pass: str | None = None     # Basic
+    taxii_bearer: str | None = None   # Bearer token (modern)
     timeout: int = 15
 
     def emit(self, report: dict) -> dict:
@@ -263,8 +268,9 @@ class STIXSink:
             from .taxii_sink import TaxiiSink
             tx = TaxiiSink(
                 collection_objects_url=self.taxii_url,
-                basic_user=self.taxii_user,
-                basic_pass=self.taxii_pass,
+                basic_user=self.taxii_user if not self.taxii_bearer else None,
+                basic_pass=self.taxii_pass if not self.taxii_bearer else None,
+                bearer_token=self.taxii_bearer,
                 timeout=self.timeout,
             )
             tx_result = tx.post_bundle(bundle)

@@ -35,9 +35,11 @@ class SinkConfig:
     webhook_url: str | None = None      # AISLOP_WEBHOOK_URL
     webhook_secret: str | None = None   # AISLOP_WEBHOOK_SECRET
     falco_out_dir: str | None = None    # AISLOP_FALCO_OUT_DIR
-    taxii_url: str | None = None        # AISLOP_TAXII_URL
-    taxii_user: str | None = None       # AISLOP_TAXII_USER
-    taxii_pass: str | None = None       # AISLOP_TAXII_PASS
+    # TAXII 2.1 — Basic auth (user/pass) 또는 Bearer 토큰 중 하나
+    taxii_url: str | None = None        # AISLOP_TAXII_URL (collection objects endpoint)
+    taxii_user: str | None = None       # AISLOP_TAXII_USER (Basic)
+    taxii_pass: str | None = None       # AISLOP_TAXII_PASS (Basic)
+    taxii_bearer: str | None = None     # AISLOP_TAXII_BEARER (modern OpenCTI/MISP)
     pmg_out_dir: str | None = None      # AISLOP_PMG_OUT_DIR — SafeDep pmg policy yaml
 
     @classmethod
@@ -50,6 +52,7 @@ class SinkConfig:
             taxii_url=os.getenv("AISLOP_TAXII_URL"),
             taxii_user=os.getenv("AISLOP_TAXII_USER"),
             taxii_pass=os.getenv("AISLOP_TAXII_PASS"),
+            taxii_bearer=os.getenv("AISLOP_TAXII_BEARER"),
             pmg_out_dir=os.getenv("AISLOP_PMG_OUT_DIR"),
         )
 
@@ -100,6 +103,7 @@ def _emit_sinks(
             taxii_url=cfg.taxii_url,
             taxii_user=cfg.taxii_user,
             taxii_pass=cfg.taxii_pass,
+            taxii_bearer=cfg.taxii_bearer,
         )
         try:
             r = sink.emit(report_dict)

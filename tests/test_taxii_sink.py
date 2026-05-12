@@ -168,6 +168,63 @@ def test_post_url_error(monkeypatch):
     print("  OK")
 
 
+def test_stixsink_bearer_takes_precedence_over_basic(monkeypatch):
+    """STIXSink 에 bearer + basic 둘 다 주어지면 bearer 우선, basic 무시."""
+    print("\n== STIXSink: bearer > basic ==")
+    _urlopen, captured = _mock_urlopen_factory(status_code=202)
+    monkeypatch.setattr("urllib.request.urlopen", _urlopen)
+
+    from pkgsentinel.realtime.sinks.stix_sink import STIXSink
+    sink = STIXSink(
+        taxii_url="https://t.example/c/x/objects/",
+        taxii_user="ignored-user",
+        taxii_pass="ignored-pass",
+        taxii_bearer="real-bearer-xyz",
+    )
+    rep = {
+        "verdict": "MALICIOUS", "package": "evil", "ecosystem": "PyPI",
+        "version": "0.0.1", "evidence": [], "package_meta": {},
+    }
+    out = sink.emit(rep)
+    assert out["taxii_status"] == 202
+
+    req = captured["req"]
+    auth = req.get_header("Authorization") or req.headers.get("Authorization")
+    assert auth == "Bearer real-bearer-xyz", f"got {auth}"
+    print(f"  OK auth header={auth}")
+
+
+def test_stixsink_basic_when_no_bearer(monkeypatch):
+    """bearer 없으면 basic 사용."""
+    print("\n== STIXSink: basic fallback when no bearer ==")
+    _urlopen, captured = _mock_urlopen_factory(status_code=202)
+    monkeypatch.setattr("urllib.request.urlopen", _urlopen)
+
+    from pkgsentinel.realtime.sinks.stix_sink import STIXSink
+    sink = STIXSink(
+        taxii_url="https://t.example/c/x/objects/",
+        taxii_user="u", taxii_pass="p",
+    )
+    rep = {
+        "verdict": "MALICIOUS", "package": "evil", "ecosystem": "PyPI",
+        "version": "0.0.1", "evidence": [], "package_meta": {},
+    }
+    sink.emit(rep)
+    auth = captured["req"].get_header("Authorization")
+    assert auth.startswith("Basic "), f"got {auth}"
+    print(f"  OK basic auth used")
+
+
+def test_sinkconfig_reads_bearer_env(monkeypatch):
+    """monitor.worker.SinkConfig 가 AISLOP_TAXII_BEARER 읽음."""
+    print("\n== SinkConfig.from_env reads taxii_bearer ==")
+    monkeypatch.setenv("AISLOP_TAXII_BEARER", "env-bearer-token")
+    from pkgsentinel.monitor.worker import SinkConfig
+    cfg = SinkConfig.from_env()
+    assert cfg.taxii_bearer == "env-bearer-token"
+    print("  OK")
+
+
 def main():
     pass
 
