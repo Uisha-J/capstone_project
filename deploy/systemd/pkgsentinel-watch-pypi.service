@@ -1,0 +1,28 @@
+[Unit]
+Description=pkgsentinel — PyPI new-release watcher (enqueue only)
+Documentation=https://github.com/Uisha-J/capstone_project
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=pkgsentinel
+Group=pkgsentinel
+WorkingDirectory=/opt/pkgsentinel
+EnvironmentFile=/etc/pkgsentinel/env
+# AISLOP_DB_KEY 등 비밀은 EnvironmentFile (root:pkgsentinel 0640) 로만.
+# 또는 AISLOP_KMS=aws + AISLOP_AWS_SECRET_ID 로 외부 KMS 연동.
+
+ExecStart=/opt/pkgsentinel/.venv/bin/python -m pkgsentinel.monitor.cron_main watch-pypi --max 500
+
+# 보호 옵션 — 악성 setup.py 가 실행되는 일은 sandbox 컨테이너에서만.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/pkgsentinel /var/log/pkgsentinel
+StandardOutput=append:/var/log/pkgsentinel/watch-pypi.log
+StandardError=append:/var/log/pkgsentinel/watch-pypi.log
+
+# 종료 코드 0 또는 1 모두 success — 폴링 무결성 누락은 다음 호출에서 catch up
+SuccessExitStatus=0 1

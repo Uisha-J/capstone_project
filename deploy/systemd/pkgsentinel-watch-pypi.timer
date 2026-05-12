@@ -1,0 +1,12 @@
+[Unit]
+Description=Run pkgsentinel PyPI watcher every 5 minutes
+
+[Timer]
+# 부팅 후 30초 + 이후 5분마다
+OnBootSec=30s
+OnUnitActiveSec=5min
+RandomizedDelaySec=15s
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,22 @@
+[Unit]
+Description=pkgsentinel — npm new-release watcher (enqueue only)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=pkgsentinel
+Group=pkgsentinel
+WorkingDirectory=/opt/pkgsentinel
+EnvironmentFile=/etc/pkgsentinel/env
+
+ExecStart=/opt/pkgsentinel/.venv/bin/python -m pkgsentinel.monitor.cron_main watch-npm --limit 200
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/pkgsentinel /var/log/pkgsentinel
+StandardOutput=append:/var/log/pkgsentinel/watch-npm.log
+StandardError=append:/var/log/pkgsentinel/watch-npm.log
+SuccessExitStatus=0 1

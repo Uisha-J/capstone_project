@@ -1,0 +1,23 @@
+[Unit]
+Description=pkgsentinel — refresh OSV / threat feeds (daily)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=pkgsentinel
+Group=pkgsentinel
+WorkingDirectory=/opt/pkgsentinel
+EnvironmentFile=/etc/pkgsentinel/env
+
+# OSV PyPI/npm 캐시 + GHSA 등 갱신. 약 5분 (네트워크 의존).
+ExecStart=/opt/pkgsentinel/.venv/bin/python -m pkgsentinel.monitor.cron_main refresh-feeds
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/pkgsentinel /var/log/pkgsentinel
+StandardOutput=append:/var/log/pkgsentinel/refresh-feeds.log
+StandardError=append:/var/log/pkgsentinel/refresh-feeds.log
+TimeoutStartSec=15min
+SuccessExitStatus=0 1

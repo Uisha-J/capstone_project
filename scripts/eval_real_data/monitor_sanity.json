@@ -1,0 +1,69 @@
+{
+  "budget_minutes": 5,
+  "max_packages": 3,
+  "llm_mode": "claude",
+  "llm_model": "claude-haiku-4-5",
+  "pypi_poll": {
+    "used": "xmlrpc",
+    "events_seen": 20,
+    "enqueued": 20,
+    "error": null
+  },
+  "npm_poll": null,
+  "worker_summary": {
+    "processed": 3,
+    "elapsed_s": 12.4,
+    "queue_stats_after": {
+      "pending": 17,
+      "inflight": 0,
+      "done": 3,
+      "failed": 0,
+      "total": 20
+    },
+    "results": [
+      {
+        "id": 1,
+        "pkg": "PyPI/GooeyPy@0.0.3",
+        "verdict": "CLEAN",
+        "elapsed_s": 6.47,
+        "sinks": [],
+        "error": null
+      },
+      {
+        "id": 2,
+        "pkg": "PyPI/sync2cd@1.3",
+        "verdict": "ERROR",
+        "elapsed_s": 0.3,
+        "sinks": [],
+        "error": null
+      },
+      {
+        "id": 3,
+        "pkg": "PyPI/zc.buildout@1.0.0b28",
+        "verdict": "ERROR",
+        "elapsed_s": 5.6,
+        "sinks": [],
+        "error": null
+      }
+    ]
+  },
+  "queue_pre": {
+    "pending": 20,
+    "inflight": 0,
+    "done": 0,
+    "failed": 0,
+    "total": 20
+  },
+  "queue_post": {
+    "pending": 17,
+    "inflight": 0,
+    "done": 3,
+    "failed": 0,
+    "total": 20
+  },
+  "verdict_distribution": {
+    "CLEAN": 1,
+    "ERROR": 2
+  },
+  "errors": 0
+}

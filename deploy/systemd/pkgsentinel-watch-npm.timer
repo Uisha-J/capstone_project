@@ -1,0 +1,11 @@
+[Unit]
+Description=Run pkgsentinel npm watcher every 5 minutes
+
+[Timer]
+OnBootSec=45s
+OnUnitActiveSec=5min
+RandomizedDelaySec=15s
+Persistent=true
+
+[Install]
+WantedBy=timers.target

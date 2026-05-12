@@ -1,0 +1,205 @@
+{
+  "budget_minutes": 30,
+  "max_packages": 20,
+  "llm_mode": "claude",
+  "llm_model": "claude-haiku-4-5",
+  "pypi_poll": {
+    "used": "xmlrpc",
+    "events_seen": 100,
+    "enqueued": 100,
+    "error": null
+  },
+  "npm_poll": null,
+  "worker_summary": {
+    "processed": 20,
+    "elapsed_s": 21.2,
+    "queue_stats_after": {
+      "pending": 80,
+      "inflight": 0,
+      "done": 20,
+      "failed": 0,
+      "total": 100
+    },
+    "results": [
+      {
+        "id": 1,
+        "pkg": "PyPI/GooeyPy@0.0.3",
+        "verdict": "CLEAN",
+        "elapsed_s": 4.82,
+        "sinks": [],
+        "error": null
+      },
+      {
+        "id": 2,
+        "pkg": "PyPI/sync2cd@1.3",
+        "verdict": "ERROR",
+        "elapsed_s": 0.11,
+        "sinks": [],
+        "error": null
+      },
+      {
+        "id": 3,
+        "pkg": "PyPI/zc.buildout@1.0.0b28",
+        "verdict": "ERROR",
+        "elapsed_s": 5.31,
+        "sinks": [],
+        "error": null
+      },
+      {
+        "id": 4,
+        "pkg": "PyPI/gaphor@0.10.2",
+        "verdict": "ERROR",
+        "elapsed_s": 0.93,
+        "sinks": [],
+        "error": null
+      },
+      {
+        "id": 5,
+        "pkg": "PyPI/bsddb3@4.7.2",
+        "verdict": "ERROR",
+        "elapsed_s": 1.27,
+        "sinks": [],
+        "error": null
+      },
+      {
+        "id": 6,
+        "pkg": "PyPI/funkload@1.6.2",
+        "verdict": "ERROR",
+        "elapsed_s": 1.24,
+        "sinks": [],
+        "error": null
+      },
+      {
+        "id": 7,
+        "pkg": "PyPI/z3c.zalchemy@trunk-r74079",
+        "verdict": "ERROR",
+        "elapsed_s": 0.38,
+        "sinks": [],
+        "error": null
+      },
+      {
+        "id": 8,
+        "pkg": "PyPI/gocept.zope3instance@2.0a1-r74080",
+        "verdict": "CLEAN",
+        "elapsed_s": 1.69,
+        "sinks": [],
+        "error": null
+      },
+      {
+        "id": 9,
+        "pkg": "PyPI/csv@1.0",
+        "verdict": "CLEAN",
+        "elapsed_s": 0.25,
+        "sinks": [],
+        "error": null
+      },
+      {
+        "id": 10,
+        "pkg": "PyPI/sybase@0.35",
+        "verdict": "CLEAN",
+        "elapsed_s": 0.27,
+        "sinks": [],
+        "error": null
+      },
+      {
+        "id": 11,
+        "pkg": "PyPI/PythonCardPrototype@0.7",
+        "verdict": "ERROR",
+        "elapsed_s": 0.35,
+        "sinks": [],
+        "error": null
+      },
+      {
+        "id": 12,
+        "pkg": "PyPI/SPYCE---Python-Server-Pages@v1.3.0",
+        "verdict": "ERROR",
+        "elapsed_s": 0.26,
+        "sinks": [],
+        "error": null
+      },
+      {
+        "id": 13,
+        "pkg": "PyPI/FontTools@1.0",
+        "verdict": "ERROR",
+        "elapsed_s": 0.97,
+        "sinks": [],
+        "error": null
+      },
+      {
+        "id": 14,
+        "pkg": "PyPI/FontTools@2.0b1",
+        "verdict": "ERROR",
+        "elapsed_s": 0.87,
+        "sinks": [],
+        "error": null
+      },
+      {
+        "id": 15,
+        "pkg": "PyPI/PyChecker@0.8.12",
+        "verdict": "CLEAN",
+        "elapsed_s": 0.32,
+        "sinks": [],
+        "error": null
+      },
+      {
+        "id": 16,
+        "pkg": "PyPI/getpaid.core@0.6.0",
+        "verdict": "CLEAN",
+        "elapsed_s": 0.95,
+        "sinks": [],
+        "error": null
+      },
+      {
+        "id": 17,
+        "pkg": "PyPI/roundup@0.5.4",
+        "verdict": "ERROR",
+        "elapsed_s": 0.31,
+        "sinks": [],
+        "error": null
+      },
+      {
+        "id": 18,
+        "pkg": "PyPI/imgSeek@0.5",
+        "verdict": "ERROR",
+        "elapsed_s": 0.29,
+        "sinks": [],
+        "error": null
+      },
+      {
+        "id": 19,
+        "pkg": "PyPI/Kaa@0.8",
+        "verdict": "CLEAN",
+        "elapsed_s": 0.26,
+        "sinks": [],
+        "error": null
+      },
+      {
+        "id": 20,
+        "pkg": "PyPI/pboolean@0.4.4",
+        "verdict": "ERROR",
+        "elapsed_s": 0.3,
+        "sinks": [],
+        "error": null
+      }
+    ]
+  },
+  "queue_pre": {
+    "pending": 100,
+    "inflight": 0,
+    "done": 0,
+    "failed": 0,
+    "total": 100
+  },
+  "queue_post": {
+    "pending": 80,
+    "inflight": 0,
+    "done": 20,
+    "failed": 0,
+    "total": 100
+  },
+  "verdict_distribution": {
+    "CLEAN": 7,
+    "ERROR": 13
+  },
+  "errors": 0
+}

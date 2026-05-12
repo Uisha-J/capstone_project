@@ -1,0 +1,40 @@
+[Unit]
+Description=pkgsentinel — queue consumer / analysis worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pkgsentinel
+Group=pkgsentinel
+WorkingDirectory=/opt/pkgsentinel
+EnvironmentFile=/etc/pkgsentinel/env
+
+# 데몬 모드 — --loop. Haiku 모드로 비용 최소.
+# Sonnet 으로 바꾸려면 --llm-model claude-sonnet-4-5 + 비용 ~5x.
+# 메모리 보호: 시스템 OOM 시 자동 재시작.
+ExecStart=/opt/pkgsentinel/.venv/bin/python -m pkgsentinel.monitor.cron_main worker \
+    --loop --poll-interval 30 \
+    --llm-mode claude --llm-model claude-haiku-4-5 \
+    --integrity-mode strict --max 5
+
+Restart=on-failure
+RestartSec=30s
+StartLimitBurst=5
+StartLimitIntervalSec=10min
+
+# 보호
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/pkgsentinel /var/log/pkgsentinel /var/lib/pkgsentinel/sinks
+# 메모리 한계 (TTP embedder + AttackIndex 합쳐 약 2GB 까지 사용)
+MemoryMax=4G
+CPUWeight=200
+
+StandardOutput=append:/var/log/pkgsentinel/worker.log
+StandardError=append:/var/log/pkgsentinel/worker.log
+
+[Install]
+WantedBy=multi-user.target
