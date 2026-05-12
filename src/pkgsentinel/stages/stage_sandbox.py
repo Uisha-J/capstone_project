@@ -369,7 +369,26 @@ class StraceDockerSandbox(DockerSandbox):
 # ─────────────── 선택 헬퍼 ───────────────
 
 def get_default_sandbox() -> BaseSandbox:
-    """Docker 가 있으면 DockerSandbox, 없으면 MockSandbox."""
+    """우선순위:
+      1. OssfDataSandbox — OSSF Package Analysis 결과를 데이터로 흡수. Docker / Linux 의존 0.
+      2. (opt-in) DockerSandbox / StraceDockerSandbox — Linux + Docker 환경에서만.
+      3. MockSandbox — 위 둘 다 사용 불가시 fallback (no-op).
+
+    DockerSandbox 는 더 이상 default 가 아님 — 실 운영에서 Windows 호스트 또는
+    Docker 없는 컨테이너 환경 에서도 dynamic-analysis 데이터를 받기 위함.
+    OSSF Package Analysis 가 매일 신규 패키지 분석을 publish 하므로 우리 자체
+    sandbox 운영의 한계 (Linux+Docker 필수, 비용, 보안 검토) 가 해소됨.
+    """
+    # 동적 import — OssfDataSandbox 가 knowledge 패키지에 있어 순환 import 회피
+    from ..knowledge.ossf_package_analysis import OssfDataSandbox
+    return OssfDataSandbox()
+
+
+def get_local_docker_sandbox() -> BaseSandbox:
+    """명시적으로 Docker / Linux 환경 자체 sandbox 가 필요할 때만 사용.
+
+    제약: Linux + Docker 데몬 필요. 악성 코드가 실행됨 — 보안 검토 후 사용.
+    """
     docker_sandbox = DockerSandbox()
     if docker_sandbox._available():
         return docker_sandbox
