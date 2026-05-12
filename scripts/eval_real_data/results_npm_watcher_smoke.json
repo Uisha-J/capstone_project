@@ -1,0 +1,19 @@
+{
+  "poll_result": {
+    "used": "couchdb",
+    "since": 0,
+    "last_seq": 109831447,
+    "changes_seen": 5,
+    "events": 10,
+    "enqueued": 10
+  },
+  "queue_stats": {
+    "pending": 10,
+    "inflight": 0,
+    "done": 0,
+    "failed": 0,
+    "total": 10
+  },
+  "elapsed_s": 15.64,
+  "fetch_versions": true
+}

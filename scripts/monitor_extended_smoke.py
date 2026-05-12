@@ -77,11 +77,16 @@ def main():
     npm_result = None
     if args.enqueue_npm > 0:
         from pkgsentinel.monitor.npm_watcher import poll_once as poll_npm
-        print(f"\n[2] npm changes poll (max={args.enqueue_npm})")
+        print(f"\n[2] npm changes poll (limit={args.enqueue_npm})")
         t0 = time.time()
         try:
-            npm_result = poll_npm(db=db, max_events=args.enqueue_npm)
-            print(f"    enqueued={npm_result.get('enqueued', 0)} "
+            # npm_watcher 는 limit 인자. fetch_versions=False → registry 콜 회피로 빠른 enqueue.
+            npm_result = poll_npm(
+                db=db, limit=args.enqueue_npm, fetch_versions=False,
+            )
+            print(f"    used={npm_result.get('used')} "
+                  f"changes_seen={npm_result.get('changes_seen', 0)} "
+                  f"enqueued={npm_result.get('enqueued', 0)} "
                   f"elapsed={time.time()-t0:.1f}s")
         except Exception as e:
             print(f"    npm poll failed: {e}")
