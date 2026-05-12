@@ -15,7 +15,7 @@
         "taint_flows": 1,
         "llm_stub": "suspicious"
       },
-      "elapsed_s": 4.72,
+      "elapsed_s": 4.76,
       "note": "SP-001 + EXF-001"
     },
     {
@@ -69,7 +69,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "SP-004 (recon + exfil)"
     },
     {
@@ -609,7 +609,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "다단계 loader (실제 사례: request typosquat 변형)"
     },
     {
@@ -627,7 +627,7 @@
         "taint_flows": 1,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "anti-analysis 기법"
     },
     {
@@ -1113,7 +1113,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "실제: pytorch nightly torchtriton incident"
     },
     {
@@ -1131,7 +1131,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.02,
+      "elapsed_s": 0.01,
       "note": "실제: ssh-decorate hijack"
     },
     {
@@ -1149,7 +1149,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "실제: shai-hulud worm"
     },
     {
@@ -1527,7 +1527,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": ""
     },
     {
@@ -2171,5 +2171,5 @@
     "f1": 1.0,
     "accuracy": 1.0
   },
-  "elapsed_total_s": 5.48
+  "elapsed_total_s": 5.57
 }

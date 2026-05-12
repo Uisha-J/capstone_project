@@ -12,8 +12,8 @@
       "info": 0,
       "clean": 3,
       "skip": 0,
-      "dep_time_s": 4.07,
-      "total_time_s": 4.22
+      "dep_time_s": 5.49,
+      "total_time_s": 5.64
     },
     {
       "name": "flask",
@@ -27,8 +27,8 @@
       "info": 0,
       "clean": 5,
       "skip": 0,
-      "dep_time_s": 0.88,
-      "total_time_s": 1.11
+      "dep_time_s": 3.37,
+      "total_time_s": 3.57
     },
     {
       "name": "pandas",
@@ -42,8 +42,8 @@
       "info": 0,
       "clean": 18,
       "skip": 0,
-      "dep_time_s": 2.38,
-      "total_time_s": 3.33
+      "dep_time_s": 9.7,
+      "total_time_s": 10.74
     },
     {
       "name": "boto3",
@@ -57,8 +57,8 @@
       "info": 0,
       "clean": 1,
       "skip": 0,
-      "dep_time_s": 0.26,
-      "total_time_s": 0.64
+      "dep_time_s": 1.27,
+      "total_time_s": 1.84
     },
     {
       "name": "react",
@@ -73,7 +73,7 @@
       "clean": 0,
       "skip": 0,
       "dep_time_s": 0.0,
-      "total_time_s": 0.75
+      "total_time_s": 0.73
     },
     {
       "name": "lodash",
@@ -102,8 +102,8 @@
       "info": 1,
       "clean": 24,
       "skip": 0,
-      "dep_time_s": 72.49,
-      "total_time_s": 73.25
+      "dep_time_s": 74.38,
+      "total_time_s": 75.14
     },
     {
       "name": "axios",
@@ -112,13 +112,13 @@
       "direct_deps": 3,
       "dev_deps": 38,
       "deps_analyzed": 30,
-      "mal": 1,
+      "mal": 0,
       "sus": 11,
-      "info": 0,
+      "info": 1,
       "clean": 18,
       "skip": 0,
-      "dep_time_s": 56.66,
-      "total_time_s": 56.96
+      "dep_time_s": 64.3,
+      "total_time_s": 64.57
     },
     {
       "name": "typescript",
@@ -127,13 +127,13 @@
       "direct_deps": 0,
       "dev_deps": 42,
       "deps_analyzed": 30,
-      "mal": 1,
+      "mal": 0,
       "sus": 10,
-      "info": 0,
+      "info": 1,
       "clean": 19,
       "skip": 0,
-      "dep_time_s": 49.88,
-      "total_time_s": 51.91
+      "dep_time_s": 55.09,
+      "total_time_s": 57.11
     },
     {
       "name": "django",
@@ -147,13 +147,13 @@
       "info": 0,
       "clean": 4,
       "skip": 0,
-      "dep_time_s": 0.36,
-      "total_time_s": 2.34
+      "dep_time_s": 1.13,
+      "total_time_s": 3.84
     }
   ],
   "summary": {
     "n_ok": 10,
     "n_total": 10,
-    "elapsed_total_s": 194.74
+    "elapsed_total_s": 223.42
   }
 }

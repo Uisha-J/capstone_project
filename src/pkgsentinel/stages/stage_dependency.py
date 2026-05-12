@@ -283,6 +283,82 @@ def _extract_pinned_version(spec: str | None) -> str | None:
     return v
 
 
+# ─────────────── range spec resolution ───────────────
+
+_REGISTRY_LATEST_CACHE: dict[tuple[str, str], str | None] = {}
+
+
+def _fetch_latest_version(name: str, ecosystem) -> str | None:
+    """레지스트리에서 최신 버전 한 개만 가져오기.
+
+    npm:   https://registry.npmjs.org/<name>  → dist-tags.latest
+    PyPI:  https://pypi.org/pypi/<name>/json  → info.version
+
+    네트워크 실패는 None — caller 가 보수적으로 fallback.
+    """
+    from ..schema import Ecosystem
+    key = (name.lower(), ecosystem.value)
+    if key in _REGISTRY_LATEST_CACHE:
+        return _REGISTRY_LATEST_CACHE[key]
+
+    import json as _json
+    import urllib.error
+    import urllib.request
+
+    if ecosystem == Ecosystem.NPM:
+        url = f"https://registry.npmjs.org/{name}"
+    elif ecosystem == Ecosystem.PYPI:
+        url = f"https://pypi.org/pypi/{name}/json"
+    else:
+        _REGISTRY_LATEST_CACHE[key] = None
+        return None
+
+    try:
+        req = urllib.request.Request(
+            url, headers={"User-Agent": "pkgsentinel-deps/1.0"},
+        )
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            data = _json.loads(resp.read().decode("utf-8"))
+    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError):
+        _REGISTRY_LATEST_CACHE[key] = None
+        return None
+    except Exception:
+        _REGISTRY_LATEST_CACHE[key] = None
+        return None
+
+    if ecosystem == Ecosystem.NPM:
+        latest = (data.get("dist-tags") or {}).get("latest")
+    else:  # PyPI
+        latest = (data.get("info") or {}).get("version")
+
+    _REGISTRY_LATEST_CACHE[key] = latest
+    return latest
+
+
+def _resolve_dep_version(
+    name: str,
+    spec: str | None,
+    ecosystem,
+    *,
+    fetch_registry: bool = True,
+) -> str | None:
+    """version_spec 을 concrete 버전으로 해석.
+
+    1) pinned spec ("1.2.3" / "==1.2.3") → 그대로
+    2) fetch_registry=True 면 registry latest 조회
+    3) 둘 다 실패 → None (caller 가 name-only 매칭)
+
+    Note: latest 가 spec 범위 (`^5.1.1` 등) 를 만족하지 않을 수 있으나, 인기 패키지
+    대부분 사용자 latest 채택 → 실용 정확도 높음. 본 단순화는 의도적.
+    """
+    pinned = _extract_pinned_version(spec)
+    if pinned:
+        return pinned
+    if not fetch_registry:
+        return None
+    return _fetch_latest_version(name, ecosystem)
+
+
 @dataclass
 class DependencyAnalysisResult:
     """한 의존성의 간단한 분석 요약. 전체 AnalysisReport 를 다 재생성하지는 않음 (성능)."""
@@ -300,6 +376,7 @@ def analyze_dependencies(
     max_depth: int = 1,
     max_packages: int = 30,
     attack_history_only: bool = True,
+    resolve_ranges: bool = True,
 ) -> list[DependencyAnalysisResult]:
     """
     의존성 재귀 분석.
@@ -308,6 +385,10 @@ def analyze_dependencies(
         의존성에 대해서는 지식 DB 공격 이력만 빠르게 조회 (성능).
     attack_history_only=False:
         각 의존성을 완전한 파이프라인으로 분석 (느림, 깊이 1 권장).
+
+    resolve_ranges=True (기본):
+        version_spec 이 range (`^5.1.1` 등) 면 registry latest 로 해석해
+        version-aware 매칭에 활용. 비활성화 시 pinned 만 추출.
     """
     from .stage0b_attack_history import check_attack_history
 
@@ -317,9 +398,12 @@ def analyze_dependencies(
     for dep in all_deps[:max_packages]:
         try:
             if attack_history_only:
-                # dep.version_spec 이 정확한 단일 버전 ("==1.2.3" 또는 "1.2.3") 이면
-                # 추출해 version-aware 매칭. 범위 spec 은 None (registry 조회 비활성).
-                resolved_version = _extract_pinned_version(dep.version_spec)
+                # dep.version_spec 이 pinned 면 직접, range 면 registry latest 로 해석.
+                # 둘 다 실패 시 None → name-only 매칭 (보수적).
+                resolved_version = _resolve_dep_version(
+                    dep.name, dep.version_spec, ecosystem,
+                    fetch_registry=resolve_ranges,
+                )
                 hist = check_attack_history(
                     dep.name, ecosystem, version=resolved_version,
                 )
