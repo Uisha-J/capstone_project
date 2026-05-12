@@ -38,6 +38,7 @@ class SinkConfig:
     taxii_url: str | None = None        # AISLOP_TAXII_URL
     taxii_user: str | None = None       # AISLOP_TAXII_USER
     taxii_pass: str | None = None       # AISLOP_TAXII_PASS
+    pmg_out_dir: str | None = None      # AISLOP_PMG_OUT_DIR — SafeDep pmg policy yaml
 
     @classmethod
     def from_env(cls) -> SinkConfig:
@@ -49,12 +50,13 @@ class SinkConfig:
             taxii_url=os.getenv("AISLOP_TAXII_URL"),
             taxii_user=os.getenv("AISLOP_TAXII_USER"),
             taxii_pass=os.getenv("AISLOP_TAXII_PASS"),
+            pmg_out_dir=os.getenv("AISLOP_PMG_OUT_DIR"),
         )
 
     def any_configured(self) -> bool:
         return any([
             self.stix_out_dir, self.webhook_url,
-            self.falco_out_dir, self.taxii_url,
+            self.falco_out_dir, self.taxii_url, self.pmg_out_dir,
         ])
 
 
@@ -131,6 +133,18 @@ def _emit_sinks(
         except Exception as e:
             out["falco"] = {"error": str(e)}
             _log_sink(db, job, "falco", False, error=str(e))
+
+    if cfg.pmg_out_dir:
+        from ..realtime.sinks.pmg_policy import PmgPolicySink
+        sink = PmgPolicySink(out_dir=cfg.pmg_out_dir)
+        try:
+            r = sink.emit(report_dict)
+            out["pmg"] = r
+            _log_sink(db, job, "pmg", r.get("ok", False),
+                      sha=r.get("sha256"))
+        except Exception as e:
+            out["pmg"] = {"error": str(e)}
+            _log_sink(db, job, "pmg", False, error=str(e))
 
     return out
 
