@@ -213,16 +213,65 @@ def _pick_previous_versions(
 def _try_load_cached_prev(
     pkg: str, eco, prev_v: str,
 ) -> tuple[dict[str, set[str]] | None, dict[str, FullSourceFile] | None]:
-    """직전 버전의 캐시된 분석 결과로부터 (apis_by_file, files_placeholder) 복원.
+    """직전 버전의 stage_2_behavior 캐시에서 (apis_by_file, files_partial) 복원.
 
-    제약: evidence-only 저장이라 indicator 가 매칭되지 않은 파일은 캐시에 안 남음.
-    그래서 단순 "API 추가" 검출에는 쓸 수 있지만 "신규 파일" 판정에는 부적합 —
-    호출 측에서 caching_skip_new_file_detection 플래그 켜고 사용해야 함.
+    Stage cache 에 BehaviorReport 가 to_dict 직렬화로 저장돼 있으면 그대로 로드.
+    - apis_by_file: {정규화된 path: {API 호출명, ...}}
+    - files_partial: {정규화된 path: FullSourceFile placeholder} — *calls 가 있는
+      파일만* (BehaviorReport.files 가 이미 그 필터 적용된 결과).
 
-    현재 None 반환 = 캐시 사용 안 함. 향후 stage-level 캐시 도입 시
-    behavior_sequence 를 별도 컬럼으로 저장해서 lossless 복원 가능하게 만들 예정.
+    한계: 호출 없는 파일은 캐시에 안 남음 → "신규 파일" 검출 부정확 가능.
+    호출 측 (analyze_full_diff) 이 result.summary 의 [cached] prefix 로 이 사실을
+    소비자에게 알림.
+
+    캐시 미스 / DB 미가용 / 직렬화 오류 → (None, None) — 호출 측이 정상 fallback.
     """
-    return None, None
+    try:
+        from ..db.stage_cache import StageCache, StageCacheKey
+        from .stage2_behavior import BehaviorReport
+    except Exception:
+        return None, None
+
+    try:
+        sc = StageCache()
+        key = StageCacheKey(
+            package=pkg,
+            ecosystem=getattr(eco, "value", str(eco)),
+            version=prev_v,
+            stage="stage_2_behavior",
+        )
+        # archive_sha256 일치 검증은 skip — 직전 버전 archive 가 안 바뀌었을
+        # 거라는 가정. 만약 변경 시 stage_version 해시도 함께 바뀌므로 cache miss.
+        hit = sc.get(key)
+    except Exception:
+        return None, None
+
+    if not hit or not hit.hit or not hit.payload:
+        return None, None
+
+    try:
+        behavior = BehaviorReport.from_dict(hit.payload)
+    except Exception:
+        return None, None
+
+    apis_by_file: dict[str, set[str]] = {}
+    files_partial: dict[str, FullSourceFile] = {}
+    for fs in behavior.files:
+        norm = _normalize_path(fs.path)
+        apis_by_file[norm] = set(fs.sequence)
+        # 최소 placeholder — analyze_full_diff 가 prev_sf.size 같은 필드를
+        # api_added 케이스에는 안 씀. new_file 케이스만 size_before=prev_sf.size
+        # 사용 — 그러나 캐시 모드에선 new_file 신뢰도 낮으므로 size=0 으로 표기.
+        files_partial[norm] = FullSourceFile(
+            path=fs.path,
+            basename=fs.path.split("/")[-1],
+            content="",
+            size=0,
+            language=fs.language,
+            tier=1,
+        )
+
+    return apis_by_file, files_partial
 
 
 def analyze_full_diff(
