@@ -664,6 +664,23 @@ def _evaluate(
     ):
         verdict = Verdict.CLEAN
 
+    # popular + LLM benign + 결정적 코드 부재 → taint 다중도 허용.
+    # 인기 라이브러리는 taint 가 발화해도 거의 항상 internal templating/
+    # serialization 으로 sink 에 닿지 않음 (flask Werkzeug, numpy einops 등).
+    # 단 decisive 코드 (EXF-004/EXS-002/EXS-003 등) 가 있으면 보호 — 진짜
+    # 침해 버전을 cooccur=0 으로 통과시키지 않기 위해. 또한 taint 가
+    # 비정상적으로 많으면 (>= 10) 라이브러리 패턴이 아니므로 보호 유지.
+    if (
+        llm_mode == "claude"
+        and _is_popular(name, ecosystem)
+        and llm_verdict == LLMVerdict.BENIGN
+        and verdict in (Verdict.SUSPICIOUS, Verdict.HIGH_RISK)
+        and not has_decisive
+        and taint_total < 10
+        and len(cooccur_files) <= 2
+    ):
+        verdict = Verdict.CLEAN
+
     expected_set = (
         {Verdict.MALICIOUS, Verdict.HIGH_RISK, Verdict.SUSPICIOUS}
         if label == "malicious" else {Verdict.CLEAN}

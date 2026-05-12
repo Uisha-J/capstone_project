@@ -1,0 +1,552 @@
+{
+  "ab": {
+    "n_fixtures": 10,
+    "agreement_rate": 0.9,
+    "sonnet_accuracy": 0.9,
+    "haiku_accuracy": 1.0,
+    "avg_latency_sonnet_s": 6.32,
+    "avg_latency_haiku_s": 3.23,
+    "pairs": [
+      {
+        "name": "credential-exfil-base64",
+        "label": "malicious",
+        "sonnet": "malicious",
+        "sonnet_s": 7.08,
+        "haiku": "malicious",
+        "haiku_s": 3.95,
+        "agree": true,
+        "sonnet_correct": true,
+        "haiku_correct": true
+      },
+      {
+        "name": "encoded-exec-payload",
+        "label": "malicious",
+        "sonnet": "ERROR",
+        "sonnet_s": 2.92,
+        "haiku": "malicious",
+        "haiku_s": 3.42,
+        "agree": false,
+        "sonnet_correct": false,
+        "haiku_correct": true
+      },
+      {
+        "name": "shell-curl-bash-pipe",
+        "label": "malicious",
+        "sonnet": "malicious",
+        "sonnet_s": 5.7,
+        "haiku": "malicious",
+        "haiku_s": 2.95,
+        "agree": true,
+        "sonnet_correct": true,
+        "haiku_correct": true
+      },
+      {
+        "name": "system-recon-and-send",
+        "label": "malicious",
+        "sonnet": "malicious",
+        "sonnet_s": 7.56,
+        "haiku": "malicious",
+        "haiku_s": 3.41,
+        "agree": true,
+        "sonnet_correct": true,
+        "haiku_correct": true
+      },
+      {
+        "name": "subprocess-output-upload",
+        "label": "malicious",
+        "sonnet": "malicious",
+        "sonnet_s": 7.33,
+        "haiku": "malicious",
+        "haiku_s": 4.02,
+        "agree": true,
+        "sonnet_correct": true,
+        "haiku_correct": true
+      },
+      {
+        "name": "json-helper",
+        "label": "benign",
+        "sonnet": "benign",
+        "sonnet_s": 6.25,
+        "haiku": "benign",
+        "haiku_s": 2.89,
+        "agree": true,
+        "sonnet_correct": true,
+        "haiku_correct": true
+      },
+      {
+        "name": "math-utils",
+        "label": "benign",
+        "sonnet": "benign",
+        "sonnet_s": 6.41,
+        "haiku": "benign",
+        "haiku_s": 2.86,
+        "agree": true,
+        "sonnet_correct": true,
+        "haiku_correct": true
+      },
+      {
+        "name": "http-getter-readonly",
+        "label": "benign",
+        "sonnet": "benign",
+        "sonnet_s": 7.97,
+        "haiku": "benign",
+        "haiku_s": 3.04,
+        "agree": true,
+        "sonnet_correct": true,
+        "haiku_correct": true
+      },
+      {
+        "name": "string-utils",
+        "label": "benign",
+        "sonnet": "benign",
+        "sonnet_s": 5.11,
+        "haiku": "benign",
+        "haiku_s": 2.91,
+        "agree": true,
+        "sonnet_correct": true,
+        "haiku_correct": true
+      },
+      {
+        "name": "config-loader-yaml-safe",
+        "label": "benign",
+        "sonnet": "benign",
+        "sonnet_s": 6.88,
+        "haiku": "benign",
+        "haiku_s": 2.85,
+        "agree": true,
+        "sonnet_correct": true,
+        "haiku_correct": true
+      }
+    ]
+  },
+  "consistency": {
+    "model": "claude-sonnet-4-5",
+    "n_fixtures": 30,
+    "n_trials": 3,
+    "consistency_rate": 1.0,
+    "top_verdict_accuracy": 0.9667,
+    "per_fixture": [
+      {
+        "name": "credential-exfil-base64",
+        "label": "malicious",
+        "trials": [
+          "malicious",
+          "malicious",
+          "malicious"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "malicious",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "encoded-exec-payload",
+        "label": "malicious",
+        "trials": [
+          "ERROR",
+          "ERROR",
+          "ERROR"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "ERROR",
+        "top_n": 3,
+        "label_match": false
+      },
+      {
+        "name": "shell-curl-bash-pipe",
+        "label": "malicious",
+        "trials": [
+          "malicious",
+          "malicious",
+          "malicious"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "malicious",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "system-recon-and-send",
+        "label": "malicious",
+        "trials": [
+          "malicious",
+          "malicious",
+          "malicious"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "malicious",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "subprocess-output-upload",
+        "label": "malicious",
+        "trials": [
+          "malicious",
+          "malicious",
+          "malicious"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "malicious",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "obfuscated-import-exec",
+        "label": "malicious",
+        "trials": [
+          "malicious",
+          "malicious",
+          "malicious"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "malicious",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "discord-webhook-exfil",
+        "label": "malicious",
+        "trials": [
+          "malicious",
+          "malicious",
+          "malicious"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "malicious",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "install-time-shell-execution",
+        "label": "malicious",
+        "trials": [
+          "malicious",
+          "malicious",
+          "malicious"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "malicious",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "ssl-verify-bypass-and-send",
+        "label": "malicious",
+        "trials": [
+          "malicious",
+          "malicious",
+          "malicious"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "malicious",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "pickle-loads-untrusted",
+        "label": "malicious",
+        "trials": [
+          "malicious",
+          "malicious",
+          "malicious"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "malicious",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "logic-bomb-platform-trigger",
+        "label": "malicious",
+        "trials": [
+          "malicious",
+          "malicious",
+          "malicious"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "malicious",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "logic-bomb-time-trigger",
+        "label": "malicious",
+        "trials": [
+          "malicious",
+          "malicious",
+          "malicious"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "malicious",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "dropper-binary-download-exec",
+        "label": "malicious",
+        "trials": [
+          "malicious",
+          "malicious",
+          "malicious"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "malicious",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "crypto-miner-pattern",
+        "label": "malicious",
+        "trials": [
+          "malicious",
+          "malicious",
+          "malicious"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "malicious",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "dns-exfiltration",
+        "label": "malicious",
+        "trials": [
+          "malicious",
+          "malicious",
+          "malicious"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "malicious",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "json-helper",
+        "label": "benign",
+        "trials": [
+          "benign",
+          "benign",
+          "benign"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "benign",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "math-utils",
+        "label": "benign",
+        "trials": [
+          "benign",
+          "benign",
+          "benign"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "benign",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "http-getter-readonly",
+        "label": "benign",
+        "trials": [
+          "benign",
+          "benign",
+          "benign"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "benign",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "string-utils",
+        "label": "benign",
+        "trials": [
+          "benign",
+          "benign",
+          "benign"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "benign",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "config-loader-yaml-safe",
+        "label": "benign",
+        "trials": [
+          "benign",
+          "benign",
+          "benign"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "benign",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "logger-setup",
+        "label": "benign",
+        "trials": [
+          "benign",
+          "benign",
+          "benign"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "benign",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "csv-reader",
+        "label": "benign",
+        "trials": [
+          "benign",
+          "benign",
+          "benign"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "benign",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "datetime-formatter",
+        "label": "benign",
+        "trials": [
+          "benign",
+          "benign",
+          "benign"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "benign",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "url-builder",
+        "label": "benign",
+        "trials": [
+          "benign",
+          "benign",
+          "benign"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "benign",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "cli-arg-parser",
+        "label": "benign",
+        "trials": [
+          "benign",
+          "benign",
+          "benign"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "benign",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "flask-style-app",
+        "label": "benign",
+        "trials": [
+          "benign",
+          "benign",
+          "benign"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "benign",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "sqlalchemy-orm",
+        "label": "benign",
+        "trials": [
+          "benign",
+          "benign",
+          "benign"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "benign",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "pytest-plugin-style",
+        "label": "benign",
+        "trials": [
+          "benign",
+          "benign",
+          "benign"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "benign",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "click-cli-framework",
+        "label": "benign",
+        "trials": [
+          "benign",
+          "benign",
+          "benign"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "benign",
+        "top_n": 3,
+        "label_match": true
+      },
+      {
+        "name": "asyncio-helper",
+        "label": "benign",
+        "trials": [
+          "benign",
+          "benign",
+          "benign"
+        ],
+        "unique_count": 1,
+        "consistent": true,
+        "top_verdict": "benign",
+        "top_n": 3,
+        "label_match": true
+      }
+    ]
+  },
+  "elapsed_total_s": 692.44
+}

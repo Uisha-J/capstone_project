@@ -1,0 +1,35 @@
+{
+  "ab": {
+    "n_fixtures": 2,
+    "agreement_rate": 1.0,
+    "sonnet_accuracy": 1.0,
+    "haiku_accuracy": 1.0,
+    "avg_latency_sonnet_s": 6.96,
+    "avg_latency_haiku_s": 3.01,
+    "pairs": [
+      {
+        "name": "credential-exfil-base64",
+        "label": "malicious",
+        "sonnet": "malicious",
+        "sonnet_s": 7.52,
+        "haiku": "malicious",
+        "haiku_s": 3.07,
+        "agree": true,
+        "sonnet_correct": true,
+        "haiku_correct": true
+      },
+      {
+        "name": "json-helper",
+        "label": "benign",
+        "sonnet": "benign",
+        "sonnet_s": 6.41,
+        "haiku": "benign",
+        "haiku_s": 2.96,
+        "agree": true,
+        "sonnet_correct": true,
+        "haiku_correct": true
+      }
+    ]
+  },
+  "elapsed_total_s": 19.95
+}

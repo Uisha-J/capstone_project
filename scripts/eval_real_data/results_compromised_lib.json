@@ -1,0 +1,19 @@
+{
+  "note": "Backstabber's Knife Collection 등가 측정 — DataDog compromised_lib 카테고리. 합법 패키지가 침해된 사건 30건.",
+  "n_total": 30,
+  "n_caught_any_alert": 29,
+  "recall": 0.9667,
+  "by_verdict": {
+    "HIGH_RISK": 27,
+    "MALICIOUS": 2,
+    "CLEAN": 1
+  },
+  "fn_packages": [
+    {
+      "name": "@react-native-aria/checkbox",
+      "ecosystem": "npm",
+      "verdict": "CLEAN"
+    }
+  ],
+  "source_data": "scripts/eval_real_data/results_llm_v2.json"
+}

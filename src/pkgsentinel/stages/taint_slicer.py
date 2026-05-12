@@ -477,6 +477,571 @@ def analyze_python_cross_file(
     return reports
 
 
+_JS_SECRET_PATH_HINTS = (".aws/", ".ssh/", "credentials", ".env", "id_rsa", "secrets")
+
+# JS sink 호출 이름 (member_expression 평탄화 결과 기준)
+_JS_SINK_NAMES = {
+    "fetch",
+    "axios.post", "axios.put", "axios.patch", "axios.get", "axios",
+    "http.request", "https.request",
+    "child_process.exec", "child_process.execSync",
+    "child_process.spawn", "child_process.spawnSync",
+    "eval", "Function",
+}
+
+# JS taint propagate transforms
+_JS_TRANSFORMS = {
+    "Buffer.from", "JSON.stringify", "JSON.parse",
+    "atob", "btoa", "encodeURIComponent", "decodeURIComponent",
+    "String", "Number",
+}
+
+
+def _js_parser():
+    """Lazy import — tree-sitter-javascript 가 없으면 None."""
+    try:
+        from .js_ast_parser import _get_parser  # type: ignore
+        return _get_parser()
+    except Exception:
+        return None
+
+
+def _js_text(node, src: bytes) -> str:
+    return src[node.start_byte:node.end_byte].decode("utf-8", errors="replace")
+
+
+def _js_resolve_member(node, src: bytes) -> str | None:
+    """member_expression / identifier → 'a.b.c' 평탄화."""
+    if node is None:
+        return None
+    t = node.type
+    if t == "identifier" or t == "property_identifier":
+        return _js_text(node, src)
+    if t == "member_expression":
+        obj = node.child_by_field_name("object")
+        prop = node.child_by_field_name("property")
+        if prop is None:
+            return None
+        prop_text = _js_text(prop, src)
+        obj_text = _js_resolve_member(obj, src) if obj else None
+        if obj_text is None:
+            return prop_text
+        return f"{obj_text}.{prop_text}"
+    if t == "subscript_expression":
+        # process.env['SECRET'] 같은 경우 — object 만 평탄화 시도
+        obj = node.child_by_field_name("object")
+        return _js_resolve_member(obj, src) if obj else None
+    return None
+
+
+def _js_is_taint_source(value_node, src: bytes) -> str | None:
+    """RHS 표현식이 taint source 이면 source 이름 반환, 아니면 None.
+
+    인식 패턴:
+      - process.env.X / process.env['X']
+      - fs.readFileSync(path)  / fs.readFile(path)  with secret-looking path
+    """
+    if value_node is None:
+        return None
+    t = value_node.type
+    if t == "member_expression" or t == "subscript_expression":
+        name = _js_resolve_member(value_node, src)
+        if name and (name == "process.env" or name.startswith("process.env.")):
+            return "process.env"
+        return None
+    if t == "call_expression":
+        func = value_node.child_by_field_name("function")
+        callee = _js_resolve_member(func, src) if func else None
+        if callee in ("fs.readFileSync", "fs.readFile"):
+            args = value_node.child_by_field_name("arguments")
+            if args is not None:
+                for child in args.children:
+                    if child.type == "string":
+                        path_str = _js_text(child, src).strip("'\"`")
+                        low = path_str.lower()
+                        if any(h in low for h in _JS_SECRET_PATH_HINTS):
+                            return callee
+        return None
+    return None
+
+
+def _js_module_level_taints_and_exports(source: str) -> tuple[dict[str, dict], dict[str, str]]:
+    """모듈-레벨 taint 변수 + export 매핑 추출.
+
+    Returns:
+      - tainted: {local_var: {source, line, transforms}}
+      - exports: {exported_name: local_var}   (export name → 모듈 내부 변수명)
+    """
+    parser = _js_parser()
+    if parser is None:
+        return {}, {}
+    src_bytes = source.encode("utf-8")
+    tree = parser.parse(src_bytes)
+    root = tree.root_node
+
+    tainted: dict[str, dict] = {}
+    exports: dict[str, str] = {}
+
+    def _scan_declarator(decl, in_export: bool):
+        """variable_declarator 한 개."""
+        name_node = decl.child_by_field_name("name")
+        value_node = decl.child_by_field_name("value")
+        if name_node is None:
+            return
+        if name_node.type == "identifier":
+            local = _js_text(name_node, src_bytes)
+            src_name = _js_is_taint_source(value_node, src_bytes)
+            if src_name:
+                tainted[local] = {
+                    "source": src_name,
+                    "line": (decl.start_point[0] + 1),
+                    "transforms": [],
+                }
+            if in_export:
+                exports[local] = local
+
+    # 모듈 top-level 만 순회 — 함수 본문은 외부에서 접근 불가
+    for stmt in root.children:
+        st = stmt.type
+
+        if st == "lexical_declaration" or st == "variable_declaration":
+            for c in stmt.children:
+                if c.type == "variable_declarator":
+                    _scan_declarator(c, in_export=False)
+
+        elif st == "export_statement":
+            # export const X = ... / export { Y } / export default ...
+            for c in stmt.children:
+                if c.type in ("lexical_declaration", "variable_declaration"):
+                    for d in c.children:
+                        if d.type == "variable_declarator":
+                            _scan_declarator(d, in_export=True)
+                elif c.type == "export_clause":
+                    # export { A, B as Bb }
+                    for spec in c.children:
+                        if spec.type == "export_specifier":
+                            name = spec.child_by_field_name("name")
+                            alias = spec.child_by_field_name("alias")
+                            if name is not None:
+                                local_name = _js_text(name, src_bytes)
+                                exported_as = (
+                                    _js_text(alias, src_bytes) if alias else local_name
+                                )
+                                exports[exported_as] = local_name
+
+        elif st == "expression_statement":
+            # module.exports = { A, B } / module.exports.X = local / exports.X = local
+            inner = stmt.children[0] if stmt.children else None
+            if inner is None or inner.type != "assignment_expression":
+                continue
+            left = inner.child_by_field_name("left")
+            right = inner.child_by_field_name("right")
+            left_name = _js_resolve_member(left, src_bytes) if left else None
+            if left_name == "module.exports" and right is not None and right.type == "object":
+                for p in right.children:
+                    if p.type == "shorthand_property_identifier":
+                        n = _js_text(p, src_bytes)
+                        exports[n] = n
+                    elif p.type == "pair":
+                        key = p.child_by_field_name("key")
+                        val = p.child_by_field_name("value")
+                        if key is not None and val is not None and val.type == "identifier":
+                            exports[_js_text(key, src_bytes)] = _js_text(val, src_bytes)
+            elif left_name and (
+                left_name.startswith("module.exports.") or left_name.startswith("exports.")
+            ):
+                exported_as = left_name.split(".")[-1]
+                if right is not None and right.type == "identifier":
+                    exports[exported_as] = _js_text(right, src_bytes)
+                else:
+                    # 직접 source 표현식을 export 에 박은 경우: exports.X = process.env.Y
+                    src_name = _js_is_taint_source(right, src_bytes) if right else None
+                    if src_name:
+                        synthetic = f"__export_{exported_as}"
+                        tainted[synthetic] = {
+                            "source": src_name,
+                            "line": (stmt.start_point[0] + 1),
+                            "transforms": [],
+                        }
+                        exports[exported_as] = synthetic
+
+    return tainted, exports
+
+
+def _js_path_to_key(path: str) -> str:
+    """경로 정규화 — '\\' → '/' 만."""
+    return path.replace("\\", "/")
+
+
+def _js_resolve_import(spec: str, importer_path: str, sources: dict[str, str]) -> str | None:
+    """import specifier 를 sources dict 의 키로 매칭.
+
+    - 상대 경로: importer 디렉터리 기준으로 resolve
+    - 절대/패키지 경로: basename 매칭 fallback
+    - .js / .mjs / .cjs / index.js 시도
+    """
+    importer = _js_path_to_key(importer_path)
+    importer_dir = importer.rsplit("/", 1)[0] if "/" in importer else ""
+
+    candidates: list[str] = []
+    if spec.startswith("./") or spec.startswith("../") or spec.startswith("/"):
+        # 상대 경로
+        if spec.startswith("/"):
+            base = spec.lstrip("/")
+        else:
+            base = (importer_dir + "/" + spec) if importer_dir else spec
+        # 정규화 (.. 처리)
+        parts: list[str] = []
+        for seg in base.split("/"):
+            if seg == "" or seg == ".":
+                continue
+            if seg == "..":
+                if parts:
+                    parts.pop()
+                continue
+            parts.append(seg)
+        joined = "/".join(parts)
+        candidates += [
+            joined,
+            joined + ".js", joined + ".mjs", joined + ".cjs",
+            joined + "/index.js",
+        ]
+    else:
+        # 패키지/절대명 → basename 매칭
+        base = spec.split("/")[-1]
+        candidates += [
+            spec, spec + ".js",
+            base, base + ".js", base + "/index.js",
+        ]
+
+    # sources 키와 매칭 — 정확/접미 매칭
+    keys = {_js_path_to_key(k): k for k in sources.keys()}
+    for cand in candidates:
+        if cand in keys:
+            return keys[cand]
+    # suffix 매칭 (best-effort)
+    for cand in candidates:
+        for norm, orig in keys.items():
+            if norm.endswith("/" + cand) or norm == cand:
+                return orig
+    return None
+
+
+def _js_scan_imports(source: str) -> list[dict]:
+    """import / require 호출을 모듈-레벨에서 추출.
+
+    각 항목: {"module": str, "bindings": [(origin_name, local_name), ...]}
+    """
+    parser = _js_parser()
+    if parser is None:
+        return []
+    src_bytes = source.encode("utf-8")
+    tree = parser.parse(src_bytes)
+    root = tree.root_node
+    out: list[dict] = []
+
+    def _extract_string(node) -> str | None:
+        for c in node.children:
+            if c.type == "string":
+                return _js_text(c, src_bytes).strip("'\"`")
+            sub = _extract_string(c)
+            if sub:
+                return sub
+        return None
+
+    for stmt in root.children:
+        if stmt.type == "import_statement":
+            # source 문자열
+            mod_str = None
+            clause = None
+            for c in stmt.children:
+                if c.type == "string":
+                    mod_str = _js_text(c, src_bytes).strip("'\"`")
+                elif c.type == "import_clause":
+                    clause = c
+            if mod_str is None:
+                continue
+            bindings: list[tuple[str, str]] = []
+            if clause is not None:
+                for cc in clause.children:
+                    if cc.type == "identifier":
+                        # default import → import D from 'x'
+                        bindings.append(("default", _js_text(cc, src_bytes)))
+                    elif cc.type == "named_imports":
+                        for spec in cc.children:
+                            if spec.type == "import_specifier":
+                                name_node = spec.child_by_field_name("name")
+                                alias_node = spec.child_by_field_name("alias")
+                                if name_node is not None:
+                                    origin = _js_text(name_node, src_bytes)
+                                    local = (
+                                        _js_text(alias_node, src_bytes)
+                                        if alias_node else origin
+                                    )
+                                    bindings.append((origin, local))
+            out.append({"module": mod_str, "bindings": bindings})
+
+        elif stmt.type in ("lexical_declaration", "variable_declaration"):
+            for d in stmt.children:
+                if d.type != "variable_declarator":
+                    continue
+                name_node = d.child_by_field_name("name")
+                value_node = d.child_by_field_name("value")
+                if value_node is None:
+                    continue
+                # const X = require('y')                  → default-ish (whole module)
+                # const { A, B } = require('y')           → named
+                # const C = require('y').D                → renamed
+                call_node = None
+                trailing_prop = None
+                if value_node.type == "call_expression":
+                    call_node = value_node
+                elif value_node.type == "member_expression":
+                    obj = value_node.child_by_field_name("object")
+                    prop = value_node.child_by_field_name("property")
+                    if obj is not None and obj.type == "call_expression" and prop is not None:
+                        call_node = obj
+                        trailing_prop = _js_text(prop, src_bytes)
+                if call_node is None:
+                    continue
+                func = call_node.child_by_field_name("function")
+                if func is None or _js_text(func, src_bytes) != "require":
+                    continue
+                args = call_node.child_by_field_name("arguments")
+                mod_str = None
+                if args is not None:
+                    for c in args.children:
+                        if c.type == "string":
+                            mod_str = _js_text(c, src_bytes).strip("'\"`")
+                            break
+                if mod_str is None:
+                    continue
+
+                bindings: list[tuple[str, str]] = []
+                if name_node is None:
+                    pass
+                elif name_node.type == "identifier":
+                    local = _js_text(name_node, src_bytes)
+                    if trailing_prop:
+                        bindings.append((trailing_prop, local))
+                    else:
+                        bindings.append(("default", local))
+                elif name_node.type == "object_pattern":
+                    for p in name_node.children:
+                        if p.type == "shorthand_property_identifier_pattern":
+                            n = _js_text(p, src_bytes)
+                            bindings.append((n, n))
+                        elif p.type == "pair_pattern":
+                            key = p.child_by_field_name("key")
+                            val = p.child_by_field_name("value")
+                            if key is not None and val is not None and val.type == "identifier":
+                                bindings.append((_js_text(key, src_bytes), _js_text(val, src_bytes)))
+                if bindings:
+                    out.append({"module": mod_str, "bindings": bindings})
+
+    return out
+
+
+def _js_emit_flows(source: str, initial_tainted: dict[str, dict], path: str) -> list[TaintFlow]:
+    """한 JS 파일을 분석 — 초기 tainted 를 받아서 sink 호출까지의 flow 만 만든다.
+
+    매우 단순화:
+      - top-level + 모든 함수 본문을 한 묶음으로 보고 변수 흐름 추적 (scope 무시).
+      - assignment / variable_declarator / call_expression 만 본다.
+    """
+    parser = _js_parser()
+    if parser is None:
+        return []
+    src_bytes = source.encode("utf-8")
+    tree = parser.parse(src_bytes)
+
+    tainted: dict[str, dict] = dict(initial_tainted)
+    flows: list[TaintFlow] = []
+
+    def _names_in_expr(node) -> list[str]:
+        if node is None:
+            return []
+        t = node.type
+        out: list[str] = []
+        if t == "identifier":
+            out.append(_js_text(node, src_bytes))
+            return out
+        if t == "member_expression":
+            obj = node.child_by_field_name("object")
+            if obj is not None:
+                out.extend(_names_in_expr(obj))
+            return out
+        if t == "subscript_expression":
+            obj = node.child_by_field_name("object")
+            if obj is not None:
+                out.extend(_names_in_expr(obj))
+            return out
+        # call / template / binary / object / array → 재귀
+        for c in node.children:
+            out.extend(_names_in_expr(c))
+        return out
+
+    def _handle_declarator(decl):
+        name_node = decl.child_by_field_name("name")
+        value_node = decl.child_by_field_name("value")
+        if name_node is None or name_node.type != "identifier" or value_node is None:
+            return
+        target = _js_text(name_node, src_bytes)
+        # transform 호출?
+        if value_node.type == "call_expression":
+            func = value_node.child_by_field_name("function")
+            callee = _js_resolve_member(func, src_bytes) if func else None
+            if callee in _JS_TRANSFORMS:
+                args = value_node.child_by_field_name("arguments")
+                arg_names = _names_in_expr(args) if args else []
+                for nm in arg_names:
+                    if nm in tainted:
+                        info = dict(tainted[nm])
+                        info["transforms"] = info["transforms"] + [callee]
+                        tainted[target] = info
+                        return
+        elif value_node.type == "identifier":
+            nm = _js_text(value_node, src_bytes)
+            if nm in tainted:
+                tainted[target] = tainted[nm]
+
+    def _handle_call(call_node):
+        func = call_node.child_by_field_name("function")
+        if func is None:
+            return
+        callee = _js_resolve_member(func, src_bytes)
+        if callee not in _JS_SINK_NAMES:
+            return
+        args = call_node.child_by_field_name("arguments")
+        if args is None:
+            return
+        arg_names = _names_in_expr(args)
+        for nm in arg_names:
+            if nm in tainted:
+                info = tainted[nm]
+                flows.append(TaintFlow(
+                    source_call=info["source"],
+                    source_line=info["line"],
+                    sink_call=callee,
+                    sink_line=(call_node.start_point[0] + 1),
+                    tainted_var=nm,
+                    transforms=list(info["transforms"]),
+                    file_path=path,
+                ))
+                break
+
+    def _walk(node):
+        t = node.type
+        if t == "variable_declarator":
+            _handle_declarator(node)
+        elif t == "assignment_expression":
+            left = node.child_by_field_name("left")
+            right = node.child_by_field_name("right")
+            if left is not None and left.type == "identifier" and right is not None:
+                target = _js_text(left, src_bytes)
+                if right.type == "identifier":
+                    nm = _js_text(right, src_bytes)
+                    if nm in tainted:
+                        tainted[target] = tainted[nm]
+                elif right.type == "call_expression":
+                    rfunc = right.child_by_field_name("function")
+                    rcallee = _js_resolve_member(rfunc, src_bytes) if rfunc else None
+                    if rcallee in _JS_TRANSFORMS:
+                        rargs = right.child_by_field_name("arguments")
+                        for nm in (_names_in_expr(rargs) if rargs else []):
+                            if nm in tainted:
+                                info = dict(tainted[nm])
+                                info["transforms"] = info["transforms"] + [rcallee]
+                                tainted[target] = info
+                                break
+        elif t == "call_expression":
+            _handle_call(node)
+        for c in node.children:
+            _walk(c)
+
+    _walk(tree.root_node)
+    return flows
+
+
+def analyze_javascript_cross_file(
+    sources: dict[str, str],
+) -> dict[str, TaintReport]:
+    """JS 모듈 간 taint 전파 분석. `analyze_python_cross_file` 의 JS 대응.
+
+    동작:
+      1. 1차 패스 — 각 .js 파일에서 모듈-레벨 taint 변수 + export 매핑 수집.
+      2. 2차 패스 — 각 파일에서 import / require 의 대상이
+         sources 안의 어떤 파일을 가리키는지 resolve 하고, 가져온 이름이
+         그 모듈의 export 이고 export 가 가리키는 로컬 변수가 tainted 면
+         현재 파일의 초기 tainted dict 에 주입.
+      3. 같은 파일에서 sink 호출 인자에 그 이름이 들어가면 cross-file flow 기록.
+
+    한계:
+      - 모듈 객체 전체 import 후 멤버 접근 (`const c = require('./c'); c.SECRET`)
+        은 미지원 — 단, `c.SECRET` 형태로 sink 인자에 직접 들어가면 잡지 못함.
+      - dynamic import / re-export / default 객체 propagate 미지원.
+      - tree-sitter-javascript 가 없으면 빈 결과 반환.
+    """
+    parser = _js_parser()
+    if parser is None:
+        return {p: TaintReport(error="tree-sitter-javascript unavailable")
+                for p in sources}
+
+    # ── 1) 모듈-레벨 taint + export 테이블 ──
+    file_taints: dict[str, dict[str, dict]] = {}
+    file_exports: dict[str, dict[str, str]] = {}
+    for path, src in sources.items():
+        try:
+            taints, exports = _js_module_level_taints_and_exports(src)
+        except Exception:
+            taints, exports = {}, {}
+        file_taints[path] = taints
+        file_exports[path] = exports
+
+    # ── 2) 각 파일에서 import resolve → 초기 tainted 주입 → flow 추출 ──
+    reports: dict[str, TaintReport] = {}
+    for path, src in sources.items():
+        initial: dict[str, dict] = {}
+        try:
+            imports = _js_scan_imports(src)
+        except Exception as e:
+            reports[path] = TaintReport(error=f"js parse error: {e}")
+            continue
+
+        for imp in imports:
+            target_path = _js_resolve_import(imp["module"], path, sources)
+            if target_path is None or target_path == path:
+                continue
+            target_exports = file_exports.get(target_path, {})
+            target_taints = file_taints.get(target_path, {})
+            for origin, local in imp["bindings"]:
+                # origin == 'default' 이거나 정확히 export 이름이거나
+                local_var_in_target = target_exports.get(origin)
+                if local_var_in_target is None:
+                    # default import or unmatched — skip
+                    continue
+                info = target_taints.get(local_var_in_target)
+                if info is None:
+                    continue
+                transforms = list(info.get("transforms", []))
+                if target_path != path:
+                    transforms = [f"<cross-file from {target_path}>"] + transforms
+                initial[local] = {
+                    "source": info["source"],
+                    "line": info.get("line", 0),
+                    "transforms": transforms,
+                }
+
+        try:
+            flows = _js_emit_flows(src, initial, path)
+        except Exception as e:
+            reports[path] = TaintReport(error=f"js parse error: {e}")
+            continue
+        reports[path] = TaintReport(flows=flows)
+
+    return reports
+
+
 def slice_for_llm(
     source: str,
     flows: list[TaintFlow],
