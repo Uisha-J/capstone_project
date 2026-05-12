@@ -81,12 +81,14 @@ def main():
             elapsed_dep = time.time() - t_dep
             n_mal = sum(1 for r in dep_results if r.verdict == "MALICIOUS")
             n_sus = sum(1 for r in dep_results if r.verdict == "SUSPICIOUS")
+            n_info = sum(1 for r in dep_results if r.verdict == "INFO")
             n_clean = sum(1 for r in dep_results if r.verdict == "CLEAN")
             n_skip = sum(1 for r in dep_results if r.verdict == "SKIPPED")
             print(f"  deps analyzed: {len(dep_results)} in {elapsed_dep:.1f}s")
-            print(f"    MAL={n_mal}  SUS={n_sus}  CLEAN={n_clean}  SKIP={n_skip}")
+            print(f"    MAL={n_mal}  SUS={n_sus}  INFO={n_info}  "
+                  f"CLEAN={n_clean}  SKIP={n_skip}")
             for r in dep_results:
-                if r.verdict in ("MALICIOUS", "SUSPICIOUS"):
+                if r.verdict in ("MALICIOUS", "SUSPICIOUS", "INFO"):
                     print(f"      ! {r.name} ({r.verdict}): {r.reason[:80]}")
 
             rows.append({
@@ -95,7 +97,8 @@ def main():
                 "direct_deps": len(direct),
                 "dev_deps": len(dev),
                 "deps_analyzed": len(dep_results),
-                "mal": n_mal, "sus": n_sus, "clean": n_clean, "skip": n_skip,
+                "mal": n_mal, "sus": n_sus, "info": n_info,
+                "clean": n_clean, "skip": n_skip,
                 "dep_time_s": round(elapsed_dep, 2),
                 "total_time_s": round(time.time() - t0, 2),
             })
@@ -113,12 +116,14 @@ def main():
         avg_analyzed = sum(r["deps_analyzed"] for r in ok_rows) / len(ok_rows)
         total_mal = sum(r["mal"] for r in ok_rows)
         total_sus = sum(r["sus"] for r in ok_rows)
+        total_info = sum(r.get("info", 0) for r in ok_rows)
         print(f"\n=== Summary ===")
         print(f"  packages OK    : {len(ok_rows)}/{len(rows)}")
         print(f"  avg direct deps: {avg_direct:.1f}")
         print(f"  avg analyzed   : {avg_analyzed:.1f}")
-        print(f"  malicious deps : {total_mal} (total)")
-        print(f"  suspicious deps: {total_sus} (total)")
+        print(f"  malicious deps : {total_mal} (current version actually compromised)")
+        print(f"  info deps      : {total_info} (name has historical advisory, current version safe)")
+        print(f"  suspicious deps: {total_sus} (typosquat candidates)")
         print(f"  total elapsed  : {total:.1f}s")
 
     out = ROOT / "scripts" / "eval_real_data" / "results_deps_recursion.json"

@@ -262,6 +262,27 @@ def extract_dependencies(
 
 # ─────────────── 재귀 분석 ───────────────
 
+_PINNED_VERSION_RE = re.compile(r"^\s*(?:==|=)?\s*([0-9][^,;\s]*)\s*$")
+
+
+def _extract_pinned_version(spec: str | None) -> str | None:
+    """version_spec 이 단일 핀 ("1.2.3" 또는 "==1.2.3") 이면 그 버전 반환, 아니면 None.
+
+    range spec (">=1,<2" 등) 은 None — known_malicious 매칭은 그 경우 보수적으로
+    이름 매칭만 수행하고 historical 로 분류.
+    """
+    if not spec:
+        return None
+    m = _PINNED_VERSION_RE.match(spec)
+    if not m:
+        return None
+    v = m.group(1)
+    # 영문 이름 (e.g., 'latest', 'next') 은 제외
+    if not v[0].isdigit():
+        return None
+    return v
+
+
 @dataclass
 class DependencyAnalysisResult:
     """한 의존성의 간단한 분석 요약. 전체 AnalysisReport 를 다 재생성하지는 않음 (성능)."""
@@ -296,7 +317,12 @@ def analyze_dependencies(
     for dep in all_deps[:max_packages]:
         try:
             if attack_history_only:
-                hist = check_attack_history(dep.name, ecosystem)
+                # dep.version_spec 이 정확한 단일 버전 ("==1.2.3" 또는 "1.2.3") 이면
+                # 추출해 version-aware 매칭. 범위 spec 은 None (registry 조회 비활성).
+                resolved_version = _extract_pinned_version(dep.version_spec)
+                hist = check_attack_history(
+                    dep.name, ecosystem, version=resolved_version,
+                )
                 if hist.error:
                     results.append(DependencyAnalysisResult(
                         name=dep.name,
@@ -312,7 +338,7 @@ def analyze_dependencies(
                     results.append(DependencyAnalysisResult(
                         name=dep.name,
                         version_spec=dep.version_spec,
-                        resolved_version=None,
+                        resolved_version=resolved_version,
                         verdict="MALICIOUS",
                         reason=(
                             f"dependency name is on the malicious list "
@@ -320,12 +346,25 @@ def analyze_dependencies(
                         ),
                         evidence_count=1,
                     ))
+                elif hist.historical_name_matches:
+                    # 이름은 advisory 에 있지만 *조회 버전이 affected_versions
+                    # 에 없음* — chalk@5.6.2 가 chalk@5.6.1 advisory 에 매칭되는
+                    # 류. INFO 로 분류 (CLEAN 과 SUSPICIOUS 사이).
+                    top = hist.historical_name_matches[0]
+                    results.append(DependencyAnalysisResult(
+                        name=dep.name,
+                        version_spec=dep.version_spec,
+                        resolved_version=resolved_version,
+                        verdict="INFO",
+                        reason=top.reason,
+                        evidence_count=len(hist.historical_name_matches),
+                    ))
                 elif hist.typosquat_candidates:
                     top = hist.typosquat_candidates[0]
                     results.append(DependencyAnalysisResult(
                         name=dep.name,
                         version_spec=dep.version_spec,
-                        resolved_version=None,
+                        resolved_version=resolved_version,
                         verdict="SUSPICIOUS",
                         reason=top.reason,
                         evidence_count=len(hist.typosquat_candidates),
@@ -334,7 +373,7 @@ def analyze_dependencies(
                     results.append(DependencyAnalysisResult(
                         name=dep.name,
                         version_spec=dep.version_spec,
-                        resolved_version=None,
+                        resolved_version=resolved_version,
                         verdict="CLEAN",
                         reason="no attack history match",
                     ))

@@ -273,13 +273,20 @@ def run_pipeline(
 
     # ========== Stage 0B: 공격 이력 ==========
     try:
-        hist = check_attack_history(package, ecosystem)
+        # target_version 가 결정됐다면 version-aware 매칭 — historical-only
+        # (이름은 매칭되지만 현재 버전이 affected_versions 에 없는) 케이스를
+        # MALICIOUS 에서 historical_name_matches 로 분리.
+        hist = check_attack_history(
+            package, ecosystem,
+            version=ctx.version if ctx.version else None,
+        )
         ctx.stage_results.append(StageResult(
             stage="stage_0b_attack_history",
             success=hist.error is None,
             error=hist.error,
             payload={
                 "exact_matches": len(hist.exact_matches),
+                "historical_name_matches": len(hist.historical_name_matches),
                 "typosquat_candidates": len(hist.typosquat_candidates),
             },
         ))

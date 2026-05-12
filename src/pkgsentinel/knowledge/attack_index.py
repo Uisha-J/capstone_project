@@ -19,10 +19,18 @@ from .osv import AttackPattern, load_patterns
 
 @dataclass
 class AttackMatch:
-    kind: str                   # "exact" | "typosquat_candidate"
+    # "exact"                  — 이름 + 버전 모두 일치 (또는 버전 미지정 호출)
+    # "historical_name_match"  — 이름 일치하지만 *조회 버전이 affected_versions 에 없음*
+    # "typosquat_candidate"    — 편집거리 가까운 다른 이름
+    kind: str
     pattern: AttackPattern
     similarity: float           # 정확: 1.0, 유사: Jaccard or 편집거리 기반
     reason: str
+
+    @property
+    def is_active(self) -> bool:
+        """현재 조회 대상이 *실제로* 침해된 상태인가."""
+        return self.kind == "exact"
 
 
 class AttackPatternIndex:
@@ -47,18 +55,62 @@ class AttackPatternIndex:
         print(f"[AttackIndex] loaded {len(patterns)} patterns, "
               f"{len(self._by_name)} unique (ecosystem, name) pairs")
 
-    def lookup_exact(self, package: str, ecosystem: str) -> list[AttackMatch]:
+    def lookup_exact(
+        self,
+        package: str,
+        ecosystem: str,
+        version: str | None = None,
+    ) -> list[AttackMatch]:
+        """이름 매칭 + (선택적) 버전 필터.
+
+        version 이 주어지면 advisory 의 affected_versions 에 *그 버전이 포함*
+        될 때만 kind="exact". 포함되지 않으면 kind="historical_name_match"
+        (정보성 — 이 이름이 과거에 침해된 적은 있으나 현재 조회 버전은 안전).
+
+        affected_versions 가 비어 있으면 unbounded 로 보고 모두 exact 처리
+        (OSV 가 버전 정보를 누락한 경우 — 보수적 매칭).
+
+        version=None 이면 기존 동작 (모두 exact).
+        """
         key = (ecosystem, package.lower())
         hits = self._by_name.get(key, [])
-        return [
-            AttackMatch(
-                kind="exact",
-                pattern=p,
-                similarity=1.0,
-                reason=f"exact match: this package name was reported as malicious ({p.advisory_id})",
-            )
-            for p in hits
-        ]
+        matches: list[AttackMatch] = []
+        for p in hits:
+            affected = p.affected_versions or []
+            if version is None or not affected:
+                matches.append(AttackMatch(
+                    kind="exact",
+                    pattern=p,
+                    similarity=1.0,
+                    reason=(
+                        f"exact match: this package name was reported as "
+                        f"malicious ({p.advisory_id})"
+                    ),
+                ))
+                continue
+            if version in affected:
+                matches.append(AttackMatch(
+                    kind="exact",
+                    pattern=p,
+                    similarity=1.0,
+                    reason=(
+                        f"exact version match: {package}@{version} is in "
+                        f"affected_versions of {p.advisory_id}"
+                    ),
+                ))
+            else:
+                matches.append(AttackMatch(
+                    kind="historical_name_match",
+                    pattern=p,
+                    similarity=1.0,
+                    reason=(
+                        f"name '{package}' was reported as malicious "
+                        f"({p.advisory_id}) but version {version} is NOT in "
+                        f"affected_versions {affected[:5]}{'...' if len(affected) > 5 else ''} "
+                        f"— current version likely safe"
+                    ),
+                ))
+        return matches
 
     def lookup_similar(
         self,

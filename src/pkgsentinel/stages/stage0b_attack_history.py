@@ -21,16 +21,35 @@ from ..schema import (
 
 @dataclass
 class AttackHistoryResult:
+    # kind="exact" 만 포함 — 현재 조회 버전이 *실제로* 침해된 advisory.
     exact_matches: list[AttackMatch] = field(default_factory=list)
+    # kind="historical_name_match" — 이름은 advisory 에 있으나 현재 버전은
+    # affected_versions 에 없음 (예: chalk@5.6.2 — chalk@5.6.1 만 침해됨).
+    # 정보성으로 보존 — Stage 5/verdict 에서 LOW severity 로 사용 가능.
+    historical_name_matches: list[AttackMatch] = field(default_factory=list)
     typosquat_candidates: list[AttackMatch] = field(default_factory=list)
     error: str | None = None
 
     @property
     def any_hit(self) -> bool:
-        return bool(self.exact_matches or self.typosquat_candidates)
+        return bool(
+            self.exact_matches
+            or self.historical_name_matches
+            or self.typosquat_candidates
+        )
 
 
-def check_attack_history(package: str, ecosystem: Ecosystem) -> AttackHistoryResult:
+def check_attack_history(
+    package: str,
+    ecosystem: Ecosystem,
+    version: str | None = None,
+) -> AttackHistoryResult:
+    """과거 침해 advisory 조회.
+
+    version 이 주어지면 advisory.affected_versions 에 *그 버전이 포함되는
+    경우만* exact_matches 로 분류. 포함되지 않으면 historical_name_matches
+    (정보성 — 같은 이름이 과거엔 침해된 적 있으나 현재 버전은 안전).
+    """
     result = AttackHistoryResult()
     try:
         idx = get_index()
@@ -38,7 +57,13 @@ def check_attack_history(package: str, ecosystem: Ecosystem) -> AttackHistoryRes
         result.error = str(e)
         return result
 
-    result.exact_matches = idx.lookup_exact(package, ecosystem.value)
+    all_name_matches = idx.lookup_exact(package, ecosystem.value, version=version)
+    for m in all_name_matches:
+        if m.kind == "exact":
+            result.exact_matches.append(m)
+        else:
+            # historical_name_match
+            result.historical_name_matches.append(m)
     result.typosquat_candidates = idx.lookup_similar(
         package, ecosystem.value, max_edit_distance=2, max_results=5,
     )
