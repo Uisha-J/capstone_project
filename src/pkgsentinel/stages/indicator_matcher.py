@@ -523,7 +523,12 @@ def _match_from_package_json(sf: FullSourceFile) -> list[IndicatorHit]:
 
 
 def _match_from_text(sf: FullSourceFile) -> list[IndicatorHit]:
-    """원본 소스 텍스트에서 정규식 기반 매칭."""
+    """원본 소스 텍스트에서 정규식 기반 매칭.
+
+    #Z1: heavy obfuscation 우회 회복용 — augment_source_for_matching 으로
+    base64/hex/charcode 등 정적 디코드 결과를 *원본과 함께* 매칭. 디코드는
+    실행 없이 순수 텍스트 변환.
+    """
     # package.json 은 별도 처리 (json 파싱 필요)
     if sf.basename.lower() == "package.json":
         return _match_from_package_json(sf)
@@ -532,7 +537,13 @@ def _match_from_text(sf: FullSourceFile) -> list[IndicatorHit]:
     if sf.language not in ("python", "javascript"):
         return hits
 
-    lines = sf.content.splitlines()
+    # #Z1: deobfuscation augment
+    try:
+        from .deobfuscator import augment_source_for_matching
+        content_for_match = augment_source_for_matching(sf.content, sf.language)
+    except Exception:
+        content_for_match = sf.content
+    lines = content_for_match.splitlines()
 
     # 1) line 단위 검색 (default)
     for code, pattern, conf, reason in _TEXT_PATTERNS:
@@ -551,16 +562,16 @@ def _match_from_text(sf: FullSourceFile) -> list[IndicatorHit]:
     {h.indicator.code for h in hits}
     for code, pattern, conf, reason in _MULTILINE_PATTERNS:
         try:
-            m = re.search(pattern, sf.content)
+            m = re.search(pattern, content_for_match)
         except re.error:
             continue
         if not m:
             continue
         # 라인 번호: match 시작 위치 기준
-        line_no = sf.content.count("\n", 0, m.start()) + 1
+        line_no = content_for_match.count("\n", 0, m.start()) + 1
         hits.append(_hit(
             code, sf.path, line_no,
-            sf.content[m.start():m.end()][:200].replace("\n", " "),
+            content_for_match[m.start():m.end()][:200].replace("\n", " "),
             confidence=conf, reason=reason,
         ))
     return hits
