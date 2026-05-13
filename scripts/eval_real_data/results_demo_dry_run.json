@@ -1,0 +1,141 @@
+{
+  "results": [
+    {
+      "id": "synthetic-credential-exfil-base64",
+      "label": "malicious",
+      "ind_hits": 3,
+      "ind_high": 2,
+      "taint": 1,
+      "seq": 1,
+      "llm_verdict": "malicious",
+      "llm_agreement": 0.333,
+      "llm_elapsed_s": 27.7
+    },
+    {
+      "id": "PyPI/pyqubee@12.1.1",
+      "source": "datadog/malicious_intent",
+      "label": "malicious",
+      "verdict": "MALICIOUS",
+      "expected": true,
+      "matchers": {
+        "ttp_match": 1,
+        "ind_47": 3,
+        "ind_47_high": 2,
+        "seq_pattern": 1,
+        "seq_high": 0,
+        "seq_medium": 1,
+        "taint_flows": 0,
+        "llm_stub": "malicious",
+        "benign_context": false,
+        "max_high_per_file": 2,
+        "files_with_high_ind": 1,
+        "cooccur_files": 0,
+        "is_concentrated": true,
+        "is_spread": false,
+        "is_popular": false,
+        "has_decisive": true,
+        "ind_codes": [
+          "EXM-008",
+          "EXS-002",
+          "SYS-005"
+        ]
+      },
+      "elapsed_s": 38.0
+    },
+    {
+      "id": "npm/@operato/board@9.0.40",
+      "source": "datadog/compromised_lib",
+      "label": "malicious",
+      "verdict": "HIGH_RISK",
+      "expected": true,
+      "matchers": {
+        "ttp_match": 3,
+        "ind_47": 4,
+        "ind_47_high": 3,
+        "seq_pattern": 2,
+        "seq_high": 2,
+        "seq_medium": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign",
+        "benign_context": false,
+        "max_high_per_file": 3,
+        "files_with_high_ind": 1,
+        "cooccur_files": 1,
+        "is_concentrated": true,
+        "is_spread": false,
+        "is_popular": false,
+        "has_decisive": true,
+        "ind_codes": [
+          "DEF-005",
+          "DEF-006",
+          "EXM-001",
+          "SYS-002"
+        ]
+      },
+      "elapsed_s": 40.5
+    },
+    {
+      "id": "npm/react-native-websocket@1.0.4",
+      "source": "datadog/compromised_lib",
+      "label": "malicious",
+      "verdict": "HIGH_RISK",
+      "expected": true,
+      "matchers": {
+        "ttp_match": 1,
+        "ind_47": 2,
+        "ind_47_high": 2,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "seq_medium": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign",
+        "benign_context": false,
+        "max_high_per_file": 2,
+        "files_with_high_ind": 1,
+        "cooccur_files": 0,
+        "is_concentrated": true,
+        "is_spread": false,
+        "is_popular": false,
+        "has_decisive": false,
+        "ind_codes": [
+          "NET-007",
+          "SYS-002"
+        ]
+      },
+      "elapsed_s": 31.7
+    },
+    {
+      "id": "PyPI/num2words@0.5.16",
+      "source": "datadog/compromised_lib",
+      "label": "malicious",
+      "verdict": "HIGH_RISK",
+      "expected": true,
+      "matchers": {
+        "ttp_match": 0,
+        "ind_47": 4,
+        "ind_47_high": 2,
+        "seq_pattern": 0,
+        "seq_high": 0,
+        "seq_medium": 0,
+        "taint_flows": 0,
+        "llm_stub": "benign",
+        "benign_context": true,
+        "max_high_per_file": 1,
+        "files_with_high_ind": 2,
+        "cooccur_files": 0,
+        "is_concentrated": false,
+        "is_spread": false,
+        "is_popular": false,
+        "has_decisive": true,
+        "ind_codes": [
+          "EXF-005",
+          "EXM-002",
+          "EXS-001",
+          "SYS-005"
+        ]
+      },
+      "elapsed_s": 37.0
+    }
+  ],
+  "timestamp": "2026-05-13T12:31:19Z"
+}
