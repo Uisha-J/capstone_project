@@ -58,10 +58,62 @@ class FileDiff:
 
 
 @dataclass
+class DependencyChange:
+    """패키지 manifest 의 dependencies 변화 (#Z6)."""
+    kind: str                # "added" | "removed" | "version_changed"
+    name: str
+    old_spec: str = ""
+    new_spec: str = ""
+    is_dangerous: bool = False
+    reason: str = ""
+
+    def to_dict(self) -> dict:
+        return {
+            "kind": self.kind, "name": self.name,
+            "old_spec": self.old_spec, "new_spec": self.new_spec,
+            "is_dangerous": self.is_dangerous, "reason": self.reason,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "DependencyChange":
+        return cls(
+            kind=d.get("kind", ""), name=d.get("name", ""),
+            old_spec=d.get("old_spec", ""), new_spec=d.get("new_spec", ""),
+            is_dangerous=bool(d.get("is_dangerous", False)),
+            reason=d.get("reason", ""),
+        )
+
+
+# 위험 의존성 — 정상 패키지가 갑자기 추가하면 의심 (#Z6)
+# child_process, crypto 등은 시스템 호출 / 자격증명 류 능력 제공
+DANGEROUS_NEW_DEPS = {
+    # npm
+    "child_process", "node:child_process",
+    "node:crypto",            # 정상은 import; 신규 추가는 의심
+    "request", "node-fetch", "axios", "got",   # 신규 등장 시 의심 (이미 있던 게 아니면)
+    # PyPI
+    "subprocess", "pycryptodome", "cryptography",
+    "requests", "urllib3", "httpx",            # 신규 등장 시 — 단, 일반적이라 weight 낮음
+    "paramiko", "fabric",     # SSH/remote exec
+    "psutil",                 # 시스템 정보
+    "PyInstaller",
+}
+
+# 정말 위험 — 무조건 의심
+HIGH_RISK_NEW_DEPS = {
+    "node:child_process", "child_process",
+    "paramiko", "fabric",
+    "pyinstaller",
+}
+
+
+@dataclass
 class FullDiffResult:
     current_version: str
     compared_versions: list[str] = field(default_factory=list)
     file_diffs: list[FileDiff] = field(default_factory=list)
+    # #Z6 — manifest dependencies 변화
+    dep_changes: list[DependencyChange] = field(default_factory=list)
     overall_severity: Severity = Severity.LOW
     summary: str = ""
     error: str | None = None
@@ -71,6 +123,7 @@ class FullDiffResult:
             "current_version": self.current_version,
             "compared_versions": list(self.compared_versions),
             "file_diffs": [fd.to_dict() for fd in self.file_diffs],
+            "dep_changes": [dc.to_dict() for dc in self.dep_changes],
             "overall_severity": self.overall_severity.value,
             "summary": self.summary,
             "error": self.error,
@@ -82,6 +135,10 @@ class FullDiffResult:
             current_version=d.get("current_version", ""),
             compared_versions=list(d.get("compared_versions", [])),
             file_diffs=[FileDiff.from_dict(fd) for fd in d.get("file_diffs", [])],
+            dep_changes=[
+                DependencyChange.from_dict(dc)
+                for dc in d.get("dep_changes", [])
+            ],
             overall_severity=Severity(d.get("overall_severity", Severity.LOW.value)),
             summary=d.get("summary", ""),
             error=d.get("error"),
@@ -103,6 +160,76 @@ class FullDiffResult:
 
 
 # ─────────────── 유틸 ───────────────
+
+def diff_dependencies(
+    prev_deps: dict[str, str],
+    curr_deps: dict[str, str],
+) -> list[DependencyChange]:
+    """두 버전의 dep map ({name: version_spec}) 비교 → 변화 목록.
+
+    각 변화에 대해 *위험 의존성* 추가/변경 여부 분류 (#Z6).
+    """
+    changes: list[DependencyChange] = []
+    prev_keys = set(prev_deps.keys())
+    curr_keys = set(curr_deps.keys())
+
+    # 추가
+    for name in (curr_keys - prev_keys):
+        nlow = name.lower()
+        is_high_risk = nlow in HIGH_RISK_NEW_DEPS
+        is_dangerous = nlow in DANGEROUS_NEW_DEPS or is_high_risk
+        reason = ""
+        if is_high_risk:
+            reason = f"high-risk dependency added: {name}"
+        elif is_dangerous:
+            reason = f"sensitive dependency added: {name}"
+        changes.append(DependencyChange(
+            kind="added", name=name,
+            new_spec=curr_deps.get(name, ""),
+            is_dangerous=is_dangerous, reason=reason,
+        ))
+
+    # 제거
+    for name in (prev_keys - curr_keys):
+        changes.append(DependencyChange(
+            kind="removed", name=name,
+            old_spec=prev_deps.get(name, ""),
+            is_dangerous=False,
+            reason="dependency removed (informational)",
+        ))
+
+    # 버전 변경
+    for name in (prev_keys & curr_keys):
+        old = prev_deps[name]
+        new = curr_deps[name]
+        if old != new:
+            changes.append(DependencyChange(
+                kind="version_changed", name=name,
+                old_spec=old, new_spec=new,
+                is_dangerous=False,
+                reason=f"dependency version: {old} -> {new}",
+            ))
+
+    return changes
+
+
+def _extract_deps_map(extract: FullSourceExtract) -> dict[str, str]:
+    """FullSourceExtract → {dep_name: version_spec}.
+
+    package.json / pyproject.toml / setup.py 합산. stage_dependency 의
+    extract_dependencies 결과를 dict 으로 평탄화.
+    """
+    from .stage_dependency import extract_dependencies
+    try:
+        de = extract_dependencies(extract.source_files, extract.ecosystem)
+    except Exception:
+        return {}
+    out: dict[str, str] = {}
+    for dep in (de.direct_deps + de.dev_deps):
+        # 같은 이름 두 번 등장 시 첫 entry 우선
+        out.setdefault(dep.name, dep.version_spec)
+    return out
+
 
 def _sources_to_entry_files(extract: FullSourceExtract) -> list[EntryFile]:
     """FullSourceExtract → Stage 2 가 받는 EntryFile 리스트."""
@@ -393,7 +520,39 @@ def analyze_full_diff(
             all_new_apis.update(new_apis)
 
     result.file_diffs = file_diffs
-    severity, summary = _classify_severity(all_new_apis, new_files_count, all_new_dims)
+
+    # #Z6 — dependencies 변화 감지
+    # prev_extract 가 있는 경우 (캐시 모드 X) 만 시도. cache 모드는 manifest 데이터 없음.
+    try:
+        if 'prev_extract' in locals():
+            prev_deps_map = _extract_deps_map(prev_extract)
+            curr_deps_map = _extract_deps_map(current_extract)
+            result.dep_changes = diff_dependencies(prev_deps_map, curr_deps_map)
+    except Exception:
+        # graceful — dep diff 실패해도 file diff 결과는 살림
+        result.dep_changes = []
+
+    severity, summary = _classify_severity(
+        all_new_apis, new_files_count, all_new_dims,
+    )
+    # #Z6 보강: dangerous dep 추가 시 severity 상향
+    has_dangerous_dep_add = any(
+        c.kind == "added" and c.is_dangerous
+        for c in result.dep_changes
+    )
+    if has_dangerous_dep_add:
+        # 위험 의존성 추가는 최소 MEDIUM, 다른 신호 함께면 HIGH
+        if severity == Severity.LOW:
+            severity = Severity.MEDIUM
+        elif severity == Severity.MEDIUM:
+            severity = Severity.HIGH
+        # summary 에 표시
+        dang_names = [c.name for c in result.dep_changes
+                      if c.kind == "added" and c.is_dangerous]
+        summary = (summary or "") + (
+            f" [Z6] dangerous deps added: {dang_names[:5]}."
+        )
+
     result.overall_severity = severity
     result.summary = summary
 
