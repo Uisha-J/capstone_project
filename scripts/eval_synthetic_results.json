@@ -15,7 +15,7 @@
         "taint_flows": 1,
         "llm_stub": "suspicious"
       },
-      "elapsed_s": 5.04,
+      "elapsed_s": 4.89,
       "note": "SP-001 + EXF-001"
     },
     {
@@ -33,7 +33,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "SP-003 + DEF-005 + EXM-001"
     },
     {
@@ -69,7 +69,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.02,
+      "elapsed_s": 0.01,
       "note": "SP-004 (recon + exfil)"
     },
     {
@@ -123,7 +123,7 @@
         "taint_flows": 1,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "EXF-004"
     },
     {
@@ -321,7 +321,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "clipboard hijack"
     },
     {
@@ -411,7 +411,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "SYS-003"
     },
     {
@@ -501,7 +501,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "EXF-005 + EXM-001"
     },
     {
@@ -537,7 +537,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "credential-paths + EXF-001"
     },
     {
@@ -591,7 +591,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "실제 사례 변형 (pynput 기반)"
     },
     {
@@ -609,7 +609,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "다단계 loader (실제 사례: request typosquat 변형)"
     },
     {
@@ -771,7 +771,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "dependency confusion + recon"
     },
     {
@@ -789,7 +789,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "EXM-003 (ctypes) + dropper"
     },
     {
@@ -915,7 +915,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "실제: event-stream incident 패턴 (npm)"
     },
     {
@@ -933,7 +933,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "실제: ua-parser-js incident 패턴"
     },
     {
@@ -1149,7 +1149,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "실제: shai-hulud worm"
     },
     {
@@ -1275,7 +1275,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "botnet flooder"
     },
     {
@@ -1347,7 +1347,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "creds-paths 변형"
     },
     {
@@ -1473,7 +1473,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": ""
     },
     {
@@ -1491,7 +1491,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": ""
     },
     {
@@ -1545,7 +1545,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "EXS-001 (Import-Time Execution)"
     },
     {
@@ -1563,7 +1563,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "time-conditional + dangerous action"
     },
     {
@@ -2171,5 +2171,5 @@
     "f1": 1.0,
     "accuracy": 1.0
   },
-  "elapsed_total_s": 5.83
+  "elapsed_total_s": 5.8
 }
