@@ -28,7 +28,7 @@ from ..intel.extractor import (
     extract_pattern_from_event,
     parse_event,
 )
-from ..realtime.sinks.webhook_sink import hmac_verify
+from .auth import check_hmac
 
 
 def handle_runtime_alert(
@@ -56,16 +56,10 @@ def handle_runtime_alert(
     Returns:
       (response_dict, http_status_code)
     """
-    # ── 1) HMAC 검증 (옵션) ──
-    if shared_secret is not None:
-        if signature_header is None or timestamp_ms is None \
-                or raw_body is None:
-            return ({"error": "signature/timestamp/body required for HMAC"},
-                    400)
-        if not hmac_verify(
-            shared_secret, timestamp_ms, raw_body, signature_header,
-        ):
-            return ({"error": "invalid signature or replay"}, 401)
+    # ── 1) HMAC + replay 검증 (#S4 통합 헬퍼) ──
+    ok, err = check_hmac(signature_header, timestamp_ms, raw_body, shared_secret)
+    if not ok:
+        return err  # type: ignore[return-value]
 
     # ── 2) source 결정 + event 파싱 ──
     # payload 가 {"source": "...", ...} 형태 또는 payload 안의 known top-level

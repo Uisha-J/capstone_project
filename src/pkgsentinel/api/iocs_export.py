@@ -32,7 +32,7 @@ OSV-format export 는 #L6 (osv_export.py) — *공개 PR* 용. 본 endpoint 는
 """
 from __future__ import annotations
 
-from ..realtime.sinks.webhook_sink import hmac_verify
+from .auth import check_hmac
 
 
 def handle_iocs_export(
@@ -56,15 +56,10 @@ def handle_iocs_export(
     Returns:
       (response_dict, http_status_code)
     """
-    # HMAC 검증 (선택 — read 엔드포인트라 약하게 가능)
-    if shared_secret is not None:
-        if signature_header is None or timestamp_ms is None \
-                or raw_body is None:
-            return ({"error": "signature/timestamp/body required"}, 400)
-        if not hmac_verify(
-            shared_secret, timestamp_ms, raw_body, signature_header,
-        ):
-            return ({"error": "invalid signature or replay"}, 401)
+    # HMAC + replay 검증 (#S4)
+    ok, err = check_hmac(signature_header, timestamp_ms, raw_body, shared_secret)
+    if not ok:
+        return err  # type: ignore[return-value]
 
     status = (query.get("status") or "approved").strip()
     ioc_type = (query.get("ioc_type") or "").strip() or None
