@@ -1,0 +1,83 @@
+# pkgsentinel HTTP 서버 — production Docker 이미지.
+#
+# 빌드:
+#   docker build -t pkgsentinel-server:latest -f deploy/docker/Dockerfile.server .
+#
+# 실행 (단독):
+#   docker run -d --name pkgsentinel \
+#     -p 8787:8787 \
+#     -e AISLOP_DB_KEY=$(openssl rand -hex 32) \
+#     -e PKGSENTINEL_HMAC_SECRET=$(openssl rand -hex 32) \
+#     -e ANTHROPIC_API_KEY=sk-ant-... \
+#     -v pkgsentinel-data:/var/lib/pkgsentinel \
+#     -v pkgsentinel-logs:/var/log/pkgsentinel \
+#     pkgsentinel-server:latest
+#
+# 실행 (docker-compose): deploy/docker/docker-compose.yml 참고.
+#
+# 보안:
+#   - non-root user (uid 10001)
+#   - read-only filesystem 권장 (--read-only --tmpfs /tmp)
+#   - HMAC secret + DB key 는 반드시 env 로 (이미지에 포함 X)
+
+# ── stage 1: build wheel ──
+FROM python:3.11-slim-bookworm AS build
+
+# sqlcipher3 빌드 의존성 — apt sqlcipher dev + build-essential
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        libsqlcipher-dev \
+        pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+# pyproject + 소스 복사 (.dockerignore 가 캐시/대용량 제외)
+COPY pyproject.toml README.md ./
+COPY src/ ./src/
+
+# wheel 빌드
+RUN pip install --no-cache-dir build && python -m build --wheel
+
+# ── stage 2: runtime ──
+FROM python:3.11-slim-bookworm AS runtime
+
+# 런타임 의존성 — sqlcipher 만 (build-essential 없음)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libsqlcipher0 \
+        ca-certificates \
+        tini \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd -g 10001 pkgsentinel \
+    && useradd -u 10001 -g 10001 -m -d /home/pkgsentinel -s /usr/sbin/nologin pkgsentinel \
+    && mkdir -p /var/lib/pkgsentinel /var/log/pkgsentinel /etc/pkgsentinel \
+    && chown -R pkgsentinel:pkgsentinel /var/lib/pkgsentinel /var/log/pkgsentinel
+
+# wheel 설치 + Flask + gunicorn (server extra)
+COPY --from=build /build/dist/*.whl /tmp/
+RUN pip install --no-cache-dir /tmp/*.whl flask>=3.0 gunicorn>=21.0 \
+    && rm /tmp/*.whl
+
+USER pkgsentinel
+WORKDIR /var/lib/pkgsentinel
+
+# 기본 환경 — secret 은 반드시 컨테이너 실행 시 주입
+ENV PKGSENTINEL_BIND=0.0.0.0 \
+    PKGSENTINEL_PORT=8787 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+EXPOSE 8787
+
+# Healthcheck — /readyz 200 이어야 healthy
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD python -c "import urllib.request,sys; \
+sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8787/readyz', timeout=3).status == 200 else 1)"
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
+# gunicorn — 4 worker, threaded mode. 시연/저부하 환경 충분.
+# 부하 ↑ 시: --workers $(nproc) --threads 4
+CMD ["gunicorn", "-w", "4", "--threads", "2", "-b", "0.0.0.0:8787", \
+     "--access-logfile", "-", "--error-logfile", "-", \
+     "--timeout", "120", \
+     "pkgsentinel.server:app"]

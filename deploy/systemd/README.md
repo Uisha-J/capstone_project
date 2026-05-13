@@ -1,6 +1,6 @@
 # pkgsentinel — systemd 운영 자산
 
-24시간 daemon 운영을 위한 4개 unit / 3개 timer 묶음.
+24시간 daemon 운영을 위한 5개 service / 3개 timer 묶음.
 
 ## 토폴로지
 
@@ -16,6 +16,9 @@
 
    pkgsentinel-worker.service          # queue 상시 consume → 분석 → STIX/Falco/webhook sink
        (Type=simple, --loop, --llm-model haiku, MemoryMax=4G)
+
+   pkgsentinel-server.service          # HTTP API — analyze / runtime-alert / iocs-export
+       (Type=simple, gunicorn -w 4 --threads 2, port 8787, #S3)
 ```
 
 ## 설치 (Ubuntu / RHEL 가족)
@@ -38,6 +41,10 @@ AISLOP_DB_KEY=__GENERATE_AND_REPLACE__
 
 # 필수 — Stage 5 LLM
 ANTHROPIC_API_KEY=__YOUR_KEY__
+
+# HTTP API server (#S3) HMAC secret — 클라이언트(VSCode extension 등)와 공유.
+# 미설정 시 server 가 HMAC 검증을 skip (dev 모드 — prod 비권장).
+PKGSENTINEL_HMAC_SECRET=__GENERATE_AND_REPLACE__
 
 # 선택 — sink. 비어 두면 sink 비활성, verdict 만 DB 에 적재.
 AISLOP_STIX_OUT_DIR=/var/lib/pkgsentinel/sinks/stix
@@ -67,7 +74,8 @@ sudo systemctl enable --now \
     pkgsentinel-refresh-feeds.timer \
     pkgsentinel-watch-pypi.timer \
     pkgsentinel-watch-npm.timer \
-    pkgsentinel-worker.service
+    pkgsentinel-worker.service \
+    pkgsentinel-server.service     # HTTP API (#S3)
 
 # 7. 동작 확인
 systemctl status pkgsentinel-worker
@@ -109,7 +117,8 @@ sudo systemctl disable --now \
     pkgsentinel-refresh-feeds.timer \
     pkgsentinel-watch-pypi.timer \
     pkgsentinel-watch-npm.timer \
-    pkgsentinel-worker.service
+    pkgsentinel-worker.service \
+    pkgsentinel-server.service
 ```
 
 ## 보안 모델

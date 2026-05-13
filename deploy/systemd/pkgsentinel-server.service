@@ -1,0 +1,47 @@
+[Unit]
+Description=pkgsentinel — HTTP API server (analyze / runtime-alert / iocs-export)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pkgsentinel
+Group=pkgsentinel
+WorkingDirectory=/opt/pkgsentinel
+EnvironmentFile=/etc/pkgsentinel/env
+
+# gunicorn — production WSGI 서버. worker 수는 CPU 코어에 맞춰 조정.
+#   -w (workers): CPU bound. (cores * 2) + 1 권장.
+#   --threads: I/O bound (LLM 호출 등) — analyze endpoint 가 LLM 대기 길어
+#              threads 늘려 throughput 확보.
+ExecStart=/opt/pkgsentinel/.venv/bin/gunicorn \
+    -w 4 --threads 2 \
+    -b 0.0.0.0:8787 \
+    --access-logfile /var/log/pkgsentinel/server-access.log \
+    --error-logfile /var/log/pkgsentinel/server-error.log \
+    --timeout 120 \
+    --graceful-timeout 30 \
+    pkgsentinel.server:app
+
+Restart=on-failure
+RestartSec=10s
+StartLimitBurst=5
+StartLimitIntervalSec=10min
+
+# 보호
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/pkgsentinel /var/log/pkgsentinel
+# /etc/pkgsentinel 는 EnvironmentFile 만 read-only
+
+# 리소스
+MemoryMax=4G
+CPUWeight=400
+
+StandardOutput=append:/var/log/pkgsentinel/server.log
+StandardError=append:/var/log/pkgsentinel/server.log
+
+[Install]
+WantedBy=multi-user.target

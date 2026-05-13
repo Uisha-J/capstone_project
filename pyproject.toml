@@ -55,12 +55,17 @@ docs = [
     "mkdocs>=1.5",
     "mkdocs-material>=9.4",
 ]
+server = [
+    "flask>=3.0",
+    "gunicorn>=21.0",
+]
 
 [project.scripts]
 pkgsentinel = "pkgsentinel.__main__:main"
 pkgsentinel-feeds = "pkgsentinel.feeds.refresh:main"
 pkgsentinel-worker = "pkgsentinel.monitor.worker:main"
 pkgsentinel-cron = "pkgsentinel.monitor.cron_main:main"
+pkgsentinel-server = "pkgsentinel.server.__main__:main"
 
 [project.urls]
 Homepage = "https://github.com/Uisha-J/capstone_project"
