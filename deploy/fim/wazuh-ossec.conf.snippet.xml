@@ -1,0 +1,57 @@
+<!--
+pkgsentinel × Wazuh — ossec.conf 부분 발췌 (실제 ossec.conf 에 병합)
+
+병합 위치:
+  /var/ossec/etc/ossec.conf 의 <ossec_config> 안
+
+세팅 후:
+  sudo systemctl restart wazuh-manager
+-->
+
+<!-- ─────────────── 1) syscheck 모니터링 ─────────────── -->
+<syscheck>
+  <!-- 패키지 설치 경로 — 신규 파일 / hash 변경 즉시 알림 -->
+  <directories check_all="yes" realtime="yes" report_changes="yes">
+    /opt/app/node_modules
+  </directories>
+  <directories check_all="yes" realtime="yes" report_changes="yes">
+    /opt/app/.venv/lib/python3.11/site-packages
+  </directories>
+  <directories check_all="yes" realtime="yes" report_changes="yes">
+    /usr/local/lib/node_modules
+  </directories>
+
+  <!-- 자격증명 경로 — *어느* process 든 read/write 시도 시 알림 -->
+  <directories check_all="yes" realtime="yes">/root/.ssh</directories>
+  <directories check_all="yes" realtime="yes">/home/*/.aws</directories>
+  <directories check_all="yes" realtime="yes">/home/*/.ssh</directories>
+  <directories check_all="yes" realtime="yes">/Users/*/.aws</directories>
+  <directories check_all="yes" realtime="yes">/Users/*/.ssh</directories>
+
+  <!-- Persistence 시도 — install hook 의 cron / systemd / launchd 변조 -->
+  <directories check_all="yes" realtime="yes">/etc/cron.d</directories>
+  <directories check_all="yes" realtime="yes">/etc/cron.daily</directories>
+  <directories check_all="yes" realtime="yes">/etc/cron.hourly</directories>
+  <directories check_all="yes" realtime="yes">/etc/systemd/system</directories>
+  <directories check_all="yes" realtime="yes">/Library/LaunchDaemons</directories>
+  <directories check_all="yes" realtime="yes">/Library/LaunchAgents</directories>
+
+  <!-- 자체 로그 제외 -->
+  <ignore>/var/log</ignore>
+  <ignore>/var/lib/pkgsentinel</ignore>
+  <ignore type="sregex">.swp$</ignore>
+</syscheck>
+
+<!-- ─────────────── 2) active-response — pkgsentinel webhook trigger ─────────────── -->
+<command>
+  <name>pkgsentinel-trigger</name>
+  <executable>pkgsentinel-trigger.sh</executable>
+  <timeout_allowed>no</timeout_allowed>
+</command>
+
+<active-response>
+  <command>pkgsentinel-trigger</command>
+  <location>local</location>
+  <!-- 트리거: 위 syscheck 룰 ID 또는 자체 룰 100501-100503 -->
+  <rules_id>100501,100502,100503,550,553,554</rules_id>
+</active-response>

@@ -1,0 +1,45 @@
+<!--
+pkgsentinel × Wazuh 사용자 정의 룰.
+
+병합 위치: /var/ossec/etc/rules/local_rules.xml
+
+룰 우선순위 (Wazuh level):
+  7  = warn (일반 변경)
+  9  = high (자격증명 영역)
+  10 = critical (persistence 시도)
+-->
+
+<group name="pkgsentinel,syscheck,">
+
+  <!-- 100501: node_modules / site-packages 변경 — install 또는 침해 가능성 -->
+  <rule id="100501" level="7">
+    <if_sid>550</if_sid>
+    <match>node_modules|site-packages</match>
+    <description>pkgsentinel: package install path changed</description>
+    <group>pkgsentinel_install,</group>
+  </rule>
+
+  <!-- 100502: 자격증명 파일 read/write 시도 — *어느* process 든 -->
+  <rule id="100502" level="9">
+    <if_sid>550</if_sid>
+    <match>.ssh|.aws/credentials|.npmrc|.pypirc|.netrc</match>
+    <description>pkgsentinel: credential file modified (potential exfil)</description>
+    <group>pkgsentinel_cred_access,attack.t1552,</group>
+  </rule>
+
+  <!-- 100503: persistence — cron / systemd / launchd 변조 -->
+  <rule id="100503" level="10">
+    <if_sid>550</if_sid>
+    <match>/etc/cron|/etc/systemd|LaunchDaemons|LaunchAgents</match>
+    <description>pkgsentinel: persistence path modified</description>
+    <group>pkgsentinel_persistence,attack.t1053,</group>
+  </rule>
+
+  <!-- 100504: 자체 룰 — pkgsentinel API server 가 STIX 받았을 때 알림 등 -->
+  <rule id="100504" level="6">
+    <decoded_as>json</decoded_as>
+    <field name="source">pkgsentinel</field>
+    <description>pkgsentinel: enrichment received</description>
+  </rule>
+
+</group>
