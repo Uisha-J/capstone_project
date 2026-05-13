@@ -1,0 +1,109 @@
+{
+  "name": "pkgsentinel-vscode",
+  "displayName": "pkgsentinel — Supply Chain Sentinel",
+  "description": "Real-time slopsquatting / supply-chain attack detection for package manifests. Sends dependency lists to pkgsentinel server, displays inline diagnostics + hover details.",
+  "version": "0.1.0",
+  "publisher": "pkgsentinel",
+  "license": "Apache-2.0",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters",
+    "Other"
+  ],
+  "keywords": [
+    "security",
+    "supply-chain",
+    "slopsquatting",
+    "pypi",
+    "npm",
+    "linter"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Uisha-J/capstone_project.git",
+    "directory": "clients/vscode"
+  },
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onLanguage:json",
+    "onLanguage:toml",
+    "onLanguage:pip-requirements",
+    "onLanguage:plaintext"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "pkgsentinel.scanWorkspace",
+        "title": "pkgsentinel: Scan workspace manifests"
+      },
+      {
+        "command": "pkgsentinel.scanFile",
+        "title": "pkgsentinel: Scan current manifest"
+      },
+      {
+        "command": "pkgsentinel.clearCache",
+        "title": "pkgsentinel: Clear verdict cache"
+      },
+      {
+        "command": "pkgsentinel.showOutput",
+        "title": "pkgsentinel: Show output log"
+      }
+    ],
+    "configuration": {
+      "title": "pkgsentinel",
+      "properties": {
+        "pkgsentinel.serverUrl": {
+          "type": "string",
+          "default": "http://localhost:8787",
+          "description": "pkgsentinel HTTP API base URL (e.g. http://localhost:8787 or https://pkgsentinel.example.com)"
+        },
+        "pkgsentinel.hmacSecret": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "HMAC shared secret for `X-AISLOPSQ-Signature`. Empty → unsigned requests (dev only)."
+        },
+        "pkgsentinel.llmMode": {
+          "type": "string",
+          "default": "stub",
+          "enum": ["stub", "claude"],
+          "description": "Server-side LLM mode. 'stub' = deterministic, free. 'claude' = Anthropic Haiku, costs money."
+        },
+        "pkgsentinel.autoScanOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Re-scan manifest on save."
+        },
+        "pkgsentinel.maxConcurrent": {
+          "type": "number",
+          "default": 4,
+          "description": "Maximum concurrent /api/v1/analyze requests per scan."
+        },
+        "pkgsentinel.cacheTtlMinutes": {
+          "type": "number",
+          "default": 60,
+          "description": "Client-side verdict cache TTL in minutes (in addition to server cache)."
+        },
+        "pkgsentinel.requestTimeoutSeconds": {
+          "type": "number",
+          "default": 60,
+          "description": "Per-request timeout. Cold pipeline runs can take >30s."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "tsc --noEmit -p ./",
+    "test": "node ./out/test/runTests.js",
+    "package": "vsce package --no-yarn -o pkgsentinel-vscode.vsix"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^2.24.0",
+    "typescript": "^5.3.3"
+  }
+}
