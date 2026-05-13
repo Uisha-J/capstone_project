@@ -15,7 +15,7 @@
         "taint_flows": 1,
         "llm_stub": "suspicious"
       },
-      "elapsed_s": 4.89,
+      "elapsed_s": 5.87,
       "note": "SP-001 + EXF-001"
     },
     {
@@ -69,7 +69,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "SP-004 (recon + exfil)"
     },
     {
@@ -123,7 +123,7 @@
         "taint_flows": 1,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.02,
+      "elapsed_s": 0.01,
       "note": "EXF-004"
     },
     {
@@ -224,8 +224,8 @@
       "severity_max": "HIGH",
       "matchers": {
         "ttp_match": 2,
-        "ind_47": 3,
-        "ind_47_high": 1,
+        "ind_47": 4,
+        "ind_47_high": 2,
         "seq_pattern": 1,
         "seq_high": 1,
         "taint_flows": 0,
@@ -303,7 +303,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "preinstall pattern"
     },
     {
@@ -321,7 +321,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.02,
+      "elapsed_s": 0.01,
       "note": "clipboard hijack"
     },
     {
@@ -411,7 +411,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.02,
+      "elapsed_s": 0.01,
       "note": "SYS-003"
     },
     {
@@ -494,14 +494,14 @@
       "severity_max": "HIGH",
       "matchers": {
         "ttp_match": 2,
-        "ind_47": 3,
-        "ind_47_high": 2,
+        "ind_47": 4,
+        "ind_47_high": 3,
         "seq_pattern": 1,
         "seq_high": 1,
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.02,
+      "elapsed_s": 0.01,
       "note": "EXF-005 + EXM-001"
     },
     {
@@ -537,7 +537,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.02,
+      "elapsed_s": 0.01,
       "note": "credential-paths + EXF-001"
     },
     {
@@ -591,7 +591,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.02,
+      "elapsed_s": 0.01,
       "note": "실제 사례 변형 (pynput 기반)"
     },
     {
@@ -602,8 +602,8 @@
       "severity_max": "HIGH",
       "matchers": {
         "ttp_match": 3,
-        "ind_47": 5,
-        "ind_47_high": 4,
+        "ind_47": 7,
+        "ind_47_high": 6,
         "seq_pattern": 1,
         "seq_high": 1,
         "taint_flows": 0,
@@ -627,7 +627,7 @@
         "taint_flows": 1,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "anti-analysis 기법"
     },
     {
@@ -735,7 +735,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "EXS-003 변형 (egg_info)"
     },
     {
@@ -771,7 +771,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.02,
+      "elapsed_s": 0.01,
       "note": "dependency confusion + recon"
     },
     {
@@ -789,7 +789,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.02,
+      "elapsed_s": 0.01,
       "note": "EXM-003 (ctypes) + dropper"
     },
     {
@@ -915,7 +915,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.02,
+      "elapsed_s": 0.01,
       "note": "실제: event-stream incident 패턴 (npm)"
     },
     {
@@ -933,7 +933,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.02,
+      "elapsed_s": 0.01,
       "note": "실제: ua-parser-js incident 패턴"
     },
     {
@@ -1149,7 +1149,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.02,
+      "elapsed_s": 0.01,
       "note": "실제: shai-hulud worm"
     },
     {
@@ -1275,7 +1275,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.02,
+      "elapsed_s": 0.01,
       "note": "botnet flooder"
     },
     {
@@ -1473,7 +1473,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.02,
+      "elapsed_s": 0.01,
       "note": ""
     },
     {
@@ -1491,7 +1491,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.02,
+      "elapsed_s": 0.01,
       "note": ""
     },
     {
@@ -1527,7 +1527,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": ""
     },
     {
@@ -1545,7 +1545,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.02,
+      "elapsed_s": 0.01,
       "note": "EXS-001 (Import-Time Execution)"
     },
     {
@@ -1563,7 +1563,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.02,
+      "elapsed_s": 0.01,
       "note": "time-conditional + dangerous action"
     },
     {
@@ -1574,8 +1574,8 @@
       "severity_max": "HIGH",
       "matchers": {
         "ttp_match": 2,
-        "ind_47": 3,
-        "ind_47_high": 2,
+        "ind_47": 4,
+        "ind_47_high": 3,
         "seq_pattern": 1,
         "seq_high": 1,
         "taint_flows": 0,
@@ -1617,7 +1617,7 @@
         "taint_flows": 0,
         "llm_stub": "benign"
       },
-      "elapsed_s": 0.01,
+      "elapsed_s": 0.02,
       "note": "CDP-based stealing"
     },
     {
@@ -2171,5 +2171,5 @@
     "f1": 1.0,
     "accuracy": 1.0
   },
-  "elapsed_total_s": 5.8
+  "elapsed_total_s": 6.73
 }

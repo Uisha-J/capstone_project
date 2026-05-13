@@ -429,6 +429,39 @@ _MULTILINE_PATTERNS: list[tuple[str, str, float, str]] = [
     ("EXM-006",
      r"\b(?:urllib|httpx|http\.client)\.\w+\s*=\s*\w",
      0.7, "HTTP library function hijack"),
+
+    # ── DOW-001: single-file downloader-exec (multi-stage 공격 #Z2) ──
+    # Python: requests.get(...).text 또는 urlopen 결과를 exec/eval 에 직접
+    ("DOW-001",
+     r"(?:requests\.(?:get|post)|urllib\.request\.urlopen|httpx\.get)"
+     r"\s*\([^)]+\)[\s\S]{0,300}?"
+     r"(?<![\w.])(?:exec|eval|compile)\s*\(",
+     0.88, "fetch result → exec/eval (single-file downloader-exec)"),
+    # JS: fetch(...).then(r => eval/Function/child_process.exec)
+    ("DOW-001",
+     r"(?:fetch|axios\.(?:get|post))\s*\([^)]+\)[\s\S]{0,400}?"
+     r"(?:\beval\s*\(|new\s+Function\s*\(|child_process\.exec\s*\()",
+     0.88, "fetch result → eval/Function/child_process (JS downloader)"),
+    # Python: subprocess.run / os.system on requests/urllib response
+    ("DOW-001",
+     r"(?:requests\.(?:get|post)|urllib\.request\.urlopen)[\s\S]{0,200}?"
+     r"\.(?:text|read|json|content)[\s\S]{0,100}?"
+     r"(?:subprocess\.(?:run|Popen|call|check_output)|os\.system|os\.popen)",
+     0.85, "fetch response → subprocess (downloader-exec variant)"),
+
+    # ── DOW-002: write-then-exec dropper (multi-stage #Z2) ──
+    # Python: open(...,'wb').write(downloaded) then subprocess/os.system on that path
+    ("DOW-002",
+     r"(?:requests\.(?:get|post)|urllib\.request\.urlopen)[\s\S]{0,200}?"
+     r"open\s*\([^)]*[\"']wb?[\"'][^)]*\)\s*\.write\s*\([\s\S]{0,200}?"
+     r"(?:subprocess\.(?:run|Popen|call)|os\.system|os\.popen|os\.execv)",
+     0.92, "fetch → write to disk → execute (dropper pattern)"),
+    # JS: fetch → fs.writeFile → child_process.exec on path
+    ("DOW-002",
+     r"(?:fetch|axios)[\s\S]{0,200}?"
+     r"fs\.(?:writeFile|writeFileSync)[\s\S]{0,200}?"
+     r"child_process\.(?:exec|spawn|execSync)",
+     0.92, "fetch → fs.writeFile → child_process (JS dropper)"),
 ]
 
 

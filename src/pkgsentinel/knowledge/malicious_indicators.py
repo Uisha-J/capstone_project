@@ -555,6 +555,52 @@ _add(MaliciousIndicator(
 ))
 
 
+# ─── DOW: Downloader pattern (Multi-stage 공격 #Z2) ─────────────────
+# Stage-1 downloader 자체는 단순하지만, "fetch + exec/eval/run" 콤보는
+# multi-stage 공격 의 거의 정의적 패턴. 이 콤보가 단일 파일에 등장 → HIGH.
+_add(MaliciousIndicator(
+    code="DOW-001",
+    name="Single-file Downloader-Exec Pattern",
+    category=IndicatorCategory.EXECUTION_STAGE,
+    description=(
+        "한 파일 내에서 HTTP/fetch 호출 결과를 그대로 exec/eval/run 으로 "
+        "넘기는 다단계 downloader 패턴. Stage-2 페이로드를 동적으로 가져와 "
+        "실행 — heavy obfuscation 우회의 전형."
+    ),
+    severity=Severity.HIGH,
+    related_dimensions=[
+        AttackDimension.DATA_TRANSMISSION,
+        AttackDimension.PAYLOAD_EXECUTION,
+    ],
+    detection_hints=[
+        "requests.get + exec/eval/compile",
+        "urllib.request.urlopen + exec",
+        "fetch/axios + Function/eval",
+        "child_process.exec on fetch response",
+    ],
+    mitre_ttps=["T1059", "T1105"],
+))
+_add(MaliciousIndicator(
+    code="DOW-002",
+    name="Write-then-Exec Downloader",
+    category=IndicatorCategory.EXECUTION_STAGE,
+    description=(
+        "fetch → fs.writeFile / open(...).write → 그 파일을 즉시 execute. "
+        "DOW-001 보다 1 단계 더 — 파일 시스템 인디케이터 남김."
+    ),
+    severity=Severity.HIGH,
+    related_dimensions=[
+        AttackDimension.DATA_TRANSMISSION,
+        AttackDimension.PAYLOAD_EXECUTION,
+    ],
+    detection_hints=[
+        "open(..., 'wb').write + subprocess.run / os.system",
+        "fs.writeFileSync + child_process.exec",
+    ],
+    mitre_ttps=["T1105", "T1059"],
+))
+
+
 # ─────────────────── 조회 헬퍼 ───────────────────
 
 def get(code: str) -> MaliciousIndicator | None:

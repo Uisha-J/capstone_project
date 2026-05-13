@@ -225,6 +225,212 @@ def to_tracing_policy(report: dict) -> str:
     return "\n".join(lines)
 
 
+# ─────────────── Generic strict-mode 정책 (#R1) ───────────────
+
+# 신뢰 registry 도메인 / IP — 외부 connect 정책에서 제외
+TRUSTED_REGISTRY_DOMAINS = (
+    "pypi.org", "files.pythonhosted.org",
+    "registry.npmjs.org",
+    "rubygems.org", "crates.io",
+    "raw.githubusercontent.com", "github.com",
+    "storage.googleapis.com",
+)
+
+
+def generate_strict_mode_falco() -> str:
+    """모든 pip/npm/node 프로세스에 적용되는 generic strict 정책.
+
+    *어떤 패키지든* 다음 행동 시도 시 alert + (Tetragon 측에선 kill):
+      - SSH/AWS/cred 파일 read
+      - registry 외 외부 IP/도메인 connect
+      - install-time 쉘 실행 (postinstall/setup.py)
+      - shadow / passwd 변조
+
+    per-package 룰 (FalcoPolicySink.emit) 과 *병행* 배포.
+    무명 zero-day 가 install 시점에 위 행동 시도 → 즉시 catch.
+    """
+    domains = ", ".join(f"'{d}'" for d in TRUSTED_REGISTRY_DOMAINS)
+    lines = [
+        "# pkgsentinel — Generic strict-mode Falco rules",
+        "# 모든 pip/npm/node-managed 프로세스에 적용. per-package 룰과 병행.",
+        "# 출력: /etc/falco/rules.d/pkgsentinel-strict.yaml",
+        "",
+        "- list: pkgsentinel_pkg_processes",
+        "  items: [pip, pip3, npm, npx, node, yarn, pnpm, setup.py, easy_install]",
+        "",
+        "- list: pkgsentinel_trusted_domains",
+        f"  items: [{domains}]",
+        "",
+        "- list: pkgsentinel_cred_paths",
+        "  items:",
+        "    - /root/.ssh",
+        "    - /home",
+        "    - /Users",
+        "    - /.aws/credentials",
+        "    - /.aws/config",
+        "    - /etc/shadow",
+        "    - /.npmrc",
+        "    - /.pypirc",
+        "    - /.netrc",
+        "",
+        "- macro: pkgsentinel_pkg_proc_ancestor",
+        "  condition: >",
+        "    proc.aname[1] in (pkgsentinel_pkg_processes) or",
+        "    proc.aname[2] in (pkgsentinel_pkg_processes) or",
+        "    proc.aname[3] in (pkgsentinel_pkg_processes)",
+        "",
+        "- rule: pkgsentinel_strict_cred_access",
+        "  desc: 'pkgsentinel: any pip/npm-rooted process accessed credentials'",
+        "  condition: >",
+        "    evt.type in (openat, open) and",
+        "    (fd.name pmatch '*/.ssh/*' or",
+        "     fd.name pmatch '*/.aws/credentials' or",
+        "     fd.name pmatch '*/.aws/config' or",
+        "     fd.name = /etc/shadow or",
+        "     fd.name pmatch '*/.npmrc' or",
+        "     fd.name pmatch '*/.pypirc' or",
+        "     fd.name pmatch '*/.netrc' or",
+        "     fd.name pmatch '*/Library/Application Support/Google/*' or",
+        "     fd.name pmatch '*/AppData/Roaming/Mozilla/*') and",
+        "    pkgsentinel_pkg_proc_ancestor",
+        "  output: >",
+        "    pkgsentinel STRICT: package install process accessed credentials",
+        "    (proc=%proc.name file=%fd.name pid=%proc.pid pkg_root=%proc.aname[2])",
+        "  priority: CRITICAL",
+        "  tags: [pkgsentinel, supply-chain, credential-access, strict-mode]",
+        "",
+        "- rule: pkgsentinel_strict_external_connect",
+        "  desc: 'pkgsentinel: package process connected outside registry CDN'",
+        "  condition: >",
+        "    evt.type = connect and",
+        "    fd.typechar = 4 and",
+        "    not fd.sip = 127.0.0.1 and",
+        "    not fd.sip startswith '10.' and",
+        "    not fd.sip startswith '172.' and",
+        "    not fd.sip startswith '192.168.' and",
+        "    not fd.sip startswith '169.254.' and",
+        "    pkgsentinel_pkg_proc_ancestor",
+        "  output: >",
+        "    pkgsentinel STRICT: package install process connected external",
+        "    (dst=%fd.sip:%fd.sport proc=%proc.cmdline pid=%proc.pid)",
+        "  priority: CRITICAL",
+        "  tags: [pkgsentinel, supply-chain, network-egress, strict-mode]",
+        "",
+        "- rule: pkgsentinel_strict_shell_in_install",
+        "  desc: 'pkgsentinel: shell spawned during package install hook'",
+        "  condition: >",
+        "    evt.type = execve and",
+        "    proc.name in (sh, bash, zsh, dash, pwsh, powershell) and",
+        "    pkgsentinel_pkg_proc_ancestor",
+        "  output: >",
+        "    pkgsentinel STRICT: install hook executed shell",
+        "    (cmdline=%proc.cmdline pkg_root=%proc.aname[2])",
+        "  priority: WARNING",
+        "  tags: [pkgsentinel, supply-chain, install-hook, strict-mode]",
+        "",
+        "- rule: pkgsentinel_strict_persistence_attempt",
+        "  desc: 'pkgsentinel: install hook wrote crontab / systemd / launchd'",
+        "  condition: >",
+        "    evt.type in (openat, open) and",
+        "    (evt.is_open_write = true or evt.is_open_create = true) and",
+        "    (fd.name pmatch '*/crontab' or",
+        "     fd.name pmatch '/etc/cron*' or",
+        "     fd.name pmatch '/etc/systemd/system/*' or",
+        "     fd.name pmatch '*/Library/LaunchAgents/*' or",
+        "     fd.name pmatch '*/Library/LaunchDaemons/*' or",
+        "     fd.name pmatch '*/.bashrc' or",
+        "     fd.name pmatch '*/.zshrc') and",
+        "    pkgsentinel_pkg_proc_ancestor",
+        "  output: >",
+        "    pkgsentinel STRICT: install hook tried persistence",
+        "    (file=%fd.name proc=%proc.cmdline)",
+        "  priority: CRITICAL",
+        "  tags: [pkgsentinel, supply-chain, persistence, strict-mode]",
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def generate_strict_mode_tetragon() -> str:
+    """Tetragon eBPF 정책 — Sigkill 활성. *어떤* pip/npm 프로세스든
+    위험 syscall 시도 시 즉시 프로세스 종료.
+    """
+    lines = [
+        "# pkgsentinel — Generic strict-mode Tetragon TracingPolicy",
+        "# 출력: kubectl apply -f - 또는 /etc/tetragon/tracing-policies/",
+        "",
+        "apiVersion: cilium.io/v1alpha1",
+        "kind: TracingPolicy",
+        "metadata:",
+        "  name: pkgsentinel-strict-mode",
+        "  labels:",
+        "    app: pkgsentinel",
+        "    mode: strict",
+        "spec:",
+        "  kprobes:",
+        "    # 자격증명 파일 openat → Sigkill",
+        "    - call: 'sys_openat'",
+        "      syscall: true",
+        "      args:",
+        "        - index: 0",
+        "          type: 'int'",
+        "        - index: 1",
+        "          type: 'string'",
+        "        - index: 2",
+        "          type: 'int'",
+        "      selectors:",
+        "        - matchBinaries:",
+        "            - operator: 'In'",
+        "              values:",
+        "                - '/usr/bin/pip'",
+        "                - '/usr/bin/pip3'",
+        "                - '/usr/bin/npm'",
+        "                - '/usr/bin/node'",
+        "                - '/usr/local/bin/npm'",
+        "                - '/usr/local/bin/node'",
+        "                - '/usr/local/bin/pip'",
+        "          matchArgs:",
+        "            - index: 1",
+        "              operator: 'Postfix'",
+        "              values:",
+        "                - '/.ssh/id_rsa'",
+        "                - '/.ssh/id_ed25519'",
+        "                - '/.aws/credentials'",
+        "                - '/.aws/config'",
+        "                - '/.npmrc'",
+        "                - '/.pypirc'",
+        "                - '/.netrc'",
+        "                - '/etc/shadow'",
+        "          matchActions:",
+        "            - action: Sigkill",
+        "    # 외부 IP connect → Sigkill",
+        "    - call: 'tcp_connect'",
+        "      args:",
+        "        - index: 0",
+        "          type: 'sock'",
+        "      selectors:",
+        "        - matchBinaries:",
+        "            - operator: 'In'",
+        "              values:",
+        "                - '/usr/bin/pip'",
+        "                - '/usr/bin/npm'",
+        "                - '/usr/bin/node'",
+        "                - '/usr/local/bin/npm'",
+        "                - '/usr/local/bin/node'",
+        "          matchArgs:",
+        "            - index: 0",
+        "              operator: 'NotDAddr'",
+        "              values:",
+        "                - '127.0.0.0/8'",
+        "                - '10.0.0.0/8'",
+        "                - '172.16.0.0/12'",
+        "                - '192.168.0.0/16'",
+        "                - '169.254.0.0/16'",
+        "          matchActions:",
+        "            - action: Sigkill",
+    ]
+    return "\n".join(lines) + "\n"
+
+
 # ─────────────── Sink ───────────────
 
 @dataclass
@@ -233,6 +439,7 @@ class FalcoPolicySink:
     out_dir: str
     emit_falco: bool = True
     emit_tetragon: bool = True
+    emit_strict_mode: bool = False     # True 면 generic strict 정책도 함께 dump
 
     def emit(self, report: dict) -> dict:
         os.makedirs(self.out_dir, exist_ok=True)
@@ -253,6 +460,17 @@ class FalcoPolicySink:
             with open(tg_path, "w", encoding="utf-8") as f:
                 f.write(to_tracing_policy(report))
             out["tetragon"] = tg_path
+
+        if self.emit_strict_mode:
+            # 한 번만 — 모든 emit() 호출 시 덮어쓰기 (전역 정책).
+            sf = os.path.join(self.out_dir, "pkgsentinel-strict.falco.yaml")
+            with open(sf, "w", encoding="utf-8") as f:
+                f.write(generate_strict_mode_falco())
+            out["strict_falco"] = sf
+            st = os.path.join(self.out_dir, "pkgsentinel-strict.tetragon.yaml")
+            with open(st, "w", encoding="utf-8") as f:
+                f.write(generate_strict_mode_tetragon())
+            out["strict_tetragon"] = st
 
         return out
 
