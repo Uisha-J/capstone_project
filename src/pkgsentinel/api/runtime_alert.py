@@ -117,25 +117,23 @@ def handle_runtime_alert(
         if store.auto_promote(ioc_id):
             promoted.append(ioc_id)
 
-    # 6) novel 패턴이면 룰 draft 생성 (#L5 에서 본격화 — 여기는 minimal hook)
-    rule_draft_id: int | None = None
-    if pattern.get("is_novel"):
-        rule = LearnedRule(
-            rule_kind="indicator_47",
-            rule_body=json.dumps({
-                "code": f"RT-{obs_id}",
-                "name": pattern.get("summary"),
-                "dimensions": pattern.get("dimensions"),
-            }),
-            source_observation_ids=[obs_id],
-            confidence=0.5,
-            created_at=_now_iso(),
-            rationale=(
-                f"Auto-derived from runtime observation #{obs_id} "
-                f"(source={parsed.source}, pattern={pattern.get('summary')})"
-            ),
-        )
-        rule_draft_id = store.record_rule_draft(rule)
+    # 6) #L5 — 자동 룰 draft 생성 (가능한 모든 종류)
+    from ..intel.rule_generator import generate_all_drafts
+    rationale = (
+        f"Auto-derived from runtime observation #{obs_id} "
+        f"(source={parsed.source}, host={parsed.host}, "
+        f"pkg={parsed.package}@{parsed.version})"
+    )
+    drafts = generate_all_drafts([obs_id], iocs, pattern, rationale)
+    rule_draft_ids: list[int] = []
+    for d in drafts:
+        d.created_at = _now_iso()
+        rule_draft_ids.append(store.record_rule_draft(d))
+
+    # 6b) #L4 — attack_index live-update
+    # learned IOC 와 promoted (high-confidence) IOC 를 in-memory 인덱스에 즉시 등록
+    # 다음 분석부터 같은 IOC 발견 시 즉시 매치.
+    _live_update_attack_index(iocs, parsed, promoted, obs_id)
 
     # 7) (선택) 재파이프라인 — 비용 발생 가능. 본 호출자가 명시적으로 켜야.
     verdict_after = obs.verdict_before
@@ -160,13 +158,46 @@ def handle_runtime_alert(
         "package": parsed.package,
         "iocs_recorded": len(iocs),
         "iocs_auto_promoted": len(promoted),
-        "rule_draft_id": rule_draft_id,
+        "rule_draft_ids": rule_draft_ids,
         "verdict_before": obs.verdict_before,
         "verdict_after": verdict_after,
     }, 200)
 
 
 # ─────────────── 내부 헬퍼 ───────────────
+
+def _live_update_attack_index(
+    iocs: list[dict],
+    parsed,
+    promoted: list[int],
+    obs_id: int,
+) -> None:
+    """학습된 IOC 를 attack_index 의 in-memory 인덱스에 즉시 push.
+
+    재시작 없이 다음 분석부터 같은 IOC 발견 시 매치 가능.
+    실패 (인덱스 미로드 등) 는 graceful skip — 본 함수는 사이드 효과만.
+    """
+    try:
+        from ..knowledge.attack_index import get_index
+        idx = get_index()
+    except Exception:
+        return  # OSV/OSSF cache 안 깔린 환경 — graceful
+
+    pkg_at_ver = None
+    if parsed.package:
+        pkg_at_ver = f"{parsed.package}@{parsed.version or '*'}"
+
+    for ioc in iocs:
+        try:
+            idx.add_runtime_ioc(
+                ioc["type"], ioc["value"],
+                confidence=ioc.get("confidence", 0.5),
+                associated_packages=[pkg_at_ver] if pkg_at_ver else None,
+                source_observation_id=obs_id,
+            )
+        except Exception:
+            continue
+
 
 def _infer_source(payload: dict) -> str:
     """payload 의 top-level key 로 source 추정."""

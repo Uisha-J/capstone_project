@@ -37,10 +37,10 @@ class AttackPatternIndex:
     """메모리 기반 빠른 조회."""
 
     def __init__(self, patterns: list[AttackPattern]):
-        self.patterns = patterns
+        self.patterns = list(patterns)
         # name -> AttackPattern (여러 개일 수 있지만 보통 하나)
         self._by_name: dict[tuple[str, str], list[AttackPattern]] = {}
-        for p in patterns:
+        for p in self.patterns:
             for name in p.affected_packages:
                 key = (p.ecosystem, name.lower())
                 self._by_name.setdefault(key, []).append(p)
@@ -48,12 +48,68 @@ class AttackPatternIndex:
         # 이름 집합 (유사도 검색용)
         self._all_names = [
             (p.ecosystem, name.lower(), p)
-            for p in patterns
+            for p in self.patterns
             for name in p.affected_packages
         ]
+        # 학습된 IOC 의 빠른 lookup
+        # runtime_iocs[(type, value)] = LearnedIOC dict (subset of fields)
+        self._runtime_iocs: dict[tuple[str, str], dict] = {}
 
-        print(f"[AttackIndex] loaded {len(patterns)} patterns, "
+        print(f"[AttackIndex] loaded {len(self.patterns)} patterns, "
               f"{len(self._by_name)} unique (ecosystem, name) pairs")
+
+    # ─────────────── live update — runtime intel feedback ───────────────
+
+    def add_runtime_pattern(self, pattern: AttackPattern) -> None:
+        """런타임 학습된 AttackPattern 한 건을 인덱스에 즉시 추가.
+
+        호출 후 lookup_exact / lookup_similar 가 새 패턴 반영. 재시작 불필요.
+        """
+        # 중복 advisory_id 는 무시 (already loaded)
+        existing_ids = {p.advisory_id for p in self.patterns}
+        if pattern.advisory_id in existing_ids:
+            return
+        self.patterns.append(pattern)
+        for name in pattern.affected_packages:
+            key = (pattern.ecosystem, name.lower())
+            self._by_name.setdefault(key, []).append(pattern)
+            self._all_names.append((pattern.ecosystem, name.lower(), pattern))
+
+    def add_runtime_patterns(self, patterns: list[AttackPattern]) -> int:
+        n = 0
+        for p in patterns:
+            before = len(self.patterns)
+            self.add_runtime_pattern(p)
+            if len(self.patterns) > before:
+                n += 1
+        return n
+
+    def add_runtime_ioc(
+        self, ioc_type: str, value: str,
+        *,
+        confidence: float = 0.5,
+        associated_packages: list[str] | None = None,
+        source_observation_id: int | None = None,
+    ) -> None:
+        """학습된 IOC 한 건을 즉시 인덱스에 추가.
+
+        associated_packages: ["evil-pkg@0.0.1", ...] 형태. 패키지명 매칭에 활용.
+        """
+        key = (ioc_type, value.lower() if ioc_type != "sha256" else value)
+        self._runtime_iocs[key] = {
+            "type": ioc_type,
+            "value": value,
+            "confidence": confidence,
+            "associated_packages": list(associated_packages or []),
+            "source_observation_id": source_observation_id,
+        }
+
+    def lookup_runtime_ioc(self, ioc_type: str, value: str) -> dict | None:
+        key = (ioc_type, value.lower() if ioc_type != "sha256" else value)
+        return self._runtime_iocs.get(key)
+
+    def runtime_ioc_count(self) -> int:
+        return len(self._runtime_iocs)
 
     def lookup_exact(
         self,
