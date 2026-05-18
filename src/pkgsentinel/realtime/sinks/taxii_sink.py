@@ -75,7 +75,7 @@ class TaxiiSink:
             return f"Bearer {self.bearer_token}"
         if self.basic_user is not None and self.basic_pass is not None:
             cred = base64.b64encode(
-                f"{self.basic_user}:{self.basic_pass}".encode("utf-8"),
+                f"{self.basic_user}:{self.basic_pass}".encode(),
             ).decode("ascii")
             return f"Basic {cred}"
         return None

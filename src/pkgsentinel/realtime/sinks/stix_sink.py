@@ -18,8 +18,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import urllib.error
-import urllib.request
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime

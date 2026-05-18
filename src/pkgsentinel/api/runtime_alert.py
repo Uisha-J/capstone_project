@@ -14,12 +14,8 @@ HTTP 어댑터 작성.
 """
 from __future__ import annotations
 
-import json
-from typing import Any
-
 from ..db.runtime_intel import (
     LearnedIOC,
-    LearnedRule,
     RuntimeIntelStore,
     RuntimeObservation,
 )

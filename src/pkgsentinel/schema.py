@@ -113,7 +113,7 @@ class TTPEntry:
         return d
 
     @classmethod
-    def from_dict(cls, d: dict) -> "TTPEntry":
+    def from_dict(cls, d: dict) -> TTPEntry:
         collected_raw = d.get("collected_at")
         if isinstance(collected_raw, str) and collected_raw:
             try:

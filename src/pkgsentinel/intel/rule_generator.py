@@ -98,8 +98,8 @@ def generate_falco_rule(
         f"{observation_ids}",
         f"  condition: {condition}",
         f"  output: 'pkgsentinel runtime IOC match (rule={rule_name})'",
-        f"  priority: CRITICAL",
-        f"  tags: [pkgsentinel, runtime-derived, auto]",
+        "  priority: CRITICAL",
+        "  tags: [pkgsentinel, runtime-derived, auto]",
     ]
     body = "\n".join(body_lines) + "\n"
 

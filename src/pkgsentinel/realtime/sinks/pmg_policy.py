@@ -32,7 +32,6 @@ import hashlib
 import os
 from dataclasses import dataclass
 
-
 # verdict → action 매핑.
 # MALICIOUS / HIGH_RISK → deny (install 차단)
 # SUSPICIOUS           → warn (install 허용하지만 사용자에게 경고)

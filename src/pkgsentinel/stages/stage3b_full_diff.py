@@ -75,7 +75,7 @@ class DependencyChange:
         }
 
     @classmethod
-    def from_dict(cls, d: dict) -> "DependencyChange":
+    def from_dict(cls, d: dict) -> DependencyChange:
         return cls(
             kind=d.get("kind", ""), name=d.get("name", ""),
             old_spec=d.get("old_spec", ""), new_spec=d.get("new_spec", ""),

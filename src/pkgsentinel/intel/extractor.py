@@ -14,7 +14,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-
 # 사설 / 신뢰 도메인 — IOC 로 안 잡음
 _INTERNAL_IPS_RE = re.compile(
     r"^(?:127\.|10\.|172\.(?:1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.|::1|fe80:)"

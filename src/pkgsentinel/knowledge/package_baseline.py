@@ -18,9 +18,8 @@ import json
 from dataclasses import dataclass, field
 
 from ..db.threat_db import ThreatDB, get_default_db
-from .ossf_package_analysis import fetch_ossf_analysis, parse_ossf_to_observed
 from ..schema import Ecosystem
-
+from .ossf_package_analysis import fetch_ossf_analysis, parse_ossf_to_observed
 
 # ─────────────── 스키마 ───────────────
 
@@ -79,7 +78,7 @@ class BehaviorProfile:
         }
 
     @classmethod
-    def from_dict(cls, d: dict) -> "BehaviorProfile":
+    def from_dict(cls, d: dict) -> BehaviorProfile:
         return cls(
             network_count_max=int(d.get("network_count_max", 0)),
             exec_count_max=int(d.get("exec_count_max", 0)),

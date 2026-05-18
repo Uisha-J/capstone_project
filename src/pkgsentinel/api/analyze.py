@@ -33,7 +33,6 @@ VSCode extension / CLI / CI 가 호출하는 *경량* 분석 요청. 서버 측�
 from __future__ import annotations
 
 import time
-from typing import Any
 
 from ..schema import Ecosystem
 from .auth import check_hmac

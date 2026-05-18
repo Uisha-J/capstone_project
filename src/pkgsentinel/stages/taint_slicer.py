@@ -449,10 +449,8 @@ def analyze_python_cross_file(
             # 정확 일치 우선
             exports = module_exports.get(target_mod)
             # 차선: 같은 패키지 안 상대 경로 (`from .config import X`)
-            # → 현재 파일의 module 의 부모 + node.module 비교
+            # → 정확히 같지 않더라도 끝 부분 매칭
             if exports is None and path in file_module:
-                cur_mod = file_module[path]
-                # 정확히 같지 않더라도 끝 부분 매칭
                 for mod_name, mod_taints in module_exports.items():
                     if mod_name.endswith("." + target_mod) or mod_name == target_mod:
                         exports = mod_taints
