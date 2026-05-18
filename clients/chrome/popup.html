@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 320px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 13px;
+      color: #1e293b;
+      background: #fff;
+    }
+    .header {
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .header-title { font-weight: 700; font-size: 15px; letter-spacing: -.2px; }
+    .header-sub   { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+    
+    .status {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 16px; border-bottom: 1px solid #f1f5f9;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; flex-shrink:0; }
+    .dot.ok    { background: #22c55e; box-shadow: 0 0 8px rgba(34, 197, 94, 0.4); }
+    .dot.error { background: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
+    .status-text { font-size: 12px; color: #475569; font-weight: 500; }
+
+    .stats-container {
+      padding: 16px;
+      display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px;
+      border-bottom: 1px solid #f1f5f9; text-align: center;
+    }
+    .stat-box { padding: 10px 0; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
+    .stat-num { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .stat-label { font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: .3px; }
+
+    .text-safe { color: #22c55e; }
+    .text-suspicious { color: #f59e0b; }
+    .text-malicious { color: #ef4444; }
+    .text-agentic { color: #a855f7; }
+
+    .sites { padding: 12px 16px; display: flex; gap: 6px; flex-wrap: wrap; }
+    .site-pill {
+      font-size: 11px; padding: 4px 10px;
+      border-radius: 99px; border: 1px solid #e2e8f0;
+      color: #64748b; background: #f8fafc;
+    }
+    .footer { padding: 10px 16px 16px; font-size: 11px; color: #94a3b8; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="header-title">🛡 Slop Detector</div>
+      <div class="header-sub">LLM 환각 및 슬롭스쿼팅 방어 체계</div>
+    </div>
+  </div>
+  
+  <div class="status">
+    <div class="dot" id="dot"></div>
+    <div class="status-text" id="status-text">서버 상태 확인 중...</div>
+  </div>
+
+  <div class="stats-container">
+    <div class="stat-box">
+      <div class="stat-num text-safe" id="stat-safe">0</div>
+      <div class="stat-label">Safe</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num text-agentic" id="stat-agent">0</div>
+      <div class="stat-label">Agentic</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num text-suspicious" id="stat-sus">0</div>
+      <div class="stat-label">Suspicious</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num text-malicious" id="stat-mal">0</div>
+      <div class="stat-label">Malicious</div>
+    </div>
+  </div>
+
+  <div class="sites">
+    <span class="site-pill">claude.ai</span>
+    <span class="site-pill">chatgpt.com</span>
+    <span class="site-pill">gemini.google.com</span>
+    <span class="site-pill">perplexity.ai</span>
+    <span class="site-pill">copilot.microsoft.com</span>
+    <span class="site-pill">deepseek.com</span>
+    <span class="site-pill">grok.com</span>
+    <span class="site-pill">phind.com</span>
+    <span class="site-pill">mistral.ai</span>
+  </div>
+  <div class="footer">Engine: localhost:8001 (Docker)</div>
+
+  <div style="padding: 8px 16px; border-top: 1px solid #f1f5f9;">
+    <label style="font-size:10px;color:#64748b;display:block;margin-bottom:4px;">
+      HMAC Secret (선택 — 백엔드 인증)
+    </label>
+    <div style="display:flex;gap:4px;">
+      <input id="hmac-secret" type="password" placeholder="비워두면 인증 안 함"
+        style="flex:1;font-size:11px;padding:4px 6px;border:1px solid #e2e8f0;border-radius:4px;">
+      <button id="save-secret" style="font-size:11px;padding:4px 8px;border:none;background:#0f172a;color:#fff;border-radius:4px;cursor:pointer;">저장</button>
+    </div>
+    <div id="secret-status" style="font-size:10px;color:#94a3b8;margin-top:4px;"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

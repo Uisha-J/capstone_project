@@ -1,0 +1,79 @@
+{
+  "manifest_version": 3,
+  "name": "Slop Detector",
+  "version": "0.3.0",
+  "description": "AI가 추천한 패키지의 슬롭스쿼팅(악성 패키지)을 실시간으로 탐지합니다.",
+
+  "permissions": ["storage"],
+
+  "host_permissions": [
+    "http://localhost:8001/*",
+    "https://claude.ai/*",
+    "https://a.claude.ai/*",
+    "https://*.claudeusercontent.com/*",
+    "https://chatgpt.com/*",
+    "https://gemini.google.com/*",
+    "https://www.perplexity.ai/*",
+    "https://perplexity.ai/*",
+    "https://copilot.microsoft.com/*",
+    "https://chat.deepseek.com/*",
+    "https://grok.com/*",
+    "https://www.phind.com/*",
+    "https://chat.mistral.ai/*"
+  ],
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["https://claude.ai/*"],
+      "js": ["content/common.js", "content/claude.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://a.claude.ai/*",
+        "https://*.claudeusercontent.com/*"
+      ],
+      "js": ["content/common.js", "content/artifact.js"],
+      "all_frames": true,
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://chatgpt.com/*"],
+      "js": ["content/common.js", "content/chatgpt.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://gemini.google.com/*"],
+      "js": ["content/common.js", "content/gemini.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.perplexity.ai/*",
+        "https://perplexity.ai/*",
+        "https://copilot.microsoft.com/*",
+        "https://chat.deepseek.com/*",
+        "https://grok.com/*",
+        "https://www.phind.com/*",
+        "https://chat.mistral.ai/*"
+      ],
+      "js": ["content/common.js", "content/generic.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Slop Detector"
+  },
+
+  "icons": {
+    "16":  "icons/icon16.png",
+    "48":  "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

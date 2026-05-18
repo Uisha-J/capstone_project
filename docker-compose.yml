@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: slop_api
+    ports:
+      - "8001:8001"
+    volumes:
+      # V2 엔진 — 이 docker-compose 가 GitHub 레포 루트(engine/)에서 실행되는 기준
+      # 다른 위치에서 엔진 사용하려면 .env 의 PKGSENTINEL_SRC 로 override
+      - ${PKGSENTINEL_SRC:-./src}:/opt/pkgsentinel/src
+      # 어댑터 핫리로드
+      - ./adapter:/app/adapter
+      # 캐시 + DB 저장 (런타임 생성, .gitignore 로 보호)
+      - ./data:/data
+      - ./data/.aislopsquatting:/root/.aislopsquatting
+    environment:
+      # ── 필수 ─────────────────────────────────────────────
+      - AISLOP_DB_KEY=${AISLOP_DB_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+
+      # ── 어댑터 동작 모드 ──────────────────────────────────
+      - AISLOP_LLM_MODE=${AISLOP_LLM_MODE:-auto}
+      - AISLOP_HMAC_SECRET=${AISLOP_HMAC_SECRET:-}
+      - AISLOP_INTEGRITY_MODE=${AISLOP_INTEGRITY_MODE:-strict}
+      - AISLOP_USE_CACHE=${AISLOP_USE_CACHE:-true}
+      - AISLOP_ALLOWED_ORIGINS=${AISLOP_ALLOWED_ORIGINS:-}
+
+      # ── 실시간 sink (선택) ───────────────────────────────
+      - AISLOP_WEBHOOK_URL=${AISLOP_WEBHOOK_URL:-}
+      - AISLOP_WEBHOOK_SECRET=${AISLOP_WEBHOOK_SECRET:-}
+      - AISLOP_STIX_OUT_DIR=${AISLOP_STIX_OUT_DIR:-}
+      - AISLOP_TAXII_URL=${AISLOP_TAXII_URL:-}
+      - AISLOP_TAXII_USER=${AISLOP_TAXII_USER:-}
+      - AISLOP_TAXII_PASS=${AISLOP_TAXII_PASS:-}
+      - AISLOP_FALCO_OUT_DIR=${AISLOP_FALCO_OUT_DIR:-}
+
+      # ── 기타 ─────────────────────────────────────────────
+      - PYTHONUNBUFFERED=1
+      - TZ=Asia/Seoul
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped

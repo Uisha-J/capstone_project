@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Artifact Dedup Bug Test</title>
+<style>
+  body { font-family: system-ui; max-width: 800px; margin: 40px auto; background: #1a1a2e; color: #e0e0e0; }
+  h1 { color: #7dd3fc; }
+  .log { background: #0f0f23; border: 1px solid #333; padding: 12px; margin: 8px 0; border-radius: 6px;
+         max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 13px; white-space: pre-wrap; }
+  .log .pass { color: #4ade80; }
+  .log .fail { color: #f87171; }
+  .log .info { color: #93c5fd; }
+  button { background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 4px;
+           cursor: pointer; margin: 4px; font-size: 14px; }
+  button:hover { background: #2563eb; }
+  .result { margin-top: 16px; padding: 12px; border-radius: 6px; font-weight: bold; font-size: 16px; }
+  .result.pass { background: #052e16; border: 1px solid #4ade80; color: #4ade80; }
+  .result.fail { background: #2c0b0e; border: 1px solid #f87171; color: #f87171; }
+
+  /* Claude DOM simulation */
+  .conversation { display: none; }
+  .artifact-block-card { padding: 8px; margin: 4px; background: #1e293b; border-radius: 8px; }
+  .row-wrapper > .row-inner > .row-deep > .row-deeper > .artifact-block-card { display: block; }
+  [data-slop-artifact-panel] { background: #14532d; padding: 6px; margin: 4px 0; border-radius: 4px; }
+  .token-line { font-family: monospace; }
+</style>
+</head>
+<body>
+<h1>Artifact Dedup Bug Test</h1>
+<p>스트리밍 시뮬레이션으로 패널이 여러 카드에 나타나는 버그를 검증합니다.</p>
+
+<button onclick="runAllTests()">전체 테스트 실행</button>
+<button onclick="clearLog()">로그 초기화</button>
+
+<div class="log" id="log"></div>
+<div id="result"></div>
+
+<!-- Claude DOM 시뮬레이션 -->
+<div class="conversation" id="conv">
+  <!-- Artifact viewer area (token elements) -->
+  <div id="viewer">
+    <div class="viewer-wrapper">
+      <div class="min-w-0 max-w-full" id="code-container">
+        <span class="token-line" id="token1"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Artifact cards in conversation -->
+  <div class="row-wrapper" id="row1">
+    <div class="row-inner"><div class="row-deep"><div class="row-deeper">
+      <div class="artifact-block-card" id="card1">Artifact 1: Flask App</div>
+    </div></div></div>
+  </div>
+  <div class="row-wrapper" id="row2">
+    <div class="row-inner"><div class="row-deep"><div class="row-deeper">
+      <div class="artifact-block-card" id="card2">Artifact 2: React App</div>
+    </div></div></div>
+  </div>
+  <div class="row-wrapper" id="row3">
+    <div class="row-inner"><div class="row-deep"><div class="row-deeper">
+      <div class="artifact-block-card" id="card3">Artifact 3: Data Pipeline</div>
+    </div></div></div>
+  </div>
+</div>
+
+<script>
+// ── Test framework ──────────────────────────────────────────────────
+const logEl = document.getElementById("log");
+let passed = 0, failed = 0;
+
+function log(msg, cls = "info") {
+  logEl.innerHTML += `<span class="${cls}">${msg}</span>\n`;
+  logEl.scrollTop = logEl.scrollHeight;
+}
+function clearLog() { logEl.innerHTML = ""; passed = 0; failed = 0; document.getElementById("result").innerHTML = ""; }
+
+function assert(condition, msg) {
+  if (condition) { log(`  PASS: ${msg}`, "pass"); passed++; }
+  else { log(`  FAIL: ${msg}`, "fail"); failed++; }
+}
+
+function resetDOM() {
+  document.querySelectorAll("[data-slop-analyzed]").forEach(el => el.removeAttribute("data-slop-analyzed"));
+  document.querySelectorAll("[data-slop-artifact-panel]").forEach(el => el.remove());
+  clearTimeout(_artifactTimer);
+  _artifactTimer = null;
+  _pendingCard = null;
+  document.getElementById("token1").textContent = "";
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── Mock: common.js functions ───────────────────────────────────────
+function checkApiServer() { return Promise.resolve(true); }
+function watchNavigation() {}
+function extractPackagesFromText() { return []; }
+
+let lastAnalyzeCall = null;
+function analyzeAndRender(code, filename, insertFn) {
+  lastAnalyzeCall = { code, filename, insertFn };
+  const panel = document.createElement("div");
+  panel.textContent = `[Panel: ${filename}, ${code.length}chars]`;
+  insertFn(panel);
+}
+function analyzePackagesFromText() {}
+
+// ── Paste fixed claude.js logic (inline for testing) ────────────────
+
+function guessFilenameFromCode(code) {
+  if (/^\s*(import |from .+ import|def |class )/m.test(code)) return "script.py";
+  if (/require\(|import .+ from/.test(code)) return "script.js";
+  return "script.py";
+}
+
+let processedKeys = new Set();
+
+function getKey(text) {
+  return `${text.length}::${text.slice(0, 60)}::${text.slice(-60)}`;
+}
+
+let _artifactTimer = null;
+let _pendingCard = null;
+
+function extractArtifactCode() {
+  const tokenEl = document.querySelector("[class*='token']");
+  if (!tokenEl) return null;
+
+  let el = tokenEl;
+  for (let i = 0; i < 8; i++) {
+    el = el.parentElement;
+    if (!el) break;
+    const cls = el.className || "";
+    if (cls.includes("min-w-0") && cls.includes("max-w-full")) {
+      const raw = el.innerText || "";
+      const lines = raw.split("\n");
+      const isNumbered = /^\d+$/.test(lines[0]?.trim());
+      return isNumbered
+        ? lines.filter((_, i) => i % 2 === 1).join("\n")
+        : raw;
+    }
+  }
+  return null;
+}
+
+// ── FIXED scanArtifacts ─────────────────────────────────────────────
+function scanArtifacts() {
+  const code = extractArtifactCode();
+  if (!code || code.length < 80) return;
+
+  const hasImport = /^\s*(import |from .+ import)/m.test(code)
+    || /require\(|"dependencies"/.test(code);
+  if (!hasImport) return;
+
+  if (_artifactTimer) {
+    clearTimeout(_artifactTimer);
+    _artifactTimer = setTimeout(() => _analyzeStableArtifact(), 2000);
+    return;
+  }
+
+  const cards = [...document.querySelectorAll("[class*='artifact-block']")];
+  const targetCard = cards.find(c => !c.hasAttribute("data-slop-analyzed"));
+  if (!targetCard) return;
+
+  targetCard.setAttribute("data-slop-analyzed", "1");
+  _pendingCard = targetCard;
+
+  _artifactTimer = setTimeout(() => _analyzeStableArtifact(), 2000);
+}
+
+function _analyzeStableArtifact() {
+  _artifactTimer = null;
+  const card = _pendingCard;
+  _pendingCard = null;
+  if (!card) return;
+
+  const code = extractArtifactCode();
+  if (!code || code.length < 80) {
+    card.removeAttribute("data-slop-analyzed");
+    return;
+  }
+
+  const filename = guessFilenameFromCode(code);
+
+  analyzeAndRender(code, filename, (newEl) => {
+    newEl.setAttribute("data-slop-artifact-panel", "1");
+    newEl.style.margin = "4px 0 0";
+    const rowContainer = card
+      ?.parentElement?.parentElement?.parentElement?.parentElement;
+    if (rowContainer) {
+      let next = rowContainer.nextElementSibling;
+      while (next?.hasAttribute("data-slop-artifact-panel")) {
+        const toRemove = next;
+        next = next.nextElementSibling;
+        toRemove.remove();
+      }
+      try {
+        rowContainer.insertAdjacentElement("afterend", newEl);
+        return true;
+      } catch {}
+    }
+    return false;
+  });
+}
+
+// ── OLD buggy scanArtifacts (for comparison) ────────────────────────
+const processedArtifactsOld = new Set();
+
+function scanArtifacts_OLD() {
+  const code = extractArtifactCode();
+  if (!code || code.length < 80) return;
+
+  const hasImport = /^\s*(import |from .+ import)/m.test(code)
+    || /require\(|"dependencies"/.test(code);
+  if (!hasImport) return;
+
+  const key = `artifact::${getKey(code)}`;
+  if (processedArtifactsOld.has(key)) return;
+  processedArtifactsOld.add(key);
+
+  const filename = guessFilenameFromCode(code);
+
+  const cards = [...document.querySelectorAll("[class*='artifact-block']")];
+  const targetCard = cards.find(c => !c.hasAttribute("data-slop-analyzed-old"));
+  if (!targetCard) return;
+
+  targetCard.setAttribute("data-slop-analyzed-old", "1");
+
+  analyzeAndRender(code, filename, (newEl) => {
+    newEl.setAttribute("data-slop-artifact-panel-old", "1");
+    const rowContainer = targetCard
+      ?.parentElement?.parentElement?.parentElement?.parentElement;
+    if (rowContainer) {
+      try { rowContainer.insertAdjacentElement("afterend", newEl); return true; } catch {}
+    }
+    return false;
+  });
+}
+
+// ── TESTS ───────────────────────────────────────────────────────────
+
+async function test1_oldBugReproduction() {
+  log("\n[TEST 1] 기존 버그 재현: 스트리밍 중 여러 카드에 패널 삽입", "info");
+  resetDOM();
+  document.querySelectorAll("[data-slop-analyzed-old]").forEach(el => el.removeAttribute("data-slop-analyzed-old"));
+  document.querySelectorAll("[data-slop-artifact-panel-old]").forEach(el => el.remove());
+  processedArtifactsOld.clear();
+
+  const token = document.getElementById("token1");
+  const basePy = "import flask\nfrom flask import Flask\nimport requests\n\napp = Flask(__name__)\n";
+
+  // Simulate streaming: code grows over 3 calls
+  token.textContent = basePy + "# phase 1\n".repeat(5);
+  scanArtifacts_OLD();
+
+  token.textContent = basePy + "# phase 1\n".repeat(5) + "# phase 2\n".repeat(5);
+  scanArtifacts_OLD();
+
+  token.textContent = basePy + "# phase 1\n".repeat(5) + "# phase 2\n".repeat(5) + "# phase 3\n".repeat(5);
+  scanArtifacts_OLD();
+
+  const panels = document.querySelectorAll("[data-slop-artifact-panel-old]");
+  const analyzed = document.querySelectorAll("[data-slop-analyzed-old]");
+
+  log(`  패널 개수: ${panels.length}, 분석된 카드: ${analyzed.length}`);
+  assert(panels.length > 1, `기존 버그 재현됨: 패널 ${panels.length}개 (1개여야 하지만 여러 개)`);
+
+  // Cleanup
+  document.querySelectorAll("[data-slop-analyzed-old]").forEach(el => el.removeAttribute("data-slop-analyzed-old"));
+  document.querySelectorAll("[data-slop-artifact-panel-old]").forEach(el => el.remove());
+}
+
+async function test2_fixedStreamingDedup() {
+  log("\n[TEST 2] 수정 후: 스트리밍 중 패널이 하나만 생성되는지 확인", "info");
+  resetDOM();
+
+  const token = document.getElementById("token1");
+  const basePy = "import flask\nfrom flask import Flask\nimport requests\n\napp = Flask(__name__)\n";
+
+  // Simulate streaming: code grows, scanArtifacts called multiple times
+  token.textContent = basePy + "# phase 1\n".repeat(5);
+  scanArtifacts();
+
+  token.textContent = basePy + "# phase 1\n".repeat(5) + "# phase 2\n".repeat(5);
+  scanArtifacts();
+
+  token.textContent = basePy + "# phase 1\n".repeat(5) + "# phase 2\n".repeat(5) + "# phase 3\n".repeat(5);
+  scanArtifacts();
+
+  // Before timer fires: no panels yet, one card locked
+  const panelsBefore = document.querySelectorAll("[data-slop-artifact-panel]");
+  const analyzedBefore = document.querySelectorAll("[data-slop-analyzed]");
+  assert(panelsBefore.length === 0, `debounce 대기 중 패널 없음 (${panelsBefore.length}개)`);
+  assert(analyzedBefore.length === 1, `잠긴 카드 1개만 (${analyzedBefore.length}개)`);
+  assert(analyzedBefore[0]?.id === "card1", `첫 번째 카드만 잠김 (${analyzedBefore[0]?.id})`);
+
+  // Wait for debounce (2s) + small buffer
+  log("  (2.5초 대기: debounce 완료 대기...)", "info");
+  await sleep(2500);
+
+  const panelsAfter = document.querySelectorAll("[data-slop-artifact-panel]");
+  const analyzedAfter = document.querySelectorAll("[data-slop-analyzed]");
+  assert(panelsAfter.length === 1, `패널 정확히 1개 (${panelsAfter.length}개)`);
+  assert(analyzedAfter.length === 1, `분석된 카드 1개만 (${analyzedAfter.length}개)`);
+
+  // Check panel is next to card1's row, not card2 or card3
+  const row1 = document.getElementById("row1");
+  const panelParent = panelsAfter[0]?.previousElementSibling;
+  assert(panelParent?.id === "row1", `패널이 card1의 row 다음에 위치 (${panelParent?.id})`);
+}
+
+async function test3_multipleArtifactsSequential() {
+  log("\n[TEST 3] 여러 아티팩트 순차 분석", "info");
+  resetDOM();
+
+  const token = document.getElementById("token1");
+
+  // Artifact 1 streaming complete
+  token.textContent = "import flask\nfrom flask import Flask\nimport requests\n\napp = Flask(__name__)\n" + "# code\n".repeat(10);
+  scanArtifacts();
+  await sleep(2500);
+
+  const panels1 = document.querySelectorAll("[data-slop-artifact-panel]");
+  assert(panels1.length === 1, `아티팩트 1 분석 후 패널 1개 (${panels1.length}개)`);
+
+  // Artifact 2: different code appears in viewer
+  token.textContent = "import numpy as np\nimport pandas as pd\nfrom sklearn import svm\n\n" + "# data science\n".repeat(10);
+  scanArtifacts();
+  await sleep(2500);
+
+  const panels2 = document.querySelectorAll("[data-slop-artifact-panel]");
+  const analyzed2 = document.querySelectorAll("[data-slop-analyzed]");
+  assert(panels2.length === 2, `아티팩트 2 분석 후 총 패널 2개 (${panels2.length}개)`);
+  assert(analyzed2.length === 2, `분석된 카드 2개 (${analyzed2.length}개)`);
+
+  // Each panel is on a different card's row
+  const row1 = document.getElementById("row1");
+  const row2 = document.getElementById("row2");
+  assert(panels2[0].previousElementSibling?.id === "row1", `패널1 → card1 row`);
+  assert(panels2[1].previousElementSibling?.id === "row2", `패널2 → card2 row`);
+}
+
+async function test4_navigationReset() {
+  log("\n[TEST 4] 네비게이션 시 상태 초기화", "info");
+  resetDOM();
+
+  const token = document.getElementById("token1");
+  token.textContent = "import flask\nfrom flask import Flask\nimport requests\n\napp = Flask(__name__)\n" + "# code\n".repeat(10);
+  scanArtifacts();
+  await sleep(2500);
+
+  assert(document.querySelectorAll("[data-slop-artifact-panel]").length === 1, "리셋 전 패널 1개");
+
+  // Simulate navigation reset
+  processedKeys = new Set();
+  clearTimeout(_artifactTimer);
+  _artifactTimer = null;
+  _pendingCard = null;
+  document.querySelectorAll("[data-slop-analyzed]").forEach(el => el.removeAttribute("data-slop-analyzed"));
+  document.querySelectorAll("[data-slop-artifact-panel]").forEach(el => el.remove());
+
+  assert(document.querySelectorAll("[data-slop-artifact-panel]").length === 0, "리셋 후 패널 0개");
+  assert(document.querySelectorAll("[data-slop-analyzed]").length === 0, "리셋 후 마킹 0개");
+}
+
+async function runAllTests() {
+  clearLog();
+  log("=== Artifact Dedup Bug Test Suite ===\n", "info");
+
+  await test1_oldBugReproduction();
+  await test2_fixedStreamingDedup();
+  await test3_multipleArtifactsSequential();
+  await test4_navigationReset();
+
+  log(`\n=== 결과: ${passed} passed, ${failed} failed ===`, failed > 0 ? "fail" : "pass");
+
+  const resultEl = document.getElementById("result");
+  if (failed === 0) {
+    resultEl.className = "result pass";
+    resultEl.textContent = `ALL PASSED (${passed}/${passed + failed})`;
+  } else {
+    resultEl.className = "result fail";
+    resultEl.textContent = `FAILED (${passed} passed, ${failed} failed)`;
+  }
+}
+</script>
+</body>
+</html>
